@@ -30,7 +30,7 @@ class Map{
     let plane = createGroundPlaneXZ(500, 500);
     scene.add(plane);
 
-    // create area 1
+    // create area 4
     let area4Geometry = new THREE.BoxGeometry(312, 6, 124);
     let area4 = new THREE.Mesh(area4Geometry, material);
     // position the cube
@@ -38,31 +38,63 @@ class Map{
     // add the cube to the scene
     scene.add(area4);
 
+     let area1Geometry = new THREE.BoxGeometry(124, 6, 108);
+    
     // create area 1
-    let area1Geometry = new THREE.BoxGeometry(124, 6, 124);
     let area1 = new THREE.Mesh(area1Geometry, material);
     // position the cube
     area1.position.set(-156.0, 3.0, -125.0);
     // add the cube to the scene
     scene.add(area1);
 
+    //Create Extend Area of area 1
+    let smallExtendedAreaGeometry = new THREE.BoxGeometry(30,6,16);
+    let smallExtendedArea = new THREE.Mesh(smallExtendedAreaGeometry,material);
+    area1.add(smallExtendedArea);
+    smallExtendedArea.position.set(-47,0,54);
+
+    let bigExtendedAreaGeometry = new THREE.BoxGeometry(78,6,16);
+    let bigExtendedArea = new THREE.Mesh(bigExtendedAreaGeometry,material);
+    area1.add(bigExtendedArea);
+    bigExtendedArea.position.set(23,0,54);
+
     // create area 2
     let material2 = setDefaultMaterial("green");
-    let area2Geometry = new THREE.BoxGeometry(124, 6, 124);
-    let area2 = new THREE.Mesh(area2Geometry, material2);
+    let area2 = new THREE.Mesh(area1Geometry, material2);
     // position the cube
     area2.position.set(0.0, 3.0, -125.0);
     // add the cube to the scene
     scene.add(area2);
 
+    //Create Extend Area of area 2
+    let extendedAreaGeometry = new THREE.BoxGeometry(54,6,16);
+    let extendedArea = new THREE.Mesh(extendedAreaGeometry,material2);
+    area2.add(extendedArea);
+    extendedArea.position.set(35,0,54);
+    
+    let extendedArea2 = new THREE.Mesh(extendedAreaGeometry,material2);
+    area2.add(extendedArea2);
+    extendedArea2.position.set(-35,0,54);
+
+
     // create area 3
     let material3 = setDefaultMaterial("blue");
-    let area3Geometry = new THREE.BoxGeometry(124, 6, 124);
-    let area3 = new THREE.Mesh(area3Geometry, material3);
+    let area3 = new THREE.Mesh(area1Geometry, material3);
     // position the cube
     area3.position.set(156.0, 3.0, -125.0);
     // add the cube to the scene
     scene.add(area3);
+
+    //Create Extend Area of area 3
+    let smallExtendedAreaGeometry3 = new THREE.BoxGeometry(30,6,16);
+    let smallExtendedArea3 = new THREE.Mesh(smallExtendedAreaGeometry3,material3);
+    area3.add(smallExtendedArea3);
+    smallExtendedArea3.position.set(47,0,54);
+
+    let bigExtendedAreaGeometry3 = new THREE.BoxGeometry(78,6,16);
+    let bigExtendedArea3= new THREE.Mesh(bigExtendedAreaGeometry3,material3);
+    area3.add(bigExtendedArea3);
+    bigExtendedArea3.position.set(-23,0,54);
 
 
     //Referenciar o meio
