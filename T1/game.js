@@ -38,9 +38,17 @@ class Map{
     // add the cube to the scene
     scene.add(area4);
 
-     let area1Geometry = new THREE.BoxGeometry(124, 6, 108);
+    let extendedAreaGeometry4 = new THREE.BoxGeometry(140,6,16);
+    let extendedArea4 = new THREE.Mesh(extendedAreaGeometry4,material);
+    area4.add(extendedArea4);
+    extendedArea4.position.set(86,0,-70);
     
+     let extendedArea42 = new THREE.Mesh(extendedAreaGeometry4,material);
+     area4.add(extendedArea42);
+     extendedArea42.position.set(-86,0,-70);
+
     // create area 1
+    let area1Geometry = new THREE.BoxGeometry(124, 6, 108);
     let area1 = new THREE.Mesh(area1Geometry, material);
     // position the cube
     area1.position.set(-156.0, 3.0, -125.0);
@@ -104,6 +112,32 @@ class Map{
     meio.position.set(0.0, 1.0, 0.0);
     // add the cube to the scene
     scene.add(meio);
+
+
+
+    //Creates the border´s wall
+    let materialWall = setDefaultMaterial("gray");
+    let wallGeometry = new THREE.BoxGeometry(499,10,1);
+    let wallBottom = new THREE.Mesh(wallGeometry,materialWall);
+    scene.add(wallBottom);
+    wallBottom.position.set(0,5,249);
+
+    let wallTop = new THREE.Mesh(wallGeometry,materialWall);
+    scene.add(wallTop);
+    wallTop.position.set(0,5,-249);
+
+    let angle = THREE.MathUtils.degToRad(90);
+
+    let wallLeft = new THREE.Mesh(wallGeometry,materialWall);
+    scene.add(wallLeft);
+    wallLeft.position.set(250,5,0);
+    wallLeft.rotateY(angle);
+
+    let wallRight = new THREE.Mesh(wallGeometry,materialWall);
+    scene.add(wallRight);
+    wallRight.position.set(-250,5,0);
+    wallRight.rotateY(angle);
+
   }
 }
 
