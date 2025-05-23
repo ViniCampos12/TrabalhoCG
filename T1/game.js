@@ -28,63 +28,19 @@ window.addEventListener( 'resize', function(){onWindowResize(camera, renderer)},
 // let axesHelper = new THREE.AxesHelper( 12 );
 // scene.add( axesHelper );
 
-
-    // create area 1
-    // let area4Geometry = new THREE.BoxGeometry(312, 6, 124);
-    // let area4 = new THREE.Mesh(area4Geometry, material);
-    // // position the cube
-    // area4.position.set(0.0, 3.0, 125.0);
-    // // add the cube to the scene
-    // scene.add(area4);
-
-    // // create area 1
-    // let area1Geometry = new THREE.BoxGeometry(124, 6, 124);
-    // let area1 = new THREE.Mesh(area1Geometry, material);
-    // // position the cube
-    // area1.position.set(-156.0, 3.0, -125.0);
-    // // add the cube to the scene
-    // scene.add(area1);
-
-    // // create area 2
-    // let material2 = setDefaultMaterial("green");
-    // let area2Geometry = new THREE.BoxGeometry(124, 6, 124);
-    // let area2 = new THREE.Mesh(area2Geometry, material2);
-    // // position the cube
-    // area2.position.set(0.0, 3.0, -125.0);
-    // // add the cube to the scene
-    // scene.add(area2);
-
-    // // create area 3
-    // let material3 = setDefaultMaterial("blue");
-    // let area3Geometry = new THREE.BoxGeometry(124, 6, 124);
-    // let area3 = new THREE.Mesh(area3Geometry, material3);
-    // // position the cube
-    // area3.position.set(156.0, 3.0, -125.0);
-    // // add the cube to the scene
-    // scene.add(area3);
-
-
-    // //Referenciar o meio
-    // let meioG = new THREE.BoxGeometry(1, 1, 1);
-    // let meio = new THREE.Mesh(meioG, material);
-    // // position the cube
-    // meio.position.set(0.0, 1.0, 0.0);
-    // // add the cube to the scene
-    // scene.add(meio);
-
     // create a cube
-var cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
-var cube = new THREE.Mesh(cubeGeometry, material);
-// position the cube
-cube.position.set(0.0, 2.0, 0.0);
-// add the cube to the scene
-scene.add(cube);
+    let map = new Map(scene);
+    const obj = map.getWall();
+    var cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
+    var cube = new THREE.Mesh(cubeGeometry, material);
+    // position the cube
+    cube.position.set(0.0, 2.0, 0.0);
+    // add the cube to the scene
+    scene.add(cube);
 
   const cubeBox = new THREE.Box3().setFromObject(cube);
-  }
-}
-
-render();
+  // console.log();
+  render();
 
 function keyboardUpdate() {
 
@@ -106,8 +62,6 @@ function keyboardUpdate() {
   if ( keyboard.pressed("W") )  cube.translateZ( -moveDistance );
 }
 
-let map = new Map();
-
 // Use this to show information onscreen
 let controls = new InfoBox();
   controls.add("Basic Scene");
@@ -121,13 +75,14 @@ let controls = new InfoBox();
   function checkCollisions(object)
 {
    let collision = cubeBox.intersectsBox(object);
-   if(collision) infoBox.changeMessage("Collision detected");
+   if(collision) console.log("collision detected")
 }
 
 render();
 function render()
 {
-  checkCollisions(cube);
+    // checkCollisions(obj)
+  
   requestAnimationFrame(render);
   keyboardUpdate();
   renderer.render(scene, camera) // Render scene

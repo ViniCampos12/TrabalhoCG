@@ -2,6 +2,8 @@ import * as THREE from  'three';
 import { createGroundPlaneXZ, setDefaultMaterial } from '../libs/util/util.js';
 import Ladder from './ladder.js';
 
+let wallBox;
+
 class Map{
   constructor(scene){
 
@@ -119,9 +121,11 @@ class Map{
     //Creates the border´s wall
     let materialWall = setDefaultMaterial("rgb(59,59,59)");
     let wallGeometry = new THREE.BoxGeometry(499,10,1);
+    
 
     for(let i = -1;i<2;i=i+2){
       let wall = new THREE.Mesh(wallGeometry,materialWall);
+      wallBox = new THREE.Box3().setFromObject(wall);
       scene.add(wall);
       wall.position.set(0,5,249*i);
     }
@@ -134,6 +138,11 @@ class Map{
       wall.position.set(250*i,5,0);
       wall.rotateY(angle);
     }
+  }
+
+  getWall(){
+    console.log(wallBox);
+    return wallBox;
   }
   
 }
