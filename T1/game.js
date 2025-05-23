@@ -26,6 +26,10 @@ window.addEventListener( 'resize', function(){onWindowResize(camera, renderer)},
 
 
 let map = new Map(scene);
+let personGeometry = new THREE.BoxGeometry(2,2,2);
+let person = new THREE.Mesh(personGeometry,material);
+scene.add(person);
+person.position.set(0,2,0);
 
 // Use this to show information onscreen
 let controls = new InfoBox();
