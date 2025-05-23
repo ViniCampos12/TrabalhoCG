@@ -12,7 +12,7 @@ let scene, renderer, camera, material, light, orbit; // Initial variables
 
 scene = new THREE.Scene();    // Create main scene
 renderer = initRenderer();    // Init a basic renderer
-camera = initCamera(new THREE.Vector3(0, 20, 250)); // Init camera in this position
+camera = initCamera(new THREE.Vector3(0, 10, 150)); // Init camera in this position
 material = setDefaultMaterial(); // create a basic material
 light = initDefaultBasicLight(scene); // Create a basic light to illuminate the scene
 orbit = new OrbitControls( camera, renderer.domElement ); // Enable mouse rotation, pan, zoom etc.
@@ -23,6 +23,45 @@ window.addEventListener( 'resize', function(){onWindowResize(camera, renderer)},
 // Show axes (parameter is size of each axis)
 // let axesHelper = new THREE.AxesHelper( 12 );
 // scene.add( axesHelper );
+
+
+class Ladder{
+  constructor(material){
+    let biggerStepGeometry = new THREE.BoxGeometry(16,0.75,1);
+    let biggerStep = new THREE.Mesh(biggerStepGeometry,material);
+
+    
+    let step = new THREE.Mesh(biggerStepGeometry,material);
+    biggerStep.add(step);
+    step.position.set(0,-0.75,1);
+
+    let step2 = new THREE.Mesh(biggerStepGeometry,material);
+    step.add(step2);
+    step2.position.set(0,-0.75,1);
+
+    let step3 = new THREE.Mesh(biggerStepGeometry,material);
+    step2.add(step3);
+    step3.position.set(0,-0.75,1);
+
+    let step4 = new THREE.Mesh(biggerStepGeometry,material);
+    step3.add(step4);
+    step4.position.set(0,-0.75,1);
+
+    let step5 = new THREE.Mesh(biggerStepGeometry,material);
+    step4.add(step5);
+    step5.position.set(0,-0.75,1);
+
+     let step6 = new THREE.Mesh(biggerStepGeometry,material);
+    step5.add(step6);
+    step6.position.set(0,-0.75,1);
+
+     let step7 = new THREE.Mesh(biggerStepGeometry,material);
+    step6.add(step7);
+    step7.position.set(0,-0.75,1);
+    
+    return biggerStep;
+  }
+}
 
 class Map{
   constructor(){
@@ -38,14 +77,14 @@ class Map{
     // add the cube to the scene
     scene.add(area4);
 
-    let extendedAreaGeometry4 = new THREE.BoxGeometry(140,6,16);
+    let extendedAreaGeometry4 = new THREE.BoxGeometry(140,6,8);
     let extendedArea4 = new THREE.Mesh(extendedAreaGeometry4,material);
     area4.add(extendedArea4);
-    extendedArea4.position.set(86,0,-70);
+    extendedArea4.position.set(86,0,-66);
     
      let extendedArea42 = new THREE.Mesh(extendedAreaGeometry4,material);
      area4.add(extendedArea42);
-     extendedArea42.position.set(-86,0,-70);
+     extendedArea42.position.set(-86,0,-66);
 
     // create area 1
     let area1Geometry = new THREE.BoxGeometry(124, 6, 108);
@@ -138,8 +177,35 @@ class Map{
     wallRight.position.set(-250,5,0);
     wallRight.rotateY(angle);
 
+
+
+    //Creates ladder
+    const ladder = new Ladder(material);
+    area1.add(ladder);
+    ladder.position.set(-24,2.6,54.5);
+
+    const ladder2 = new Ladder(material2);
+    area2.add(ladder2);
+    ladder2.position.set(0,2.6,54.5);
+
+    const ladder3 = new Ladder(material3);
+    area3.add(ladder3);
+    ladder3.position.set(24,2.6,54.5);
+
+    const ladder4 = new Ladder(material);
+    area4.add(ladder4);
+    ladder4.position.set(8,2.6,-62.5);
+    let angleLadder = THREE.MathUtils.degToRad(180);
+    ladder4.rotateY(angleLadder);
+
+    const ladder5 = new Ladder(material);
+    area4.add(ladder5);
+    ladder5.position.set(-8,2.6,-62.5);
+    ladder5.rotateY(angleLadder);
   }
 }
+
+
 
 let map = new Map();
 
