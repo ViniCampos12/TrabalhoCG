@@ -75,16 +75,18 @@ class Map{
     meio.position.set(0.0, 1.0, 0.0);
     // add the cube to the scene
     scene.add(meio);
-  }
-}
 
-// create a cube
+    // create a cube
 var cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
 var cube = new THREE.Mesh(cubeGeometry, material);
 // position the cube
 cube.position.set(0.0, 2.0, 0.0);
 // add the cube to the scene
 scene.add(cube);
+
+  const cubeBox = new THREE.Box3().setFromObject(cube);
+  }
+}
 
 render();
 
@@ -120,9 +122,16 @@ let controls = new InfoBox();
   controls.add("* Scroll to zoom in/out.");
   controls.show();
 
+  function checkCollisions(object)
+{
+   let collision = cubeBox.intersectsBox(object);
+   if(collision) infoBox.changeMessage("Collision detected");
+}
+
 render();
 function render()
 {
+  checkCollisions(cube);
   requestAnimationFrame(render);
   keyboardUpdate();
   renderer.render(scene, camera) // Render scene
