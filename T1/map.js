@@ -2,11 +2,13 @@ import * as THREE from  'three';
 import { createGroundPlaneXZ, setDefaultMaterial } from '../libs/util/util.js';
 import Ladder from './ladder.js';
 
-let wallBox;
+export let wallBox;
+ export   let wall; 
 
 class Map{
+  
   constructor(scene){
-
+    this.scene = scene;
     // create the ground plane
     let plane = createGroundPlaneXZ(500, 500);
     scene.add(plane);
@@ -36,6 +38,10 @@ class Map{
     const ladder = new Ladder(material1);
     area1.add(ladder);
     ladder.position.set(-24,2.6,54.5);
+    
+    //Create bb
+    const wallBox1 = new THREE.Box3().setFromObject(area1);
+    this.createBBHelper(wallBox1,"white"); 
 
 
     // create area 2
@@ -57,6 +63,10 @@ class Map{
     const ladder2 = new Ladder(material2);
     area2.add(ladder2);
     ladder2.position.set(0,2.6,54.5);
+
+    //Create bb
+    const wallBox2 = new THREE.Box3().setFromObject(area2);
+    this.createBBHelper(wallBox2,"white"); 
 
 
     // create area 3
@@ -80,7 +90,13 @@ class Map{
     area3.add(ladder3);
     ladder3.position.set(24,2.6,54.5);
 
+    //Create bb
+    const wallBox3 = new THREE.Box3().setFromObject(area3);
+    this.createBBHelper(wallBox3,"white"); 
+
     this.createBorder(scene);  
+
+
   }
 
   createBiggerArea(material, x, y, z){
@@ -105,6 +121,10 @@ class Map{
       ladder.rotateY(angleLadder);
     }
 
+    //Create bb
+    const wallBox = new THREE.Box3().setFromObject(area);
+    this.createBBHelper(wallBox,"white"); 
+
     return area;
   }
 
@@ -121,28 +141,42 @@ class Map{
     //Creates the border´s wall
     let materialWall = setDefaultMaterial("rgb(59,59,59)");
     let wallGeometry = new THREE.BoxGeometry(499,10,1);
-    
 
     for(let i = -1;i<2;i=i+2){
-      let wall = new THREE.Mesh(wallGeometry,materialWall);
-      wallBox = new THREE.Box3().setFromObject(wall);
-      scene.add(wall);
+       wall = new THREE.Mesh(wallGeometry,materialWall);
+      // this.createBBHelper(wall,"white");
       wall.position.set(0,5,249*i);
+      wallBox = new THREE.Box3().setFromObject(wall);
+      let helper = new THREE.Box3Helper( wallBox, "white" );
+      scene.add(helper);
+      scene.add(wall);
+      
     }
 
     let angle = THREE.MathUtils.degToRad(90);
 
     for(let i=-1;i<2;i=i+2){
-      let wall = new THREE.Mesh(wallGeometry,materialWall);
-      scene.add(wall);
+      wall = new THREE.Mesh(wallGeometry,materialWall);
       wall.position.set(250*i,5,0);
       wall.rotateY(angle);
+      wallBox = new THREE.Box3().setFromObject(wall);
+      let helper = new THREE.Box3Helper( wallBox, "white" );  
+      scene.add(helper);
+      scene.add(wall);
     }
   }
 
   getWall(){
-    console.log(wallBox);
-    return wallBox;
+    console.log(wallBox); 
+    return wall;
+  }
+
+  createBBHelper(bb, color)
+  {
+     // Create a bounding box helper
+     let helper = new THREE.Box3Helper( bb, color);
+     this.scene.add( helper );
+     return helper;
   }
   
 }

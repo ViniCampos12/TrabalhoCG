@@ -31,15 +31,21 @@ window.addEventListener( 'resize', function(){onWindowResize(camera, renderer)},
     // create a cube
     let map = new Map(scene);
     const obj = map.getWall();
+    const wallBox = new THREE.Box3().setFromObject(obj);
+    let helper2 = new THREE.Box3Helper( wallBox, "white" );
+    scene.add(helper2);
+
     var cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
     var cube = new THREE.Mesh(cubeGeometry, material);
-    // position the cube
     cube.position.set(0.0, 2.0, 0.0);
+    const caixaBB = new THREE.Box3().setFromObject(cube);
+    let helper = new THREE.Box3Helper( caixaBB, "white" );
+      scene.add(helper); 
+    // position the cube
+    
     // add the cube to the scene
     scene.add(cube);
 
-  const cubeBox = new THREE.Box3().setFromObject(cube);
-  // console.log();
   render();
 
 function keyboardUpdate() {
@@ -49,8 +55,23 @@ function keyboardUpdate() {
   var speed = 30;
   var moveDistance = speed * clock.getDelta();
 
+   var position = new THREE.Vector3();
+  
+  // Obtém a posição do cubo no mundo
+  
+  // console.log(cubePos); 
+
+  let newCubePos;
+
   // Keyboard.down - execute only once per key pressed
-  if ( keyboard.down("left") )   cube.translateX( -1 );
+  if ( keyboard.down("left") ) {
+    cube.translateX( -1 );
+    cube.getWorldPosition(position); //Armazena na position
+    console.log(position);
+    newCubePos = position.add(new THREE.Vector3(-1,0,0));
+    
+    console.log(newCubePos);
+  }  
   if ( keyboard.down("right") )  cube.translateX(  1 );
   if ( keyboard.down("down") )     cube.translateZ(  1 );
   if ( keyboard.down("up") )   cube.translateZ( -1 );
@@ -72,17 +93,17 @@ let controls = new InfoBox();
   controls.add("* Scroll to zoom in/out.");
   controls.show();
 
-  function checkCollisions(object)
+  function checkCollisions(obj)
 {
-   let collision = cubeBox.intersectsBox(object);
+   let collision = caixaBB.intersectsBox(obj);
    if(collision) console.log("collision detected")
 }
 
 render();
 function render()
 {
-    // checkCollisions(obj)
   
+  checkCollisions(wallBox)
   requestAnimationFrame(render);
   keyboardUpdate();
   renderer.render(scene, camera) // Render scene
