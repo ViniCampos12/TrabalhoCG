@@ -9,6 +9,9 @@ class Map{
   
   constructor(scene){
     this.scene = scene;
+    this.wallsBox = [];
+    this.areasBox = [];
+    
     // create the ground plane
     let plane = createGroundPlaneXZ(500, 500);
     scene.add(plane);
@@ -41,6 +44,7 @@ class Map{
     
     //Create bb
     const wallBox1 = new THREE.Box3().setFromObject(area1);
+    this.areasBox.push(wallBox1);
     this.createBBHelper(wallBox1,"white"); 
 
 
@@ -66,6 +70,7 @@ class Map{
 
     //Create bb
     const wallBox2 = new THREE.Box3().setFromObject(area2);
+    this.areasBox.push(wallBox2);
     this.createBBHelper(wallBox2,"white"); 
 
 
@@ -92,10 +97,13 @@ class Map{
 
     //Create bb
     const wallBox3 = new THREE.Box3().setFromObject(area3);
+    this.areasBox.push(wallBox3);
     this.createBBHelper(wallBox3,"white"); 
 
     this.createBorder(scene);  
 
+    console.log("Areas");
+    console.log(this.areasBox);
 
   }
 
@@ -123,6 +131,7 @@ class Map{
 
     //Create bb
     const wallBox = new THREE.Box3().setFromObject(area);
+    this.areasBox.push(wallBox);
     this.createBBHelper(wallBox,"white"); 
 
     return area;
@@ -144,13 +153,14 @@ class Map{
 
     for(let i = -1;i<2;i=i+2){
        wall = new THREE.Mesh(wallGeometry,materialWall);
-      // this.createBBHelper(wall,"white");
       wall.position.set(0,5,249*i);
       wallBox = new THREE.Box3().setFromObject(wall);
       let helper = new THREE.Box3Helper( wallBox, "white" );
+      
       scene.add(helper);
       scene.add(wall);
-      
+
+      this.wallsBox.push(wallBox);
     }
 
     let angle = THREE.MathUtils.degToRad(90);
@@ -163,12 +173,18 @@ class Map{
       let helper = new THREE.Box3Helper( wallBox, "white" );  
       scene.add(helper);
       scene.add(wall);
+
+      this.wallsBox.push(wallBox);
     }
   }
 
-  getWall(){
-    console.log(wallBox); 
-    return wall;
+  getWallBoxes(){
+    console.log(this.wallsBox); 
+    return this.wallsBox;
+  }
+
+  getAreaBoxes(){
+    return this.areasBox;
   }
 
   createBBHelper(bb, color)

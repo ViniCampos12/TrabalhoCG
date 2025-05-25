@@ -24,23 +24,25 @@ var keyboard = new KeyboardState();
 // Listen window size changes
 window.addEventListener( 'resize', function(){onWindowResize(camera, renderer)}, false );
 
-// Show axes (parameter is size of each axis)
-// let axesHelper = new THREE.AxesHelper( 12 );
-// scene.add( axesHelper );
+//Show axes (parameter is size of each axis)
+let axesHelper = new THREE.AxesHelper( 250 );
+scene.add( axesHelper );
 
     // create a cube
     let map = new Map(scene);
-    const obj = map.getWall();
-    const wallBox = new THREE.Box3().setFromObject(obj);
-    let helper2 = new THREE.Box3Helper( wallBox, "white" );
-    scene.add(helper2);
+    const wallBoxes = map.getWallBoxes();
+    const areaBoxes = map.getAreaBoxes();
+    let position = new THREE.Vector3();
+    // const wallBox = new THREE.Box3().setFromObject(obj);
+    // let helper2 = new THREE.Box3Helper( wallBox, "white" );
+    // scene.add(helper2);
 
     var cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
     var cube = new THREE.Mesh(cubeGeometry, material);
     cube.position.set(0.0, 2.0, 0.0);
     const caixaBB = new THREE.Box3().setFromObject(cube);
     let helper = new THREE.Box3Helper( caixaBB, "white" );
-      scene.add(helper); 
+    scene.add(helper); 
     // position the cube
     
     // add the cube to the scene
@@ -55,19 +57,17 @@ function keyboardUpdate() {
   var speed = 30;
   var moveDistance = speed * clock.getDelta();
 
-   var position = new THREE.Vector3();
+   
+  //Boundig box follows cube
+  caixaBB.setFromObject(cube);
   
-  // Obtém a posição do cubo no mundo
-  
-  // console.log(cubePos); 
-
   let newCubePos;
+  cube.getWorldPosition(position);
 
   // Keyboard.down - execute only once per key pressed
   if ( keyboard.down("left") ) {
     cube.translateX( -1 );
-    cube.getWorldPosition(position); //Armazena na position
-    console.log(position);
+     //Ideia de uso para descobrir uma posição futura
     newCubePos = position.add(new THREE.Vector3(-1,0,0));
     
     console.log(newCubePos);
@@ -93,9 +93,34 @@ let controls = new InfoBox();
   controls.add("* Scroll to zoom in/out.");
   controls.show();
 
-  function checkCollisions(obj)
-{
-   let collision = caixaBB.intersectsBox(obj);
+  function checkCollisions(walls, areas)
+{ 
+  let collision = false;
+
+  //Testa paredes
+  if(Math.abs(position.x) > 248 || Math.abs(position.z) > 248){
+    for (const wall of walls) {
+      if (caixaBB.intersectsBox(wall)) {
+        collision = true;
+        break; 
+      }
+    }
+  }
+  //Testa caixona
+  else if(position.z > 52 && Math.abs(position.x)< 158){
+    collision = caixaBB.intersectsBox(areas[0]);
+  }
+  //Testa outras areas em ordem
+  else if(position.z < -60 && position.z > -181){
+    if(position.x > -218 && position.x < -92)
+      collision = caixaBB.intersectsBox(areas[1]);
+    if(position.x > -64 && position.x < 64)
+      collision = caixaBB.intersectsBox(areas[2]);
+    if(position.x > 92 && position.x < 220)
+      collision = caixaBB.intersectsBox(areas[3]);
+  }
+  
+    
    if(collision) console.log("collision detected")
 }
 
@@ -103,7 +128,7 @@ render();
 function render()
 {
   
-  checkCollisions(wallBox)
+  checkCollisions(wallBoxes,areaBoxes);
   requestAnimationFrame(render);
   keyboardUpdate();
   renderer.render(scene, camera) // Render scene
