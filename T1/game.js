@@ -33,7 +33,9 @@ scene.add( axesHelper );
     const wallBoxes = map.getWallBoxes();
     const areaBoxes = map.getAreaBoxes();
     let position = new THREE.Vector3();
-    let newCubePos = new THREE.Vector3();
+    let colisionVector = new THREE.Vector3();
+    colisionVector.add(new THREE.Vector3(1,0,1))
+
     // const wallBox = new THREE.Box3().setFromObject(obj);
     // let helper2 = new THREE.Box3Helper( wallBox, "white" );
     // scene.add(helper2);
@@ -51,16 +53,17 @@ scene.add( axesHelper );
 
   render();
 
-function keyboardUpdate() {
+  function keyboardUpdate() {
 
   keyboard.update();
 
-  var speed = 30;
-  var moveDistance = speed * clock.getDelta();
-
-  let movimentVector = new THREE.Vector3();
-  movimentVector.add(new THREE.Vector3(moveDistance,0,moveDistance))
-   
+  let newCubePos = position.clone()
+    var speed = 30;
+    var moveDistance = speed * clock.getDelta();
+    let movimentVector = new THREE.Vector3();
+    movimentVector.add(new THREE.Vector3(moveDistance,0,moveDistance))
+     
+    movimentVector.multiply(colisionVector)
   //Boundig box follows cube
   caixaBB.setFromObject(cube);
   
@@ -71,8 +74,6 @@ function keyboardUpdate() {
     cube.translateX( -1 );
      //Ideia de uso para descobrir uma posição futura
     newCubePos = position.add(new THREE.Vector3(-1,0,0));
-    
-    console.log(newCubePos);
   }  
   if ( keyboard.down("right") )  cube.translateX(  1 );
   if ( keyboard.down("down") )     cube.translateZ(  1 );
@@ -81,28 +82,22 @@ function keyboardUpdate() {
   // Keyboard.pressed - execute while is pressed
   if ( keyboard.pressed("A") ){
     cube.position.add(new THREE.Vector3(-movimentVector.x,0,0))
-    newCubePos = position.add(new THREE.Vector3(-1,0,0));
+    newCubePos = newCubePos.add(new THREE.Vector3(-1,0,0))
   }
   if ( keyboard.pressed("D") ){
     cube.position.add(new THREE.Vector3(movimentVector.x,0,0))
-    newCubePos = cube.position
     newCubePos = newCubePos.add(new THREE.Vector3(1,0,0))
-  console.log("newCube")
-  console.log(newCubePos.x)
-  console.log(position.x)
   }
+
   if ( keyboard.pressed("W") ){
     cube.position.add(new THREE.Vector3(0,0,-movimentVector.z))
-    newCubePos = position.add(new THREE.Vector3(0,0,-1));  
+    newCubePos = newCubePos.add(new THREE.Vector3(0,0,-1))
   }
   if ( keyboard.pressed("S") ){
     cube.position.add(new THREE.Vector3(0,0,movimentVector.z))
-    newCubePos = position.add(new THREE.Vector3(0,0,1));  
+    newCubePos = newCubePos.add(new THREE.Vector3(0,0,1))  
   }
-    
-  let colisionVector = checkCollisions(wallBoxes, areaBoxes, newCubePos)
-  movimentVector = movimentVector.multiply(colisionVector)
-
+  colisionVector = checkCollisions(wallBoxes, areaBoxes, newCubePos)
 }
 
 // Use this to show information onscreen
@@ -119,7 +114,6 @@ let controls = new InfoBox();
 { 
   
   let collision = false;
-  let colisionVector = new THREE.Vector3(1,0,1)
   //Testa paredes
   if(Math.abs(position.x) > 248 || Math.abs(position.z) > 248){
     for (const wall of walls) {
@@ -142,10 +136,13 @@ let controls = new InfoBox();
     if(position.x > 92 && position.x < 220)
       collision = caixaBB.intersectsBox(areas[3]);
   }
-  
+
   if(collision)
   {
-    if(newCubePos.x > position.x) colisionVector.x = 0;
+    if(Math.abs(newCubePos.x) > Math.abs(position.x)) colisionVector.x = 0;
+    else colisionVector.x = 1;
+    if(Math.abs(newCubePos.z) > Math.abs(position.z)) colisionVector.z = 0;
+    else colisionVector.z = 1;
   }
   return colisionVector;
 }
