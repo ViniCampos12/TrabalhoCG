@@ -67,10 +67,11 @@ class PointerLockControls extends EventDispatcher {
 
 	}
 
-	getDirection( v ) {
-
-		return v.set( 0, 0, - 1 ).applyQuaternion( this.camera.quaternion );
-
+// Direção sem inclinação vertical (plano XZ)
+	getDirection(v) {
+		// Extrai apenas a rotação Y (ignora pitch)
+		const yaw = new Euler(0, this.camera.rotation.y, 0);
+		return v.set(0, 0, -1).applyEuler(yaw).normalize();
 	}
 
 	moveForward( distance ) {
@@ -97,6 +98,7 @@ class PointerLockControls extends EventDispatcher {
 		camera.position.addScaledVector( _vector, distance );
 
 	}
+
 
 	lock() {
 
