@@ -35,7 +35,7 @@ scene.add( axesHelper );
     let position = new THREE.Vector3();
     let colisionVector = new THREE.Vector3();
     colisionVector.add(new THREE.Vector3(1,0,1))
-
+    let collision;
     // const wallBox = new THREE.Box3().setFromObject(obj);
     // let helper2 = new THREE.Box3Helper( wallBox, "white" );
     // scene.add(helper2);
@@ -57,7 +57,7 @@ scene.add( axesHelper );
 
   keyboard.update();
 
-  let newCubePos = position.clone()
+    let newCubePos = position.clone()
     var speed = 30;
     var moveDistance = speed * clock.getDelta();
     let movimentVector = new THREE.Vector3();
@@ -81,23 +81,27 @@ scene.add( axesHelper );
 
   // Keyboard.pressed - execute while is pressed
   if ( keyboard.pressed("A") ){
-    cube.position.add(new THREE.Vector3(-movimentVector.x,0,0))
-    newCubePos = newCubePos.add(new THREE.Vector3(-1,0,0))
+
+    newCubePos = position.add(new THREE.Vector3(-1,0,0))
   }
   if ( keyboard.pressed("D") ){
-    cube.position.add(new THREE.Vector3(movimentVector.x,0,0))
-    newCubePos = newCubePos.add(new THREE.Vector3(1,0,0))
+
+    newCubePos = position.add(new THREE.Vector3(1,0,0))
   }
 
   if ( keyboard.pressed("W") ){
-    cube.position.add(new THREE.Vector3(0,0,-movimentVector.z))
-    newCubePos = newCubePos.add(new THREE.Vector3(0,0,-1))
+
+    newCubePos = position.add(new THREE.Vector3(0,0,-1))
   }
   if ( keyboard.pressed("S") ){
-    cube.position.add(new THREE.Vector3(0,0,movimentVector.z))
-    newCubePos = newCubePos.add(new THREE.Vector3(0,0,1))  
+
+    newCubePos = position.add(new THREE.Vector3(0,0,1))  
   }
-  colisionVector = checkCollisions(wallBoxes, areaBoxes, newCubePos)
+  collision = checkCollisions(wallBoxes, areaBoxes, newCubePos);
+
+    if (!collision) {
+  cube.position.copy(newCubePos); 
+}
 }
 
 // Use this to show information onscreen
@@ -112,10 +116,10 @@ let controls = new InfoBox();
 
   function checkCollisions(walls, areas, newCubePos)
 { 
-  
+  const futureBox = new THREE.Box3().setFromCenterAndSize(newCubePos, new THREE.Vector3(5,4,5))
   let collision = false;
   //Testa paredes
-  if(Math.abs(position.x) > 248 || Math.abs(position.z) > 248){
+  if(Math.abs(newCubePos.x) > 248 || Math.abs(newCubePos.z) > 248){
     for (const wall of walls) {
       if (caixaBB.intersectsBox(wall)) {
         collision = true;
@@ -124,27 +128,32 @@ let controls = new InfoBox();
     }
   }
   //Testa caixona
-  else if(position.z > 52 && Math.abs(position.x)< 158){
-    collision = caixaBB.intersectsBox(areas[0]);
+  else if(newCubePos.z > 52 && Math.abs(newCubePos.x)< 158){
+    collision = futureBox.intersectsBox(areas[0]);
   }
   //Testa outras areas em ordem
-  else if(position.z < -60 && position.z > -181){
-    if(position.x > -218 && position.x < -92)
-      collision = caixaBB.intersectsBox(areas[1]);
-    if(position.x > -64 && position.x < 64)
-      collision = caixaBB.intersectsBox(areas[2]);
-    if(position.x > 92 && position.x < 220)
-      collision = caixaBB.intersectsBox(areas[3]);
+  else if(newCubePos.z < -60 && newCubePos.z > -181){
+    if(newCubePos.x > -218 && newCubePos.x < -92)
+      collision = futureBox.intersectsBox(areas[1]);
+    if(newCubePos.x > -64 && newCubePos.x < 64)
+      collision = futureBox.intersectsBox(areas[2]);
+    if(newCubePos.x > 92 && newCubePos.x < 220)
+      collision = futureBox.intersectsBox(areas[3]);
   }
 
-  if(collision)
+  return collision;
+}
+
+function checker(walls, areas, newCubePos){
+  let collision = checkCollisions(walls, areas, newCubePos)
+    if(collision)
   {
     if(Math.abs(newCubePos.x) > Math.abs(position.x)) colisionVector.x = 0;
     else colisionVector.x = 1;
     if(Math.abs(newCubePos.z) > Math.abs(position.z)) colisionVector.z = 0;
     else colisionVector.z = 1;
   }
-  return colisionVector;
+  return collision;
 }
 
 render();
