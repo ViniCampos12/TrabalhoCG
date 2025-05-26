@@ -173,10 +173,10 @@ let controls = new InfoBox();
   
   let collision = false;
  
-  const futureBB = new THREE.Box3().setFromCenterAndSize(newCubePos, new THREE.Vector3(5, 5, 5));
+  const futureBB = new THREE.Box3().setFromCenterAndSize(newCubePos, new THREE.Vector3(5, 4, 5));
 
   //Testa paredes
-  if(Math.abs(position.x) > 248 || Math.abs(position.z) > 248){
+  if(Math.abs(newCubePos.x) > 248 || Math.abs(newCubePos.z) > 248){
     for (const wall of walls) {
       if (futureBB.intersectsBox(wall)) {
         collision = true;
@@ -185,16 +185,16 @@ let controls = new InfoBox();
     }
   }
   //Testa caixona
-  else if(position.z > 52 && Math.abs(position.x)< 158){
+  else if(newCubePos.z > 52 && Math.abs(newCubePos.x)< 158){
     collision = futureBB.intersectsBox(areas[0]);
   }
   //Testa outras areas em ordem
-  else if(position.z < -60 && position.z > -181){
-    if(position.x > -218 && position.x < -92)
+  else if(newCubePos.z < -60 && newCubePos.z > -181){
+    if(newCubePos.x > -218 && newCubePos.x < -92)
       collision = futureBB.intersectsBox(areas[1]);
-    if(position.x > -64 && position.x < 64)
+    if(newCubePos.x > -64 && newCubePos.x < 64)
       collision = futureBB.intersectsBox(areas[2]);
-    if(position.x > 92 && position.x < 220)
+    if(newCubePos.x > 92 && newCubePos.x < 220)
       collision = futureBB.intersectsBox(areas[3]);
   }
   
