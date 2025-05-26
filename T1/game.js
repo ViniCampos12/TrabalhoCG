@@ -77,23 +77,23 @@ function keyboardUpdate() {
 
   // Verifica teclas pressionadas (movimento contínuo)
   if (keyboard.pressed("A") || keyboard.pressed("left")) {
-    newCubePos = position.clone().add(new THREE.Vector3(-movimentVector.x, 0, 0));
+    newCubePos = position.add(new THREE.Vector3(-movimentVector.x, 0, 0));
   }
   if (keyboard.pressed("D") || keyboard.pressed("right")) {
-    newCubePos = position.clone().add(new THREE.Vector3(movimentVector.x, 0, 0));
+    newCubePos = position.add(new THREE.Vector3(movimentVector.x, 0, 0));
   }
   if (keyboard.pressed("W") || keyboard.pressed("up")) {
-    newCubePos = position.clone().add(new THREE.Vector3(0, 0, -movimentVector.z));
+    newCubePos = position.add(new THREE.Vector3(0, 0, -movimentVector.z));
   }
   if (keyboard.pressed("S") || keyboard.pressed("down")) {
-    newCubePos = position.clone().add(new THREE.Vector3(0, 0, movimentVector.z));
+    newCubePos = position.add(new THREE.Vector3(0, 0, movimentVector.z));
   }
 
   // Verifica colisão ANTES de aplicar movimento
   const colisionVector = checkCollisions(wallBoxes, areaBoxes, newCubePos);
 
   if (!colisionVector) {
-  cube.position.copy(newCubePos); 
+  cube.position.copy(newCubePos);   
 }
   
 
