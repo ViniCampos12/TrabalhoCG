@@ -14,6 +14,7 @@ class Map{
     this.ladderBig = new Ladder();
     this.piramide = new THREE.Mesh();
 
+
     
     
 
@@ -26,10 +27,10 @@ class Map{
     // creating bigger area
     let material = setDefaultMaterial("rgb(63,81,181)"); 
 
-    let piramideG = new THREE.ConeGeometry(16,6,4);
+    let piramideG = new THREE.ConeGeometry(160,40,4);
     this.piramide = new THREE.Mesh(piramideG,material);
     scene.add(this.piramide);
-    this.piramide.position.set(0,0,0);
+    this.piramide.position.set(100,0,20);
 
     let area = this.createBiggerArea(material,0,3,125);
     scene.add(area);

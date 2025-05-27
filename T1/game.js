@@ -26,34 +26,35 @@ const movementVector = new THREE.Vector3(1,0,1)
 let axesHelper = new THREE.AxesHelper( 250 );
 scene.add( axesHelper );
 
-    // create a cube
-    let map = new Map(scene);
-    const wallBoxes = map.getWallBoxes();
-    const areaBoxes = map.getAreaBoxes();
-    let position = new THREE.Vector3();
-    let newCubePos = new THREE.Vector3();
-    // const wallBox = new THREE.Box3().setFromObject(obj);
-    // let helper2 = new THREE.Box3Helper( wallBox, "white" );
-    // scene.add(helper2);
+// create a cube
+let map = new Map(scene);
+const wallBoxes = map.getWallBoxes();
+const areaBoxes = map.getAreaBoxes();
 
-    var cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
-    var cube = new THREE.Mesh(cubeGeometry, material);
-    cube.position.set(0.0, 2.0, 0.0);
+// let position = new THREE.Vector3();
+// let newCubePos = new THREE.Vector3();
+// const wallBox = new THREE.Box3().setFromObject(obj);
+// let helper2 = new THREE.Box3Helper( wallBox, "white" );
+// scene.add(helper2);
 
-    const cubeSize = new THREE.Vector3(5, 4, 5);
-    const cubeCenter = new THREE.Vector3();
-    cube.getWorldPosition(cubeCenter); 
+var cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
+var cube = new THREE.Mesh(cubeGeometry, material);
+cube.position.set(0.0, 2.0, 0.0);
 
-    const caixaBB = new THREE.Box3().setFromCenterAndSize(cubeCenter, cubeSize);
-    // const caixaBB = new THREE.Box3().setFromObject(cube);
-    // caixaBB.expandByScalar(2);
-    caixaBB.setFromObject(cube);
-    let helper = new THREE.Box3Helper( caixaBB, "white" );
-    scene.add(helper); 
-    // position the cube
-    
-    // add the cube to the scene
-    scene.add(cube);
+const cubeSize = new THREE.Vector3(5, 4, 5);
+const cubeCenter = new THREE.Vector3();
+cube.getWorldPosition(cubeCenter); 
+
+// const caixaBB = new THREE.Box3().setFromCenterAndSize(cubeCenter, cubeSize);
+// const caixaBB = new THREE.Box3().setFromObject(cube);
+// caixaBB.expandByScalar(2);
+// caixaBB.setFromObject(cube);
+// let helper = new THREE.Box3Helper( caixaBB, "white" );
+// scene.add(helper); 
+// position the cube
+
+// add the cube to the scene
+scene.add(cube);
 
 const geometryC = new THREE.CylinderGeometry( 0.13, 0.13, 2.5, 32 ); 
 const materialC = new THREE.MeshStandardMaterial( {color: 0x5F5F5F} ); 
@@ -136,7 +137,7 @@ function keyboardUpdate() {
 //   // Atualiza a posição atual do cubo
 //   cube.getWorldPosition(position);
 
-   caixaBB.setFromObject(cube);
+   
 
 //   let newCubePos = position.clone(); // Começa com a posição atual
 
@@ -170,6 +171,7 @@ function keyboardUpdate() {
 
 
 // function keyboardUpdate() {
+
 //   keyboard.update();
 
 //   const speed = 30;
@@ -212,6 +214,7 @@ function keyboardUpdate() {
 
 
 // Resize handler
+
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
@@ -225,10 +228,13 @@ instrucao.addParagraph();
 instrucao.add("Clique na tela para ativar o controle com o mouse.");
 instrucao.add("Use W, A, S, D para mover o cubo com a câmera dentro.");
 instrucao.show();
+const pos = cube.position;
 
 // Update loop
 function render() {
   requestAnimationFrame(render);
+
+  // caixaBB.setFromObject(cube);
 
   const delta = clock.getDelta();
   const velocidade = 50.0 * delta;
@@ -237,7 +243,7 @@ function render() {
     // Faz o cubo girar com a rotação da câmera
     cube.rotation.y = controls.getObject().rotation.y;
 
-    const pos = cube.position;
+    
 
     // Direção baseada na rotação do cubo
     const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(cube.quaternion);
@@ -258,33 +264,48 @@ function render() {
     if (moveDir.lengthSq() > 0) {
       const newPos = pos.clone().add(moveDir.multiplyScalar(velocidade));
 
+      newPos.y = getRampHeight(newPos.x, newPos.z);
+
       if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
         cube.position.copy(newPos);
       }
+      else{
+        // scene.remove(cube);
+        // map.piramide.add(cube);
+        // cube.position.set(0,40,0);
+      }
+
+      
+
     }
   }
 
   renderer.render(scene, camera);
 }
 
+function getRampHeight(x, z) {
+  // Ajuste estes valores conforme o posicionamento e geometria da sua rampa
+  const rampaBaseZ = 55;       // z inicial da rampa
+  const rampaTopoZ = 71;       // z final da rampa
+  const alturaRampa = 7;      // altura máxima da rampa (no topo)
+  const rampaBaseX = 0;
+  const rampaTopoX = 100;
+  
+  if (z >= rampaBaseZ && z <= rampaTopoZ && x>= rampaBaseX) {
+    const t = (z - rampaBaseZ) / (rampaTopoZ - rampaBaseZ);
+    return 2 + t * alturaRampa;  // 2 é a altura base do cubo
+  }
+  return 2; // altura padrão do cubo
+}
 
-  function checkCollisions(walls, areas, newCubePos)
-{ 
+
+  function checkCollisions(walls, areas, newCubePos) { 
   
   let collision = false;
  
   const futureBB = new THREE.Box3().setFromCenterAndSize(newCubePos, new THREE.Vector3(5, 4, 5));
 
   if(newCubePos.z > 2 && newCubePos.x > -17 && newCubePos.x < 17 && newCubePos.z < 62){
-    
-    if (cube.parent !== map.piramide) {
-      scene.remove(cube);
-      map.piramide.add(cube);
-      map.piramide.updateWorldMatrix(true, false);
-      let localPos = map.piramide.worldToLocal(newCubePos.clone());
-      cube.position.copy(localPos);
-    }
-
     return false;
   }
 
