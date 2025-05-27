@@ -49,6 +49,7 @@ scene.add( axesHelper );
     const caixaBB = new THREE.Box3().setFromCenterAndSize(cubeCenter, cubeSize);
     // const caixaBB = new THREE.Box3().setFromObject(cube);
     // caixaBB.expandByScalar(2);
+    caixaBB.setFromObject(cube);
     let helper = new THREE.Box3Helper( caixaBB, "white" );
     scene.add(helper); 
     // position the cube
@@ -79,48 +80,94 @@ const controls = new PointerLockControls(cube, document.body); //faz o movimento
 document.addEventListener('click', () => {
   controls.lock();
 }, false);
+ const movimento = { frente: false, tras: false, esquerda: false, direita: false };
+
+document.addEventListener('keydown', (event) => {
+  switch (event.code) {
+    case 'KeyW':
+    case "ArrowUp": 
+      movimento.frente = true; 
+      break;
+    case 'KeyS':
+    case "ArrowDown": 
+      movimento.tras = true; 
+      break;
+    case 'KeyA':
+    case "ArrowLeft": 
+      movimento.esquerda = true; 
+      break;
+    case 'KeyD':
+    case "ArrowRight": 
+      movimento.direita = true; 
+      break;
+  }
+}, false);
+
+document.addEventListener('keyup', (event) => {
+  switch (event.code) {
+    case 'KeyW':
+    case "ArrowUp": 
+      movimento.frente = false; 
+      break;
+    case 'KeyS':
+    case "ArrowDown": 
+      movimento.tras = false; 
+      break;
+    case 'KeyA':
+    case "ArrowLeft": 
+      movimento.esquerda = false; 
+      break;
+    case 'KeyD':
+    case "ArrowRight": 
+      movimento.direita = false; 
+      break;
+  }
+}, false);
+
 
   render();
 
 function keyboardUpdate() {
-  keyboard.update();
+//  keyboard.update();
 
-  const speed = 30;
-  const moveDistance = speed * clock.getDelta();
+//   const speed = 30;
+//   const moveDistance = speed * clock.getDelta();
 
-  const movimentVector = new THREE.Vector3(moveDistance, 0, moveDistance);
+//   const movimentVector = new THREE.Vector3(moveDistance, 0, moveDistance);
 
-  // Atualiza a posição atual do cubo
-  cube.getWorldPosition(position);
+//   // Atualiza a posição atual do cubo
+//   cube.getWorldPosition(position);
 
-  caixaBB.setFromObject(cube);
+   caixaBB.setFromObject(cube);
 
-  let newCubePos = position.clone(); // Começa com a posição atual
+//   let newCubePos = position.clone(); // Começa com a posição atual
 
-  // Verifica teclas pressionadas (movimento contínuo)
-  if (keyboard.pressed("A") || keyboard.pressed("left")) {
-    newCubePos = position.add(new THREE.Vector3(-movimentVector.x, 0, 0));
-  }
-  if (keyboard.pressed("D") || keyboard.pressed("right")) {
-    newCubePos = position.add(new THREE.Vector3(movimentVector.x, 0, 0));
-  }
-  if (keyboard.pressed("W") || keyboard.pressed("up")) {
-    newCubePos = position.add(new THREE.Vector3(0, 0, -movimentVector.z));
-  }
-  if (keyboard.pressed("S") || keyboard.pressed("down")) {
-    newCubePos = position.add(new THREE.Vector3(0, 0, movimentVector.z));
-  }
+//   // Verifica teclas pressionadas (movimento contínuo)
+//   if (keyboard.pressed("A") || keyboard.pressed("left")) {
+//     newCubePos = position.add(new THREE.Vector3(-movimentVector.x, 0, 0));
+//   }
+//   if (keyboard.pressed("D") || keyboard.pressed("right")) {
+//     newCubePos = position.add(new THREE.Vector3(movimentVector.x, 0, 0));
+//   }
+//   if (keyboard.pressed("W") || keyboard.pressed("up")) {
+//     newCubePos = position.add(new THREE.Vector3(0, 0, -movimentVector.z));
+//   }
+//   if (keyboard.pressed("S") || keyboard.pressed("down")) {
+//     newCubePos = position.add(new THREE.Vector3(0, 0, movimentVector.z));
+//   }
 
-  // Verifica colisão ANTES de aplicar movimento
-  const colisionVector = checkCollisions(wallBoxes, areaBoxes, newCubePos);
+//   // Verifica colisão ANTES de aplicar movimento
+//   const colisionVector = checkCollisions(wallBoxes, areaBoxes, newCubePos);
 
-  if (!colisionVector) {
-  cube.position.copy(newCubePos);   
-}
+//   if (!colisionVector) {
+//   cube.position.copy(newCubePos);   
+// }
   
 
-  console.log("Posição atual:", position);
-  console.log("Nova posição (tentada):", newCubePos);
+//   console.log("Posição atual:", position);
+//   console.log("Nova posição (tentada):", newCubePos);
+
+
 }
 
 
@@ -203,11 +250,35 @@ function render() {
   const velocidade = 80.0 * delta;
 
   if (controls.isLocked) {
-  if (movimento.frente) controls.moveForward(velocidade);
-  if (movimento.tras) controls.moveForward(-velocidade);
-  if (movimento.direita) controls.moveRight(velocidade);
-  if (movimento.esquerda) controls.moveRight(-velocidade);
-}
+    const pos = controls.getObject().position;
+
+    // Direção base da câmera (apenas no plano XZ)
+    const forward = new THREE.Vector3();
+    controls.getDirection(forward);
+    forward.y = 0;
+    forward.normalize();
+
+    const right = new THREE.Vector3();
+    right.crossVectors(forward, camera.up).normalize(); // Direção perpendicular à frente (direita)
+
+    let moveDir = new THREE.Vector3();
+
+    if (movimento.frente) moveDir.add(forward);
+    if (movimento.tras) moveDir.add(forward.clone().negate());
+    if (movimento.direita) moveDir.add(right);
+    if (movimento.esquerda) moveDir.add(right.clone().negate());
+
+    moveDir.normalize();
+
+    if (moveDir.lengthSq() > 0) {
+      const newPos = pos.clone().add(moveDir.multiplyScalar(velocidade));
+
+      if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
+        controls.getObject().position.copy(newPos);
+      }
+    }
+  }
+
   renderer.render(scene, camera);
 }
 
