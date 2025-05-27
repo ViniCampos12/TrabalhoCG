@@ -21,8 +21,6 @@ let keyboard = new KeyboardState();
 
 const movementVector = new THREE.Vector3(1,0,1)
 
-// Listen window size changes
-window.addEventListener( 'resize', function(){onWindowResize(camera, renderer)}, false );
 
 //Show axes (parameter is size of each axis)
 let axesHelper = new THREE.AxesHelper( 250 );
@@ -247,19 +245,20 @@ function render() {
   requestAnimationFrame(render);
 
   const delta = clock.getDelta();
-  const velocidade = 80.0 * delta;
+  const velocidade = 50.0 * delta;
 
   if (controls.isLocked) {
-    const pos = controls.getObject().position;
+    // Faz o cubo girar com a rotação da câmera
+    cube.rotation.y = controls.getObject().rotation.y;
 
-    // Direção base da câmera (apenas no plano XZ)
-    const forward = new THREE.Vector3();
-    controls.getDirection(forward);
+    const pos = cube.position;
+
+    // Direção baseada na rotação do cubo
+    const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(cube.quaternion);
     forward.y = 0;
     forward.normalize();
 
-    const right = new THREE.Vector3();
-    right.crossVectors(forward, camera.up).normalize(); // Direção perpendicular à frente (direita)
+    const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
 
     let moveDir = new THREE.Vector3();
 
@@ -274,13 +273,14 @@ function render() {
       const newPos = pos.clone().add(moveDir.multiplyScalar(velocidade));
 
       if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
-        controls.getObject().position.copy(newPos);
+        cube.position.copy(newPos);
       }
     }
   }
 
   renderer.render(scene, camera);
 }
+
 
   function checkCollisions(walls, areas, newCubePos)
 { 
