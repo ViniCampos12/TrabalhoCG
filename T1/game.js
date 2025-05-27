@@ -60,7 +60,7 @@ scene.add( axesHelper );
 
   render();
 
-function keyboardUpdate() {
+  function keyboardUpdate() {
   keyboard.update();
 
   const speed = 30;
@@ -68,95 +68,73 @@ function keyboardUpdate() {
 
   const movimentVector = new THREE.Vector3(moveDistance, 0, moveDistance);
 
-  // Atualiza a posição atual do cubo
   cube.getWorldPosition(position);
-
   caixaBB.setFromObject(cube);
 
-  let newCubePos = position.clone(); // Começa com a posição atual
+  let newCubePos = position.clone(); // agora sim, base intacta
 
-  // Verifica teclas pressionadas (movimento contínuo)
   if (keyboard.pressed("A") || keyboard.pressed("left")) {
-    newCubePos = position.add(new THREE.Vector3(-movimentVector.x, 0, 0));
+    newCubePos.add(new THREE.Vector3(-movimentVector.x, 0, 0));
   }
   if (keyboard.pressed("D") || keyboard.pressed("right")) {
-    newCubePos = position.add(new THREE.Vector3(movimentVector.x, 0, 0));
+    newCubePos.add(new THREE.Vector3(movimentVector.x, 0, 0));
   }
   if (keyboard.pressed("W") || keyboard.pressed("up")) {
-    newCubePos = position.add(new THREE.Vector3(0, 0, -movimentVector.z));
+    newCubePos.add(new THREE.Vector3(0, 0, -movimentVector.z));
   }
   if (keyboard.pressed("S") || keyboard.pressed("down")) {
-    newCubePos = position.add(new THREE.Vector3(0, 0, movimentVector.z));
+    newCubePos.add(new THREE.Vector3(0, 0, movimentVector.z));
   }
 
-  // Verifica colisão ANTES de aplicar movimento
+  // Verifica colisão
   const colisionVector = checkCollisions(wallBoxes, areaBoxes, newCubePos);
 
   if (!colisionVector) {
-  cube.position.copy(newCubePos);   
+    cube.position.copy(newCubePos);
+  }
 }
-  
-
-  console.log("Posição atual:", position);
-  console.log("Nova posição (tentada):", newCubePos);
-}
-
 
 // function keyboardUpdate() {
-
 //   keyboard.update();
 
-//   var speed = 30;
-//   var moveDistance = speed * clock.getDelta();
+//   const speed = 30;
+//   const moveDistance = speed * clock.getDelta();
 
-//   let movimentVector = new THREE.Vector3();
-//   movimentVector.add(new THREE.Vector3(moveDistance,0,moveDistance))
-   
-//   //Boundig box follows cube
-//   caixaBB.setFromObject(cube);
-  
+//   const movimentVector = new THREE.Vector3(moveDistance, 0, moveDistance);
+
+//   // Atualiza a posição atual do cubo
 //   cube.getWorldPosition(position);
 
-//   // Keyboard.down - execute only once per key pressed
-//   if ( keyboard.down("left") ) {
-//     cube.translateX( -1 );
-//      //Ideia de uso para descobrir uma posição futura
-//     newCubePos = position.add(new THREE.Vector3(-1,0,0));
-    
-//     console.log(newCubePos);
-//   }  
-//   if ( keyboard.down("right") )  cube.translateX(  1 );
-//   if ( keyboard.down("down") )     cube.translateZ(  1 );
-//   if ( keyboard.down("up") )   cube.translateZ( -1 );
+//   caixaBB.setFromObject(cube);
 
-//   // Keyboard.pressed - execute while is pressed
-//   if ( keyboard.pressed("A") ){
-//     cube.position.add(new THREE.Vector3(-movimentVector.x,0,0))
-//     newCubePos = position.add(new THREE.Vector3(-1,0,0));
+//   let newCubePos = position.clone(); // Começa com a posição atual
+
+//   // Verifica teclas pressionadas (movimento contínuo)
+//   if (keyboard.pressed("A") || keyboard.pressed("left")) {
+//     newCubePos = position.add(new THREE.Vector3(-movimentVector.x, 0, 0));
 //   }
-//   if ( keyboard.pressed("D") ){
-//     cube.position.add(new THREE.Vector3(movimentVector.x,0,0))
-//     // newCubePos = position.add(new THREE.Vector3(movimentVector.x,0,0));
-    
-//     // newCubePos = newCubePos.add(new THREE.Vector3(1,0,0))
+//   if (keyboard.pressed("D") || keyboard.pressed("right")) {
+//     newCubePos = position.add(new THREE.Vector3(movimentVector.x, 0, 0));
 //   }
-//   if ( keyboard.pressed("W") ){
-//     cube.position.add(new THREE.Vector3(0,0,-movimentVector.z))
-//     newCubePos = position.add(new THREE.Vector3(0,0,-1));  
+//   if (keyboard.pressed("W") || keyboard.pressed("up")) {
+//     newCubePos = position.add(new THREE.Vector3(0, 0, -movimentVector.z));
 //   }
-//   if ( keyboard.pressed("S") ){
-//     cube.position.add(new THREE.Vector3(0,0,movimentVector.z))
-//     newCubePos = position.add(new THREE.Vector3(0,0,1));  
+//   if (keyboard.pressed("S") || keyboard.pressed("down")) {
+//     newCubePos = position.add(new THREE.Vector3(0, 0, movimentVector.z));
 //   }
 
-//   console.log("newCube")
-  
-//   console.log(position.x)
-    
-//   let colisionVector = checkCollisions(wallBoxes, areaBoxes, newCubePos)
-//   movimentVector = movimentVector.multiply(colisionVector)
+//   // Verifica colisão ANTES de aplicar movimento
+//   const colisionVector = checkCollisions(wallBoxes, areaBoxes, newCubePos);
 
+//   if (!colisionVector) {
+//   cube.position.copy(newCubePos);   
 // }
+  
+
+//   // console.log("Posição atual:", position);
+//   // console.log("Nova posição (tentada):", newCubePos);
+// }
+
 
 // Use this to show information onscreen
 let controls = new InfoBox();
@@ -174,6 +152,19 @@ let controls = new InfoBox();
   let collision = false;
  
   const futureBB = new THREE.Box3().setFromCenterAndSize(newCubePos, new THREE.Vector3(5, 4, 5));
+
+  if(newCubePos.z > 2 && newCubePos.x > -17 && newCubePos.x < 17 && newCubePos.z < 62){
+    
+    if (cube.parent !== map.piramide) {
+      scene.remove(cube);
+      map.piramide.add(cube);
+      map.piramide.updateWorldMatrix(true, false);
+      let localPos = map.piramide.worldToLocal(newCubePos.clone());
+      cube.position.copy(localPos);
+    }
+
+    return false;
+  }
 
   //Testa paredes
   if(Math.abs(newCubePos.x) > 248 || Math.abs(newCubePos.z) > 248){

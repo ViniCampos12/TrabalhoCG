@@ -11,13 +11,26 @@ class Map{
     this.scene = scene;
     this.wallsBox = [];
     this.areasBox = [];
+    this.ladderBig = new Ladder();
+    this.piramide = new THREE.Mesh();
+
     
+    
+
     // create the ground plane
     let plane = createGroundPlaneXZ(500, 500);
     scene.add(plane);
 
+
+
     // creating bigger area
     let material = setDefaultMaterial("rgb(63,81,181)"); 
+
+    let piramideG = new THREE.ConeGeometry(16,6,4);
+    this.piramide = new THREE.Mesh(piramideG,material);
+    scene.add(this.piramide);
+    this.piramide.position.set(0,0,0);
+
     let area = this.createBiggerArea(material,0,3,125);
     scene.add(area);
 
@@ -37,15 +50,17 @@ class Map{
     area1.add(bigExtendedArea);
     bigExtendedArea.position.set(23,0,54);
 
+    //Create bb
+    const wallBox1 = new THREE.Box3().setFromObject(area1);
+    
+    this.areasBox.push(wallBox1);
+    this.createBBHelper(wallBox1,"white"); 
+
     //Create ladder
     const ladder = new Ladder(material1);
     area1.add(ladder);
     ladder.position.set(-24,2.6,54.5);
     
-    //Create bb
-    const wallBox1 = new THREE.Box3().setFromObject(area1);
-    this.areasBox.push(wallBox1);
-    this.createBBHelper(wallBox1,"white"); 
 
 
     // create area 2
@@ -123,10 +138,10 @@ class Map{
     let angleLadder = THREE.MathUtils.degToRad(180);
 
     for(let i =-1;i<2;i++){
-      let ladder = new Ladder(material);
-      area.add(ladder);
-      ladder.position.set(8.2*i,2.6,-62.5);
-      ladder.rotateY(angleLadder);
+      this.ladder = new Ladder(material);
+      area.add(this.ladder);
+      this.ladder.position.set(8.2*i,2.6,-62.5);
+      this.ladder.rotateY(angleLadder);
     }
 
     //Create bb
