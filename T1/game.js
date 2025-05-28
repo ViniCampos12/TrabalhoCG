@@ -263,11 +263,12 @@ function render() {
 
     if (moveDir.lengthSq() > 0) {
       const newPos = pos.clone().add(moveDir.multiplyScalar(velocidade));
-
-      newPos.y = getRampHeight(newPos.x, newPos.z);
+      
+      
 
       if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
-        cube.position.copy(newPos);
+        newPos.y = getRampHeight(newPos.x, newPos.y, newPos.z);
+        cube.position.copy(newPos); 
       }
       else{
         // scene.remove(cube);
@@ -283,18 +284,19 @@ function render() {
   renderer.render(scene, camera);
 }
 
-function getRampHeight(x, z) {
+function getRampHeight(x,y, z) {
   // Ajuste estes valores conforme o posicionamento e geometria da sua rampa
   const rampaBaseZ = 55;       // z inicial da rampa
   const rampaTopoZ = 71;       // z final da rampa
-  const alturaRampa = 7;      // altura máxima da rampa (no topo)
+  const alturaRampa = 10;      // altura máxima da rampa (no topo)
   const rampaBaseX = 0;
-  const rampaTopoX = 100;
   
   if (z >= rampaBaseZ && z <= rampaTopoZ && x>= rampaBaseX) {
     const t = (z - rampaBaseZ) / (rampaTopoZ - rampaBaseZ);
     return 2 + t * alturaRampa;  // 2 é a altura base do cubo
   }
+  if((z>=70 && z<=190 && x<=156 && x>=-156 && y!=2) || (z>=53 && (x>17 || x<-17)))
+    return 8;
   return 2; // altura padrão do cubo
 }
 
@@ -304,6 +306,9 @@ function getRampHeight(x, z) {
   let collision = false;
  
   const futureBB = new THREE.Box3().setFromCenterAndSize(newCubePos, new THREE.Vector3(5, 4, 5));
+  console.log(newCubePos.y);
+
+  if(newCubePos.y > 5) return false;
 
   if(newCubePos.z > 2 && newCubePos.x > -17 && newCubePos.x < 17 && newCubePos.z < 62){
     return false;
@@ -319,7 +324,7 @@ function getRampHeight(x, z) {
     }
   }
   //Testa caixona
-  else if(newCubePos.z > 52 && Math.abs(newCubePos.x)< 158){
+  else if(newCubePos.z > 52 && Math.abs(newCubePos.x)< 158 && newCubePos.y<4){
     collision = futureBB.intersectsBox(areas[0]);
   }
   //Testa outras areas em ordem
@@ -331,6 +336,8 @@ function getRampHeight(x, z) {
     if(newCubePos.x > 92 && newCubePos.x < 220)
       collision = futureBB.intersectsBox(areas[3]);
   }
+
+  if(collision) console.log("Colisão")
   
   return collision; 
 }
