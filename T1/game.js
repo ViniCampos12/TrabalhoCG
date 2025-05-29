@@ -261,13 +261,17 @@ function render() {
 
     moveDir.normalize();
 
+    console.log(pos);
+
     if (moveDir.lengthSq() > 0) {
       const newPos = pos.clone().add(moveDir.multiplyScalar(velocidade));
       
-      
+
+      newPos.y = getRampHeight(newPos.x, newPos.y, newPos.z);
+
 
       if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
-        newPos.y = getRampHeight(newPos.x, newPos.y, newPos.z);
+        
         cube.position.copy(newPos); 
       }
       else{
@@ -284,19 +288,36 @@ function render() {
   renderer.render(scene, camera);
 }
 
+const rampas = [
+  { baseX: -16, topoX: 16, baseZ: 55, topoZ: 70, altura: 10 },
+  { baseX: -188, topoX: -172, baseZ: -73, topoZ: -61, altura: 10 },
+  { baseX: -8, topoX: 8, baseZ: -73, topoZ: -61, altura: 10 },
+  { baseX: 176, topoX: 192, baseZ: -73, topoZ: -61, altura: 10 },
+];
+
+
 function getRampHeight(x,y, z) {
-  // Ajuste estes valores conforme o posicionamento e geometria da sua rampa
-  const rampaBaseZ = 55;       // z inicial da rampa
-  const rampaTopoZ = 71;       // z final da rampa
-  const alturaRampa = 10;      // altura máxima da rampa (no topo)
-  const rampaBaseX = 0;
-  
-  if (z >= rampaBaseZ && z <= rampaTopoZ && x>= rampaBaseX) {
-    const t = (z - rampaBaseZ) / (rampaTopoZ - rampaBaseZ);
-    return 2 + t * alturaRampa;  // 2 é a altura base do cubo
-  }
-  if((z>=70 && z<=190 && x<=156 && x>=-156 && y!=2) || (z>=53 && (x>17 || x<-17)))
+ 
+  if((z>=70 && z<=187 && x<=156 && x>=-156 && y!=2) || ((z<-64 && z>-179) && ((x>-218 && x<-94) || (x>-62 && x<62) || (x>94 && x<218))))
     return 8;
+  for (const rampa of rampas) {
+    const dentroZ = z >= rampa.baseZ && z <= rampa.topoZ;
+    const dentroX = x >= Math.min(rampa.baseX, rampa.topoX) && x <= Math.max(rampa.baseX, rampa.topoX);
+    
+    if (dentroZ && dentroX) {
+      const t = (z - rampa.baseZ) / (rampa.topoZ - rampa.baseZ);
+      return 2 + t * rampa.altura;
+    }
+  }
+  
+  // if (z >= rampaBaseZ && z <= rampaTopoZ && x>= rampaBaseX) {
+  //   const t = (z - rampaBaseZ) / (rampaTopoZ - rampaBaseZ);
+  //   return 2 + t * alturaRampa;  // 2 é a altura base do cubo
+  // }
+// 
+// (z>=53 && (x>17 || x<-17))
+
+  
   return 2; // altura padrão do cubo
 }
 
@@ -310,7 +331,8 @@ function getRampHeight(x,y, z) {
 
   if(newCubePos.y > 5) return false;
 
-  if(newCubePos.z > 2 && newCubePos.x > -17 && newCubePos.x < 17 && newCubePos.z < 62){
+  //Testa escadas
+  if((newCubePos.z > 52 && newCubePos.x > -17 && newCubePos.x < 17 && newCubePos.z < 62) || ((newCubePos.z > -71 && newCubePos.z < -40) && ((newCubePos.x > -188 && newCubePos.x < -172) || (newCubePos.x > -8 && newCubePos.x < 8) || (newCubePos.x > 176 && newCubePos.x < 192)))){
     return false;
   }
 
@@ -324,7 +346,8 @@ function getRampHeight(x,y, z) {
     }
   }
   //Testa caixona
-  else if(newCubePos.z > 52 && Math.abs(newCubePos.x)< 158 && newCubePos.y<4){
+  else if(newCubePos.z > 52 && newCubePos.z<189 && Math.abs(newCubePos.x)< 158 && newCubePos.y<4){
+    console.log("Entrou")
     collision = futureBB.intersectsBox(areas[0]);
   }
   //Testa outras areas em ordem

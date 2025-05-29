@@ -15,16 +15,17 @@ class Ladder{
     
 
 
-    const invisibleMat = new THREE.MeshBasicMaterial({
-        transparent: true,
-        opacity: 0,
-        depthWrite: false,
-    });
+    // const invisibleMat = new THREE.MeshBasicMaterial({
+    //     transparent: true,
+    //     opacity: 0,
+    //     depthWrite: false,
+    // });
 
-    const ramp = new THREE.Mesh(new THREE.PlaneGeometry(16, 17.1), invisibleMat);
-    ramp.rotation.x = THREE.MathUtils.degToRad(135);
-    ramp.position.set(0, -8, 0);
-    ladder.add(ramp);
+    // const ramp = new THREE.Mesh(new THREE.PlaneGeometry(16, 17.1), invisibleMat);
+    // ramp.rotation.x = THREE.MathUtils.degToRad(135);
+    // ramp.position.set(0, -8, 0);
+    // ladder.add(ramp);
+
 
     return ladder;
   }

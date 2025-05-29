@@ -62,6 +62,8 @@ class Map{
     area1.add(ladder);
     ladder.position.set(-24,2.6,54.5);
     
+    
+    
 
 
     // create area 2
@@ -83,6 +85,8 @@ class Map{
     const ladder2 = new Ladder(material2);
     area2.add(ladder2);
     ladder2.position.set(0,2.6,54.5);
+
+    
 
     //Create bb
     const wallBox2 = new THREE.Box3().setFromObject(area2);
@@ -110,6 +114,10 @@ class Map{
     const ladder3 = new Ladder(material3);
     area3.add(ladder3);
     ladder3.position.set(24,2.6,54.5);
+
+    // 
+
+    
 
     //Create bb
     const wallBox3 = new THREE.Box3().setFromObject(area3);
@@ -143,6 +151,13 @@ class Map{
       area.add(this.ladder);
       this.ladder.position.set(8.2*i,2.6,-62.5);
       this.ladder.rotateY(angleLadder);
+      const b = new THREE.Box3().setFromObject(this.ladder);
+
+    const minX = b.min.z;
+    const maxX = b.max.z;
+
+    console.log(minX);
+    console.log(maxX);
     }
 
     //Create bb
