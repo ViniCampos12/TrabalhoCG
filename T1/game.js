@@ -262,6 +262,22 @@ function render() {
         newPos.x = newPos.x + 2;
         newPos.z = newPos.z +2;
         cube.position.copy(newPos); 
+  moveDir.normalize();
+  
+  // Tentativa completa
+  let newPos = pos.clone().add(moveDir.clone().multiplyScalar(velocidade));
+  if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
+    cube.position.copy(newPos);
+  } else {
+    // Testar só o eixo X
+    newPos = pos.clone().add(new THREE.Vector3(moveDir.x, 0, 0).multiplyScalar(velocidade));
+    if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
+      cube.position.copy(newPos);
+    } else {
+      // Testar só o eixo Z
+      newPos = pos.clone().add(new THREE.Vector3(0, 0, moveDir.z).multiplyScalar(velocidade));
+      if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
+        cube.position.copy(newPos);
       }
       else if(!checkCollisions(wallBoxes, areaBoxes, newPos)) {     
         cube.position.copy(newPos); 
@@ -269,6 +285,9 @@ function render() {
       
 
     }
+  }
+}
+
   }
 
   renderer.render(scene, camera);
