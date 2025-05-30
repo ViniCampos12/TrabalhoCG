@@ -19,12 +19,6 @@ let light = initDefaultBasicLight(scene);
 let clock = new THREE.Clock();
 let keyboard = new KeyboardState();
 
-// const movementVector = new THREE.Vector3(1,0,1)
-
-
-//Show axes (parameter is size of each axis)
-let axesHelper = new THREE.AxesHelper( 250 );
-scene.add( axesHelper );
 
 // create a cube
 let map = new Map(scene);

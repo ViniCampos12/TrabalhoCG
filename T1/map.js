@@ -27,11 +27,6 @@ class Map{
     // creating bigger area
     let material = setDefaultMaterial("rgb(63,81,181)"); 
 
-    // let piramideG = new THREE.ConeGeometry(160,40,4);
-    // this.piramide = new THREE.Mesh(piramideG,material);
-    // scene.add(this.piramide);
-    // this.piramide.position.set(100,0,20);
-
     let area = this.createBiggerArea(material,0,3,125);
     scene.add(area);
 
@@ -55,7 +50,6 @@ class Map{
     const wallBox1 = new THREE.Box3().setFromObject(area1);
     
     this.areasBox.push(wallBox1);
-    this.createBBHelper(wallBox1,"white"); 
 
     //Create ladder
     const ladder = new Ladder(material1);
@@ -91,7 +85,6 @@ class Map{
     //Create bb
     const wallBox2 = new THREE.Box3().setFromObject(area2);
     this.areasBox.push(wallBox2);
-    this.createBBHelper(wallBox2,"white"); 
 
 
     // create area 3
@@ -115,14 +108,12 @@ class Map{
     area3.add(ladder3);
     ladder3.position.set(24,2.6,54.5);
 
-    // 
 
     
 
     //Create bb
     const wallBox3 = new THREE.Box3().setFromObject(area3);
     this.areasBox.push(wallBox3);
-    this.createBBHelper(wallBox3,"white"); 
 
     this.createBorder(scene);  
 
@@ -163,7 +154,6 @@ class Map{
     //Create bb
     const wallBox = new THREE.Box3().setFromObject(area);
     this.areasBox.push(wallBox);
-    this.createBBHelper(wallBox,"white"); 
 
     return area;
   }
@@ -186,9 +176,6 @@ class Map{
        wall = new THREE.Mesh(wallGeometry,materialWall);
       wall.position.set(0,5,249*i);
       wallBox = new THREE.Box3().setFromObject(wall);
-      let helper = new THREE.Box3Helper( wallBox, "white" );
-      
-      scene.add(helper);
       scene.add(wall);
 
       this.wallsBox.push(wallBox);
@@ -201,8 +188,6 @@ class Map{
       wall.position.set(250*i,5,0);
       wall.rotateY(angle);
       wallBox = new THREE.Box3().setFromObject(wall);
-      let helper = new THREE.Box3Helper( wallBox, "white" );  
-      scene.add(helper);
       scene.add(wall);
 
       this.wallsBox.push(wallBox);
@@ -218,13 +203,13 @@ class Map{
     return this.areasBox;
   }
 
-  createBBHelper(bb, color)
-  {
-     // Create a bounding box helper
-     let helper = new THREE.Box3Helper( bb, color);
-     this.scene.add( helper );
-     return helper;
-  }
+  // createBBHelper(bb, color)
+  // {
+  //    // Create a bounding box helper
+  //    let helper = new THREE.Box3Helper( bb, color);
+  //    this.scene.add( helper );
+  //    return helper;
+  // }
   
 }
 
