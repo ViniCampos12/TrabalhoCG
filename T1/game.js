@@ -55,11 +55,18 @@ cylinder.rotation.x = Math.PI / 2;
 camera.add(cylinder);
 cylinder.position.set(0, -0.5, -0.5);
 
+let materialShot = setDefaultMaterial("#708090");
 let shotball = false;
-var shotGeo = new THREE.SphereGeometry(0.1,64,16);
-var shot = new THREE.Mesh(shotGeo,material);
+var shotGeo = new THREE.SphereGeometry(0.2,64,16);
+var shot = new THREE.Mesh(shotGeo,materialShot);
 shot.position.set(0,-2,0.2);
+// const shotBox = new THREE.Box3().setFromObject(shot);
+//       const helper = new THREE.Box3Helper( shotBox, "white");
+//       scene.add( helper );
+
 cylinder.add(shot);
+
+
 
 
 camera.position.set(0,2,0); // posiciona a camera dentro do cubo
@@ -111,7 +118,9 @@ document.addEventListener('keydown', (event) => {
       shotClone.getWorldPosition(worldPos);
 
       scene.attach(shotClone);
+      
       shotClone.position.copy(worldPos); //reposiciona na cena, evita bugs ao atirar e andar ao msm tempo
+      
       
       // Define a direção de movimento com base na câmera
       const direction = new THREE.Vector3();
@@ -120,6 +129,11 @@ document.addEventListener('keydown', (event) => {
 
       // Armazena a direção na bala
       shotClone.userData.direction = direction;
+
+      const shotBox = new THREE.Box3().setFromObject(shotClone);
+    
+    // Armazena no userData da bala
+    shotClone.userData.box = shotBox;
 
       activeShots.push(shotClone);
 
@@ -186,12 +200,35 @@ function render() {
       const speed = 50 * delta;
       const dir = shot.userData.direction.clone();
       shot.position.add(dir.multiplyScalar(speed));
+      shot.userData.box.setFromObject(shot);
 
-    // Checa se a bala já saiu do alcance
-    if (shot.position.length() > 500) { // ou colisão (chek)
-      scene.remove(shot);
-      activeShots.splice(index, 1); //exclui o tiro do vetor
+    let atingiuAlgo = false;
+
+    // Testa colisão com as paredes
+    for (const wall of wallBoxes) {
+      if (shot.userData.box.intersectsBox(wall)) {
+        atingiuAlgo = true;
+        break;
+      }
     }
+
+    // Se não bateu nas paredes, testa as áreas
+    if (!atingiuAlgo) {
+      for (const area of areaBoxes) {
+        if (shot.userData.box.intersectsBox(area)) {
+          atingiuAlgo = true;
+          break;
+        }
+      }
+    }
+
+    if (shot.position.length() > 500 || atingiuAlgo) {
+      scene.remove(shot);
+      scene.remove(shot.userData.helper); // Remove helper
+      console.log("Removeu")
+      activeShots.splice(index, 1);
+    }
+
     });
 
     // Faz o cubo girar com a rotação da câmera
@@ -215,7 +252,7 @@ function render() {
 
     moveDir.normalize();
 
-    console.log(pos);
+    // console.log(pos);
 
     if (moveDir.lengthSq() > 0) {
       const newPos = pos.clone().add(moveDir.multiplyScalar(velocidade));
@@ -285,7 +322,8 @@ function getRampHeight(x,y, z) {
 }
 
 
-  function checkCollisions(walls, areas, newCubePos) { 
+
+  function checkCollisions(walls, areas, newCubePos,is) { 
   
   let collision = false;
  
