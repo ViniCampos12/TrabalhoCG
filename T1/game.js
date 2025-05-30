@@ -223,6 +223,10 @@ function render() {
 
   // caixaBB.setFromObject(cube);
 
+let velocidadeQueda = 0; // velocidade inicial da queda
+let aceleracao = -0.02;  // aceleração da gravidade (negativa pois vai pra baixo)
+
+
   const delta = clock.getDelta();
   const velocidade = 20.0 * delta;
 
@@ -253,7 +257,7 @@ function render() {
 
     if (moveDir.lengthSq() > 0) {
 
-moveDir.normalize();
+  moveDir.normalize();
   
   // Tentativa completa
   let newPos = pos.clone().add(moveDir.clone().multiplyScalar(velocidade));
@@ -281,9 +285,18 @@ moveDir.normalize();
       //Tem que ver melhor isso aqui, nessa parte é realizada a descida
       if(pos.y == 8 && newPos.y == 2)
       {
-        newPos.x = newPos.x + 2;
-        newPos.z = newPos.z +2;
-        cube.position.copy(newPos);
+let posicaoInicialY = 8;
+let posicaoChaoY = 2;
+  velocidadeQueda += aceleracao;
+
+  // Atualiza posição Y do cubo baseado na velocidade
+  cube.position.lerp(newPos, 0.4);
+
+  // Limita o chão para que o cubo não caia além do Y = 2
+  if(cube.position.y <= posicaoChaoY) {
+    cube.position.y = posicaoChaoY;
+    velocidadeQueda = 0; // Para a queda
+  }
       }
       else{
         if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
