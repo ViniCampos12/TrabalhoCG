@@ -55,6 +55,13 @@ cylinder.rotation.x = Math.PI / 2;
 camera.add(cylinder);
 cylinder.position.set(0, -0.5, -0.5);
 
+let shotball = false;
+var shotGeo = new THREE.SphereGeometry(0.1,64,16);
+var shot = new THREE.Mesh(shotGeo,material);
+shot.position.set(0,-2,0);
+cylinder.add(shot);
+
+
 camera.position.set(0,2,0); // posiciona a camera dentro do cubo
 cube.add(camera);           // faz a câmera seguir o cubo
 
@@ -86,6 +93,9 @@ document.addEventListener('keydown', (event) => {
     case "ArrowRight": 
       movimento.direita = true; 
       break;
+    case "Space":
+      shotball = true;
+      scene.attach(shot);
   }
 }, false);
 
@@ -112,93 +122,6 @@ document.addEventListener('keyup', (event) => {
 
 
   render();
-
-// function keyboardUpdate() {
-// //  keyboard.update();
-
-// //   const speed = 30;
-// //   const moveDistance = speed * clock.getDelta();
-
-// //   const movimentVector = new THREE.Vector3(moveDistance, 0, moveDistance);
-
-// //   // Atualiza a posição atual do cubo
-// //   cube.getWorldPosition(position);
-
-   
-
-// //   let newCubePos = position.clone(); // Começa com a posição atual
-
-// //   // Verifica teclas pressionadas (movimento contínuo)
-// //   if (keyboard.pressed("A") || keyboard.pressed("left")) {
-// //     newCubePos = position.add(new THREE.Vector3(-movimentVector.x, 0, 0));
-// //   }
-// //   if (keyboard.pressed("D") || keyboard.pressed("right")) {
-// //     newCubePos = position.add(new THREE.Vector3(movimentVector.x, 0, 0));
-// //   }
-// //   if (keyboard.pressed("W") || keyboard.pressed("up")) {
-// //     newCubePos = position.add(new THREE.Vector3(0, 0, -movimentVector.z));
-// //   }
-// //   if (keyboard.pressed("S") || keyboard.pressed("down")) {
-// //     newCubePos = position.add(new THREE.Vector3(0, 0, movimentVector.z));
-// //   }
-
-// //   // Verifica colisão ANTES de aplicar movimento
-// //   const colisionVector = checkCollisions(wallBoxes, areaBoxes, newCubePos);
-
-// //   if (!colisionVector) {
-// //   cube.position.copy(newCubePos);   
-// // }
-  
-
-// //   console.log("Posição atual:", position);
-// //   console.log("Nova posição (tentada):", newCubePos);
-
-
-// }
-
-
-// function keyboardUpdate() {
-
-//   keyboard.update();
-
-//   const speed = 30;
-//   const moveDistance = speed * clock.getDelta();
-
-//   const movimentVector = new THREE.Vector3(moveDistance, 0, moveDistance);
-
-//   // Atualiza a posição atual do cubo
-//   cube.getWorldPosition(position);
-
-//   caixaBB.setFromObject(cube);
-
-//   let newCubePos = position.clone(); // Começa com a posição atual
-
-//   // Verifica teclas pressionadas (movimento contínuo)
-//   if (keyboard.pressed("A") || keyboard.pressed("left")) {
-//     newCubePos = position.add(new THREE.Vector3(-movimentVector.x, 0, 0));
-//   }
-//   if (keyboard.pressed("D") || keyboard.pressed("right")) {
-//     newCubePos = position.add(new THREE.Vector3(movimentVector.x, 0, 0));
-//   }
-//   if (keyboard.pressed("W") || keyboard.pressed("up")) {
-//     newCubePos = position.add(new THREE.Vector3(0, 0, -movimentVector.z));
-//   }
-//   if (keyboard.pressed("S") || keyboard.pressed("down")) {
-//     newCubePos = position.add(new THREE.Vector3(0, 0, movimentVector.z));
-//   }
-
-//   // Verifica colisão ANTES de aplicar movimento
-//   const colisionVector = checkCollisions(wallBoxes, areaBoxes, newCubePos);
-
-//   if (!colisionVector) {
-//   cube.position.copy(newCubePos);   
-// }
-  
-
-//   // console.log("Posição atual:", position);
-//   // console.log("Nova posição (tentada):", newCubePos);
-// }
-
 
 // Resize handler
 
@@ -227,6 +150,12 @@ function render() {
   const velocidade = 50.0 * delta;
 
   if (controls.isLocked) {
+
+    //To com a ideia aq já com ajuda do amigo
+    if(shotball) shot.translateZ(-0.05);
+
+    if(shot.position.z < -5) scene.remove(shot);
+
     // Faz o cubo girar com a rotação da câmera
     cube.rotation.y = controls.getObject().rotation.y;
 
