@@ -75,6 +75,9 @@ document.addEventListener('click', () => {
 }, false);
  const movimento = { frente: false, tras: false, esquerda: false, direita: false };
 
+let lastShotTime = 0; // armazena o momento do último disparo
+const cadenciaMin = 500; // 500 milissegundos (1/2 segundo)
+
 document.addEventListener('keydown', (event) => {
   switch (event.code) {
     case 'KeyW':
@@ -94,8 +97,28 @@ document.addEventListener('keydown', (event) => {
       movimento.direita = true; 
       break;
     case "Space":
+      const now = Date.now(); //armazena o tempo do tiro
+      if ((now - lastShotTime) >= cadenciaMin) { //so libera a bala se já tiver passado da cadencia mínima de tiro
       shotball = true;
+      lastShotTime = now; //atualiza o tempo do último
+       
+       // Calcula a posição absoluta da bala antes de tirar da arma (adicionar na cena)
+      shot.updateMatrixWorld();
+      const worldPos = new THREE.Vector3();
+      shot.getWorldPosition(worldPos);
+
       scene.attach(shot);
+      shot.position.copy(worldPos); //reposiciona na cena, evita bugs ao atirar e andar ao msm tempo
+      
+
+      // Define a direção de movimento com base na câmera
+      const direction = new THREE.Vector3();
+      camera.getWorldDirection(direction);
+      direction.normalize();
+
+      // Armazena a direção na bala
+      shot.userData.direction = direction;
+    }
   }
 }, false);
 
@@ -140,6 +163,14 @@ instrucao.add("Use W, A, S, D para mover o cubo com a câmera dentro.");
 instrucao.show();
 const pos = cube.position;
 
+function resetShot(){
+  scene.remove(shot);
+  cylinder.add(shot);
+  shot.position.set(0,-2,0);
+  shotball = false;
+  shot.userData.direction = null;
+}
+
 // Update loop
 function render() {
   requestAnimationFrame(render);
@@ -152,9 +183,16 @@ function render() {
   if (controls.isLocked) {
 
     //To com a ideia aq já com ajuda do amigo
-    if(shotball) shot.translateZ(-0.05);
+    if (shotball && shot.userData.direction) {
+      const speed = 50 * delta;
+      const dir = shot.userData.direction.clone();
+      shot.position.add(dir.multiplyScalar(speed));
+    }
 
-    if(shot.position.z < -5) scene.remove(shot);
+    // Checa se a bala já saiu do alcance
+    if (shot.position.length() > 250) { // ou outro limite
+      resetShot();
+    }
 
     // Faz o cubo girar com a rotação da câmera
     cube.rotation.y = controls.getObject().rotation.y;
