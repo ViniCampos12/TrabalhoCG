@@ -224,7 +224,7 @@ function render() {
   // caixaBB.setFromObject(cube);
 
   const delta = clock.getDelta();
-  const velocidade = 50.0 * delta;
+  const velocidade = 20.0 * delta;
 
   if (controls.isLocked) {
     // Faz o cubo girar com a rotação da câmera
@@ -298,12 +298,7 @@ moveDir.normalize();
           else {
             // Testar só o eixo Z
             newPos = pos.clone().add(new THREE.Vector3(0, 0, moveDir.z).multiplyScalar(velocidade));
-            if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
-              cube.position.copy(newPos);
-            }
-            else if(!checkCollisions(wallBoxes, areaBoxes, newPos)) {     
-              cube.position.copy(newPos); 
-            }
+
           }
         } 
       }   
