@@ -57,7 +57,7 @@ cylinder.position.set(0, -0.5, -0.5);
 
 let materialShot = setDefaultMaterial("#708090");
 let shotball = false;
-var shotGeo = new THREE.SphereGeometry(0.2,64,16);
+var shotGeo = new THREE.SphereGeometry(0.15,64,16);
 var shot = new THREE.Mesh(shotGeo,materialShot);
 shot.position.set(0,-2,0.2);
 // const shotBox = new THREE.Box3().setFromObject(shot);
@@ -225,7 +225,6 @@ function render() {
     if (shot.position.length() > 500 || atingiuAlgo) {
       scene.remove(shot);
       scene.remove(shot.userData.helper); // Remove helper
-      console.log("Removeu")
       activeShots.splice(index, 1);
     }
 
