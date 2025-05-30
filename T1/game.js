@@ -55,6 +55,20 @@ cylinder.rotation.x = Math.PI / 2;
 camera.add(cylinder);
 cylinder.position.set(0, -0.5, -0.5);
 
+let materialShot = setDefaultMaterial("#708090");
+let shotball = false;
+var shotGeo = new THREE.SphereGeometry(0.15,64,16);
+var shot = new THREE.Mesh(shotGeo,materialShot);
+shot.position.set(0,-2,0.2);
+// const shotBox = new THREE.Box3().setFromObject(shot);
+//       const helper = new THREE.Box3Helper( shotBox, "white");
+//       scene.add( helper );
+
+cylinder.add(shot);
+
+
+
+
 camera.position.set(0,2,0); // posiciona a camera dentro do cubo
 cube.add(camera);           // faz a câmera seguir o cubo
 
@@ -67,6 +81,10 @@ document.addEventListener('click', () => {
   controls.lock();
 }, false);
  const movimento = { frente: false, tras: false, esquerda: false, direita: false };
+
+let lastShotTime = 0; // armazena o momento do último disparo
+const cadenciaMin = 500; // 500 milissegundos (1/2 segundo)
+const activeShots = []; //balas atiradas em cena
 
 document.addEventListener('keydown', (event) => {
   switch (event.code) {
@@ -86,6 +104,40 @@ document.addEventListener('keydown', (event) => {
     case "ArrowRight": 
       movimento.direita = true; 
       break;
+    case "Space":
+      const now = Date.now(); //armazena o tempo do tiro
+      if ((now - lastShotTime) >= cadenciaMin) { //so libera a bala se já tiver passado da cadencia mínima de tiro
+      shotball = true;
+      lastShotTime = now; //atualiza o tempo do último tiro
+       
+       // Calcula a posição absoluta da bala antes de tirar da arma (adicionar na cena)
+      const shotClone = shot.clone();
+      cylinder.add(shotClone);
+      shotClone.updateMatrixWorld();
+      const worldPos = new THREE.Vector3();
+      shotClone.getWorldPosition(worldPos);
+
+      scene.attach(shotClone);
+      
+      shotClone.position.copy(worldPos); //reposiciona na cena, evita bugs ao atirar e andar ao msm tempo
+      
+      
+      // Define a direção de movimento com base na câmera
+      const direction = new THREE.Vector3();
+      camera.getWorldDirection(direction);
+      direction.normalize();
+
+      // Armazena a direção na bala
+      shotClone.userData.direction = direction;
+
+      const shotBox = new THREE.Box3().setFromObject(shotClone);
+    
+    // Armazena no userData da bala
+    shotClone.userData.box = shotBox;
+
+      activeShots.push(shotClone);
+
+    }
   }
 }, false);
 
@@ -113,93 +165,6 @@ document.addEventListener('keyup', (event) => {
 
   render();
 
-// function keyboardUpdate() {
-// //  keyboard.update();
-
-// //   const speed = 30;
-// //   const moveDistance = speed * clock.getDelta();
-
-// //   const movimentVector = new THREE.Vector3(moveDistance, 0, moveDistance);
-
-// //   // Atualiza a posição atual do cubo
-// //   cube.getWorldPosition(position);
-
-   
-
-// //   let newCubePos = position.clone(); // Começa com a posição atual
-
-// //   // Verifica teclas pressionadas (movimento contínuo)
-// //   if (keyboard.pressed("A") || keyboard.pressed("left")) {
-// //     newCubePos = position.add(new THREE.Vector3(-movimentVector.x, 0, 0));
-// //   }
-// //   if (keyboard.pressed("D") || keyboard.pressed("right")) {
-// //     newCubePos = position.add(new THREE.Vector3(movimentVector.x, 0, 0));
-// //   }
-// //   if (keyboard.pressed("W") || keyboard.pressed("up")) {
-// //     newCubePos = position.add(new THREE.Vector3(0, 0, -movimentVector.z));
-// //   }
-// //   if (keyboard.pressed("S") || keyboard.pressed("down")) {
-// //     newCubePos = position.add(new THREE.Vector3(0, 0, movimentVector.z));
-// //   }
-
-// //   // Verifica colisão ANTES de aplicar movimento
-// //   const colisionVector = checkCollisions(wallBoxes, areaBoxes, newCubePos);
-
-// //   if (!colisionVector) {
-// //   cube.position.copy(newCubePos);   
-// // }
-  
-
-// //   console.log("Posição atual:", position);
-// //   console.log("Nova posição (tentada):", newCubePos);
-
-
-// }
-
-
-// function keyboardUpdate() {
-
-//   keyboard.update();
-
-//   const speed = 30;
-//   const moveDistance = speed * clock.getDelta();
-
-//   const movimentVector = new THREE.Vector3(moveDistance, 0, moveDistance);
-
-//   // Atualiza a posição atual do cubo
-//   cube.getWorldPosition(position);
-
-//   caixaBB.setFromObject(cube);
-
-//   let newCubePos = position.clone(); // Começa com a posição atual
-
-//   // Verifica teclas pressionadas (movimento contínuo)
-//   if (keyboard.pressed("A") || keyboard.pressed("left")) {
-//     newCubePos = position.add(new THREE.Vector3(-movimentVector.x, 0, 0));
-//   }
-//   if (keyboard.pressed("D") || keyboard.pressed("right")) {
-//     newCubePos = position.add(new THREE.Vector3(movimentVector.x, 0, 0));
-//   }
-//   if (keyboard.pressed("W") || keyboard.pressed("up")) {
-//     newCubePos = position.add(new THREE.Vector3(0, 0, -movimentVector.z));
-//   }
-//   if (keyboard.pressed("S") || keyboard.pressed("down")) {
-//     newCubePos = position.add(new THREE.Vector3(0, 0, movimentVector.z));
-//   }
-
-//   // Verifica colisão ANTES de aplicar movimento
-//   const colisionVector = checkCollisions(wallBoxes, areaBoxes, newCubePos);
-
-//   if (!colisionVector) {
-//   cube.position.copy(newCubePos);   
-// }
-  
-
-//   // console.log("Posição atual:", position);
-//   // console.log("Nova posição (tentada):", newCubePos);
-// }
-
-
 // Resize handler
 
 window.addEventListener('resize', () => {
@@ -217,6 +182,8 @@ instrucao.add("Use W, A, S, D para mover o cubo com a câmera dentro.");
 instrucao.show();
 const pos = cube.position;
 
+
+
 // Update loop
 function render() {
   requestAnimationFrame(render);
@@ -231,6 +198,42 @@ let aceleracao = -0.02;  // aceleração da gravidade (negativa pois vai pra bai
   const velocidade = 20.0 * delta;
 
   if (controls.isLocked) {
+
+    //To com a ideia aq já com ajuda do amigo
+    activeShots.forEach((shot, index) => {
+      const speed = 50 * delta;
+      const dir = shot.userData.direction.clone();
+      shot.position.add(dir.multiplyScalar(speed));
+      shot.userData.box.setFromObject(shot);
+
+    let atingiuAlgo = false;
+
+    // Testa colisão com as paredes
+    for (const wall of wallBoxes) {
+      if (shot.userData.box.intersectsBox(wall)) {
+        atingiuAlgo = true;
+        break;
+      }
+    }
+
+    // Se não bateu nas paredes, testa as áreas
+    if (!atingiuAlgo) {
+      for (const area of areaBoxes) {
+        if (shot.userData.box.intersectsBox(area)) {
+          atingiuAlgo = true;
+          break;
+        }
+      }
+    }
+
+    if (shot.position.length() > 500 || atingiuAlgo) {
+      scene.remove(shot);
+      scene.remove(shot.userData.helper); // Remove helper
+      activeShots.splice(index, 1);
+    }
+
+    });
+
     // Faz o cubo girar com a rotação da câmera
     cube.rotation.y = controls.getObject().rotation.y;
 
@@ -252,7 +255,7 @@ let aceleracao = -0.02;  // aceleração da gravidade (negativa pois vai pra bai
 
     moveDir.normalize();
 
-    console.log(pos);
+    // console.log(pos);
 
 
     if (moveDir.lengthSq() > 0) {
@@ -348,7 +351,8 @@ function getRampHeight(x,y, z) {
 }
 
 
-  function checkCollisions(walls, areas, newCubePos) { 
+
+  function checkCollisions(walls, areas, newCubePos,is) { 
   
   let collision = false;
  
