@@ -250,8 +250,30 @@ function render() {
 
     console.log(pos);
 
+
     if (moveDir.lengthSq() > 0) {
-      const newPos = pos.clone().add(moveDir.multiplyScalar(velocidade));
+
+moveDir.normalize();
+  
+  // Tentativa completa
+  let newPos = pos.clone().add(moveDir.clone().multiplyScalar(velocidade));
+  if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
+    cube.position.copy(newPos);
+  } else {
+    // Testar só o eixo X
+    newPos = pos.clone().add(new THREE.Vector3(moveDir.x, 0, 0).multiplyScalar(velocidade));
+    if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
+      cube.position.copy(newPos);
+    } else {
+      // Testar só o eixo Z
+      newPos = pos.clone().add(new THREE.Vector3(0, 0, moveDir.z).multiplyScalar(velocidade));
+      if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
+        cube.position.copy(newPos);
+      }
+    }
+  }
+
+      newPos = pos.clone().add(moveDir.multiplyScalar(velocidade));
       
 
       newPos.y = getRampHeight(newPos.x, newPos.y, newPos.z);
