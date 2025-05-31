@@ -160,12 +160,11 @@ function shoot() {
   }
 }
 let velocidadeVertical = 0;
-let isQuicando = false;
 let amortecimento = 0.5; // reduz a força do quique
 let gravidade = -0.003;   // força da gravidade
 
 
-  render();
+
 
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -177,7 +176,29 @@ window.addEventListener('resize', () => {
 const pos = cube.position;
 const ramp = new Ramp();
 
+function atualizaGravidade(cube) {
+  const targetY = ramp.getRampHeight(cube.position.x, cube.position.y, cube.position.z);
 
+  if (cube.position.y > targetY) {
+    velocidadeVertical += gravidade;
+    cube.position.y += velocidadeVertical;
+
+    if (cube.position.y <= targetY) {
+      cube.position.y = targetY;
+      if (Math.abs(velocidadeVertical) < 0.1) {
+        velocidadeVertical = 0;
+      } else {
+        velocidadeVertical = -velocidadeVertical * amortecimento;
+      }
+    }
+  } else {
+    velocidadeVertical = 0;
+    cube.position.y = targetY;
+  }
+}
+
+
+  render();
 // Update loop
 function render() {
   requestAnimationFrame(render);
@@ -280,41 +301,6 @@ function render() {
       //Tem que ver melhor isso aqui, nessa parte é realizada a descida
       if(pos.y > newPos.y)
       {
-const targetY = getRampHeight(newPos.x, newPos.y, newPos.z);
-// Atualiza X e Z normalmente
-cube.position.x = newPos.x;
-cube.position.z = newPos.z;
-
-// Aplica gravidade + quique
-
-if (cube.position.y > targetY || isQuicando) {
-  velocidadeVertical += gravidade; // gravidade aplicada continuamente
-  cube.position.y += velocidadeVertical;
-
-    console.log(targetY)
-    console.log(cube.position.y)
-
-  // Quando atinge o chão
-  if (cube.position.y <= targetY) {
-    cube.position.y = targetY;
-
-    // Invertemos a velocidade (efeito de quique)
-    velocidadeVertical = -velocidadeVertical * amortecimento;
-
-    // Se o quique for pequeno, para
-    if (Math.abs(velocidadeVertical) < 0.1) {
-      velocidadeVertical = 0;
-      isQuicando = false;
-    } else {
-      isQuicando = true;
-    }
-  }
-} else {
-  // Está no chão
-  velocidadeVertical = 0;
-  isQuicando = false;
-  cube.position.y = targetY;
-}
 
       }
       else{
@@ -335,6 +321,7 @@ if (cube.position.y > targetY || isQuicando) {
         } 
       }   
     }
+    atualizaGravidade(cube)
   }
 
   renderer.render(scene, camera);
