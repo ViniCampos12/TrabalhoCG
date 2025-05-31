@@ -156,6 +156,11 @@ document.addEventListener('keyup', (event) => {
   }
 }, false);
 
+let velocidadeVertical = 0;
+let isQuicando = false;
+let amortecimento = 0.5; // reduz a força do quique
+let gravidade = -0.003;   // força da gravidade
+
 
   render();
 
@@ -279,21 +284,47 @@ let aceleracao = -0.02;  // aceleração da gravidade (negativa pois vai pra bai
 
       newPos.y = getRampHeight(newPos.x, newPos.y, newPos.z);
 
+
+      
       //Tem que ver melhor isso aqui, nessa parte é realizada a descida
-      if(pos.y == 8 && newPos.y == 2)
+      if(pos.y > newPos.y)
       {
-let posicaoInicialY = 8;
-let posicaoChaoY = 2;
-  velocidadeQueda += aceleracao;
+const targetY = getRampHeight(newPos.x, newPos.y, newPos.z);
+// Atualiza X e Z normalmente
+cube.position.x = newPos.x;
+cube.position.z = newPos.z;
 
-  // Atualiza posição Y do cubo baseado na velocidade
-  cube.position.lerp(newPos, 0.4);
+// Aplica gravidade + quique
 
-  // Limita o chão para que o cubo não caia além do Y = 2
-  if(cube.position.y <= posicaoChaoY) {
-    cube.position.y = posicaoChaoY;
-    velocidadeQueda = 0; // Para a queda
+if (cube.position.y > targetY || isQuicando) {
+  velocidadeVertical += gravidade; // gravidade aplicada continuamente
+  cube.position.y += velocidadeVertical;
+
+    console.log(targetY)
+    console.log(cube.position.y)
+
+  // Quando atinge o chão
+  if (cube.position.y <= targetY) {
+    cube.position.y = targetY;
+
+    // Invertemos a velocidade (efeito de quique)
+    velocidadeVertical = -velocidadeVertical * amortecimento;
+
+    // Se o quique for pequeno, para
+    if (Math.abs(velocidadeVertical) < 0.1) {
+      velocidadeVertical = 0;
+      isQuicando = false;
+    } else {
+      isQuicando = true;
+    }
   }
+} else {
+  // Está no chão
+  velocidadeVertical = 0;
+  isQuicando = false;
+  cube.position.y = targetY;
+}
+
       }
       else{
         if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
