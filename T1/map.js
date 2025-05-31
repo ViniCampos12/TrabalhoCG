@@ -1,5 +1,5 @@
 import * as THREE from  'three';
-import { createGroundPlaneXZ, setDefaultMaterial } from '../libs/util/util.js';
+import { createGroundPlaneXZ, InfoBox, setDefaultMaterial } from '../libs/util/util.js';
 import Ladder from './ladder.js';
 
 export let wallBox;
@@ -9,19 +9,13 @@ class Map{
   
   constructor(scene){
     this.scene = scene;
-    this.wallsBox = [];
-    this.areasBox = [];
+    this.wallsBox = [];   //Vetor with all bb´s of wall
+    this.areasBox = [];   //Vetor with all bb´s of areas
     this.ladderBig = new Ladder();
-    this.piramide = new THREE.Mesh();
-
-
-    
-    
 
     // create the ground plane
     let plane = createGroundPlaneXZ(500, 500);
     scene.add(plane);
-
 
 
     // creating bigger area
@@ -48,7 +42,6 @@ class Map{
 
     //Create bb
     const wallBox1 = new THREE.Box3().setFromObject(area1);
-    
     this.areasBox.push(wallBox1);
 
     //Create ladder
@@ -80,11 +73,10 @@ class Map{
     area2.add(ladder2);
     ladder2.position.set(0,2.6,54.5);
 
-    
-
     //Create bb
     const wallBox2 = new THREE.Box3().setFromObject(area2);
     this.areasBox.push(wallBox2);
+
 
 
     // create area 3
@@ -108,18 +100,14 @@ class Map{
     area3.add(ladder3);
     ladder3.position.set(24,2.6,54.5);
 
-
-    
-
     //Create bb
     const wallBox3 = new THREE.Box3().setFromObject(area3);
     this.areasBox.push(wallBox3);
 
-    this.createBorder(scene);  
 
-    console.log("Areas");
-    console.log(this.areasBox);
-
+    //Create side walls
+    this.createBorder(scene);
+    this.createInfoArea(); 
   }
 
   createBiggerArea(material, x, y, z){
@@ -143,12 +131,6 @@ class Map{
       this.ladder.position.set(8.2*i,2.6,-62.5);
       this.ladder.rotateY(angleLadder);
       const b = new THREE.Box3().setFromObject(this.ladder);
-
-    const minX = b.min.z;
-    const maxX = b.max.z;
-
-    console.log(minX);
-    console.log(maxX);
     }
 
     //Create bb
@@ -161,7 +143,6 @@ class Map{
   createDefaultArea(material, x, y, z){
     let areaGeometry = new THREE.BoxGeometry(124, 6, 108);
     let area = new THREE.Mesh(areaGeometry, material);
-    // position the cube
     area.position.set(x, y, z);
 
     return area;
@@ -195,7 +176,6 @@ class Map{
   }
 
   getWallBoxes(){
-    console.log(this.wallsBox); 
     return this.wallsBox;
   }
 
@@ -203,13 +183,16 @@ class Map{
     return this.areasBox;
   }
 
-  // createBBHelper(bb, color)
-  // {
-  //    // Create a bounding box helper
-  //    let helper = new THREE.Box3Helper( bb, color);
-  //    this.scene.add( helper );
-  //    return helper;
-  // }
+  createInfoArea(){
+    // Info box
+    let instrucao = new InfoBox();
+    instrucao.add("PointerLockControls com cubo vinculado");
+    instrucao.addParagraph();
+    instrucao.add("Clique na tela para ativar o controle com o mouse.");
+    instrucao.add("Use W, A, S, D para mover o cubo com a câmera dentro.");
+    instrucao.add("Use o clique do mouse para realizar disparos.");
+    instrucao.show();
+  }
   
 }
 
