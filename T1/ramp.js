@@ -35,7 +35,7 @@ class Ramp{
             
             // Aplica easing para suavizar a transição
             const easedT = this.easeInOutQuad(t);
-            return 1 + (easedT * rampa.altura);
+            return (easedT * rampa.altura);
             }
         }
 
