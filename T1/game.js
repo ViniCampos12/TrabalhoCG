@@ -7,7 +7,6 @@ import {
   setDefaultMaterial,
   InfoBox,
 } from "../libs/util/util.js";
-import KeyboardState from '../libs/util/KeyboardState.js';
 import Map from './map.js';
 import Ramp from './ramp.js';
 
@@ -17,7 +16,6 @@ let material = setDefaultMaterial();
 let camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 let light = initDefaultBasicLight(scene);
 let clock = new THREE.Clock();
-let keyboard = new KeyboardState();
 
 
 // Chama o mapa
@@ -51,21 +49,17 @@ var shot = new THREE.Mesh(shotGeo,materialShot);
 shot.position.set(0,-2,0.2);
 cylinder.add(shot);
 
-
 camera.position.set(0,2,0); // posiciona a camera dentro do cubo
 cube.add(camera);           // faz a câmera seguir o cubo
 
-
 // CONTROLES
 const controls = new PointerLockControls(cube, document.body); //faz o movimento do mouse atuar direto no cubo
-
 
 // Clicar ativa o pointer lock
 document.addEventListener('click', () => {
   controls.lock();
 }, false);
  const movimento = { frente: false, tras: false, esquerda: false, direita: false };
-
 
 document.addEventListener('keydown', (event) => {
   switch (event.code) {
@@ -160,18 +154,14 @@ function shoot() {
   }
 }
 let velocidadeVertical = 0;
-let amortecimento = 0.5; // reduz a força do quique
-let gravidade = -0.003;   // força da gravidade
-
-
-
+let amortecimento = 0.5;
+let gravidade = -0.003;
 
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
-
 
 const pos = cube.position;
 const ramp = new Ramp();
@@ -197,16 +187,10 @@ function atualizaGravidade(cube) {
   }
 }
 
-
   render();
 // Update loop
 function render() {
   requestAnimationFrame(render);
-
-  let velocidadeQueda = 0; // velocidade inicial da queda
-  let aceleracao = -0.02;  // aceleração da gravidade (negativa pois vai pra baixo)
-
-
   const delta = clock.getDelta();
   const velocidade = 20.0 * delta;
 
@@ -246,7 +230,6 @@ function render() {
     }
 
     });
-
 
     //PARTE DO CUBO MOVIMENTAÇÃO
     // Faz o cubo girar com a rotação da câmera
@@ -292,38 +275,10 @@ function render() {
       }
 
       newPos = pos.clone().add(moveDir.multiplyScalar(velocidade));
-        
-
-      newPos.y = ramp.getRampHeight(newPos.x, newPos.y, newPos.z);
-
-
-      
-      //Tem que ver melhor isso aqui, nessa parte é realizada a descida
-      if(pos.y > newPos.y)
-      {
-
-      }
-      else{
-        if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
-          cube.position.copy(newPos);
-        } 
-        else {
-          // Testar só o eixo X
-          newPos = pos.clone().add(new THREE.Vector3(moveDir.x, 0, 0).multiplyScalar(velocidade));
-          if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
-            cube.position.copy(newPos);
-          }
-          else {
-            // Testar só o eixo Z
-            newPos = pos.clone().add(new THREE.Vector3(0, 0, moveDir.z).multiplyScalar(velocidade));
-
-          }
-        } 
-      }   
+      newPos.y = ramp.getRampHeight(newPos.x, newPos.y, newPos.z);   
     }
     atualizaGravidade(cube)
   }
-
   renderer.render(scene, camera);
 }
 
