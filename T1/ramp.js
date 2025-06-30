@@ -2,10 +2,10 @@ class Ramp{
     constructor(){
         //Vetor com todas as rampas para verificação no getRamp
         this.rampas = [
-        { baseX: -16, topoX: 16, baseZ: 55, topoZ: 70, altura: 8 },
-        { baseX: -188, topoX: -172, baseZ: -73, topoZ: -61, altura: 8 },
+        { baseX: -16, topoX: 16, baseZ: 55, topoZ: 70, altura: 10 },
+        { baseX: -188, topoX: -172, baseZ: -73, topoZ: -61, altura: 10 },
         { baseX: -8, topoX: 8, baseZ: -73, topoZ: -61, altura: 8 },
-        { baseX: 172, topoX: 188, baseZ: -73, topoZ: -61, altura: 8 },
+        { baseX: 172, topoX: 188, baseZ: -73, topoZ: -61, altura: 10 },
         ];
     }
     
