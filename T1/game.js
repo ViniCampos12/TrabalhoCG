@@ -16,7 +16,7 @@ let material = setDefaultMaterial();
 let camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 let light = initDefaultBasicLight(scene);
 let clock = new THREE.Clock();
-const raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, -1, 0).normalize(), 0, 2);
+// const raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, -1, 0).normalize(), 0, 2);
 
 
 // Chama o mapa
@@ -245,16 +245,16 @@ function render() {
 
     let moveDir = new THREE.Vector3();
     
-    raycaster.ray.origin.copy(controls.getObject().position);
-    const isIntersectingRamp = raycaster.intersectObject().length > 0;
+    // raycaster.ray.origin.copy(controls.getObject().position);
+    // const isIntersectingRamp = raycaster.intersectObject().length > 0;
 
     if (movimento.frente) moveDir.add(forward);
     if (movimento.tras) moveDir.add(forward.clone().negate());
     if (movimento.direita) moveDir.add(right);
     if (movimento.esquerda) moveDir.add(right.clone().negate());
-    else if (isIntersectingRamp) {
-        camera.position.y += speed / 2 * delta;
-    }
+    // else if (isIntersectingRamp) {
+    //     camera.position.y += speed / 2 * delta;
+    // }
 
     moveDir.normalize();
 
@@ -282,9 +282,9 @@ function render() {
       }
 
       newPos = pos.clone().add(moveDir.multiplyScalar(velocidade));
-      // newPos.y = ramp.getRampHeight(newPos.x, newPos.y, newPos.z);   
+      newPos.y = ramp.getRampHeight(newPos.x, newPos.y, newPos.z);   
     }
-    // atualizaGravidade(cube)
+    atualizaGravidade(cube)
   }
   renderer.render(scene, camera);
 }
