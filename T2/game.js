@@ -12,12 +12,53 @@ import Ramp from './ramp.js';
 
 let scene = new THREE.Scene();
 let renderer = initRenderer();
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Adiciona tipo de shadow map para sombras mais suaves
 let material = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
 let camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-let light = initDefaultBasicLight(scene);
 let clock = new THREE.Clock();
 // const raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, -1, 0).normalize(), 0, 2);
 
+//criando iluminação
+let ligthposition = new THREE.Vector3(30, 60, 30);
+let ligthColor = "rgb(255, 255, 255)";
+let directionalLight = new THREE.DirectionalLight(ligthColor, 5.0);
+directionalLight.position.copy(ligthposition);
+directionalLight.castShadow = true;
+directionalLight.shadow.mapSize.width = 4096; 
+directionalLight.shadow.mapSize.height = 4096;
+
+directionalLight.shadow.camera.left = -300; 
+directionalLight.shadow.camera.right = 300;
+directionalLight.shadow.camera.top = 300;
+directionalLight.shadow.camera.bottom = -300;
+directionalLight.shadow.camera.near = 1;
+directionalLight.shadow.camera.far = 1000;
+scene.add(directionalLight);
+
+// Cria uma esfera que representa o "sol"
+const sunGeometry = new THREE.SphereGeometry(2.5, 32, 32);
+const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffffaa, emissive: 0xffff00 });
+const sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
+
+// Coloca a esfera na posição da luz direcional
+sunMesh.position.copy(directionalLight.position);
+
+// Faz a "esfera do sol" não receber sombras (opcional)
+sunMesh.castShadow = false;
+sunMesh.receiveShadow = false;
+
+// Adiciona na cena
+scene.add(sunMesh);
+
+
+//cria iluminação secundária sem sombras
+let lightPositionBack = new THREE.Vector3(-30, 30, -30);
+let directionalLightBack = new THREE.DirectionalLight("rgb(200, 200, 200)", 1.0); // intensidade mais baixa
+directionalLightBack.position.copy(lightPositionBack);
+directionalLightBack.castShadow = false; // não projeta sombras
+
+scene.add(directionalLightBack);
 
 // Chama o mapa
 let map = new Map(scene);
@@ -39,6 +80,9 @@ const cylinder = new THREE.Mesh( geometryC, materialC );
 // Rotaciona o cilindro para apontar para frente
 cylinder.rotation.x = Math.PI / 2;
 
+//faz o cilindro receber e transmitir sombras
+cylinder.castShadow = true;
+cylinder.receiveShadow = true;
 // Posiciona o cilindro na "frente" da câmera, ajustando para parecer uma arma
 camera.add(cylinder);
 cylinder.position.set(0, -0.5, -0.5);
@@ -48,6 +92,8 @@ let materialShot = new THREE.MeshLambertMaterial({ color: 0x708090 });
 var shotGeo = new THREE.SphereGeometry(0.15,64,16);
 var shot = new THREE.Mesh(shotGeo,materialShot);
 shot.position.set(0,-2,0.2);
+shot.castShadow = true; // A bala também deve projetar sombras
+shot.receiveShadow = true; // A bala também deve receber sombras
 cylinder.add(shot);
 
 camera.position.set(0,2,0); // posiciona a camera dentro do cubo
@@ -129,6 +175,11 @@ function shoot() {
 
     // Clona o tiro
     const shotClone = shot.clone();
+    
+    // Garante que as propriedades de sombra sejam mantidas
+    shotClone.castShadow = true;
+    shotClone.receiveShadow = true;
+    
     cylinder.add(shotClone);
     shotClone.updateMatrixWorld();
 

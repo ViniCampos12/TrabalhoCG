@@ -16,6 +16,7 @@ class Map{
 
     // create the ground plane
     let plane = createGroundPlaneXZ(500, 500);
+    plane.receiveShadow = true; // A área também deve receber sombras
     scene.add(plane);
 
 
@@ -33,11 +34,15 @@ class Map{
     //Create Extend Area of area 1
     let smallExtendedAreaGeometry = new THREE.BoxGeometry(30,6,16);
     let smallExtendedArea = new THREE.Mesh(smallExtendedAreaGeometry,material1);
+    smallExtendedArea.castShadow = true; // A área pequena também deve projetar sombras
+    smallExtendedArea.receiveShadow = true; // A área pequena também deve receber sombras
     area1.add(smallExtendedArea);
     smallExtendedArea.position.set(-47,0,54);
 
     let bigExtendedAreaGeometry = new THREE.BoxGeometry(78,6,16);
     let bigExtendedArea = new THREE.Mesh(bigExtendedAreaGeometry,material1);
+    bigExtendedArea.castShadow = true; // A área também deve projetar sombras
+    bigExtendedArea.receiveShadow = true; // A área também deve receber sombras
     area1.add(bigExtendedArea);
     bigExtendedArea.position.set(23,0,54);
 
@@ -63,6 +68,8 @@ class Map{
     //Create Extend Area of area 2
     let extendedAreaGeometry2 = new THREE.BoxGeometry(54,6,16);
     let extendedArea = new THREE.Mesh(extendedAreaGeometry2,material2);
+    extendedArea.castShadow = true; // A área também deve projetar sombras
+    extendedArea.receiveShadow = true; // A área também deve receber sombras
     area2.add(extendedArea);
     extendedArea.position.set(35,0,54);
     
@@ -91,11 +98,15 @@ class Map{
     //Create Extend Area of area 3
     let smallExtendedAreaGeometry3 = new THREE.BoxGeometry(30,6,16);
     let smallExtendedArea3 = new THREE.Mesh(smallExtendedAreaGeometry3,material3);
+    smallExtendedArea3.castShadow = true; // A área também deve projetar sombras
+    smallExtendedArea3.receiveShadow = true; // A área também deve receber sombras
     area3.add(smallExtendedArea3);
     smallExtendedArea3.position.set(47,0,54);
 
     let bigExtendedAreaGeometry3 = new THREE.BoxGeometry(78,6,16);
     let bigExtendedArea3= new THREE.Mesh(bigExtendedAreaGeometry3,material3);
+    bigExtendedArea3.castShadow = true; // A área também deve projetar sombras
+    bigExtendedArea3.receiveShadow = true; // A área também deve receber sombras
     area3.add(bigExtendedArea3);
     bigExtendedArea3.position.set(-23,0,54);
 
@@ -119,10 +130,14 @@ class Map{
     let areaGeometry = new THREE.BoxGeometry(312, 6, 124);
     let area = new THREE.Mesh(areaGeometry, material);
     area.position.set(x, y, z);
+    area.castShadow = true; // A área principal deve projetar sombras
+    area.receiveShadow = true; // A área principal deve receber sombras
 
     let extendedAreaGeometry = new THREE.BoxGeometry(140,6,8);
     for(let i=-1;i<2;i=i+2){
         let extendedArea = new THREE.Mesh(extendedAreaGeometry,material);
+        extendedArea.castShadow = true; // As extensões também devem projetar sombras
+        extendedArea.receiveShadow = true; // As extensões também devem receber sombras
         area.add(extendedArea);
         extendedArea.position.set(i*86,0,-66);
     }
@@ -150,17 +165,21 @@ class Map{
     let areaGeometry = new THREE.BoxGeometry(124, 6, 108);
     let area = new THREE.Mesh(areaGeometry, material);
     area.position.set(x, y, z);
+    area.castShadow = true; // A área deve projetar sombras
+    area.receiveShadow = true; // A área deve receber sombras
 
     return area;
   }
 
   createBorder(scene){
     //Creates the border´s wall
-    let materialWall = setDefaultMaterial("rgb(59,59,59)");
+    let materialWall = new THREE.MeshLambertMaterial({ color: "rgb(59,59,59)" });
     let wallGeometry = new THREE.BoxGeometry(499,10,1);
 
     for(let i = -1;i<2;i=i+2){
        wall = new THREE.Mesh(wallGeometry,materialWall);
+      wall.castShadow = true; // A parede também deve projetar sombras
+      wall.receiveShadow = true; // A parede também deve receber sombras
       wall.position.set(0,5,249*i);
       wallBox = new THREE.Box3().setFromObject(wall);
       scene.add(wall);
@@ -172,6 +191,8 @@ class Map{
 
     for(let i=-1;i<2;i=i+2){
       wall = new THREE.Mesh(wallGeometry,materialWall);
+      wall.castShadow = true; // A parede também deve projetar sombras
+      wall.receiveShadow = true; // A parede também deve receber sombras  
       wall.position.set(250*i,5,0);
       wall.rotateY(angle);
       wallBox = new THREE.Box3().setFromObject(wall);
