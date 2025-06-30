@@ -28,6 +28,7 @@ showInformation();
 
 // To use the keyboard
 var keyboard = new KeyboardState();
+const raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, -1, 0).normalize(), 0, 2);
 
 // Show axes (parameter is size of each axis)
 var axesHelper = new THREE.AxesHelper( 12 );
@@ -45,11 +46,19 @@ cube.position.set(0.0, 2.0, 0.0);
 // add the cube to the scene
 scene.add(cube);
 
+const rampGeometry = new THREE.PlaneGeometry(11, 10);
+const ramp = new THREE.Mesh(rampGeometry, material);
+ramp.rotation.x = 1.5 * Math.PI;
+ramp.rotation.y = -Math.PI / 6;
+ramp.position.set(28.5, 2, 0);
+scene.add(ramp);
+
 render();
 
 function keyboardUpdate() {
 
   keyboard.update();
+  const isIntersectingRamp = raycaster.intersectObject(ramp).length > 0;
 
   var speed = 30;
   var moveDistance = speed * clock.getDelta();
@@ -67,6 +76,10 @@ function keyboardUpdate() {
   if ( keyboard.pressed("S") )  cube.translateZ( -moveDistance );
 
   if ( keyboard.pressed("space") ) cube.position.set(0.0, 2.0, 0.0);
+
+  else if (isIntersectingRamp) {
+        camera.position.y += speed / 2 * delta;
+    }
 }
 
 function showInformation()
