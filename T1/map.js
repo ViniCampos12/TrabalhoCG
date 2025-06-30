@@ -12,7 +12,8 @@ class Map{
     this.wallsBox = [];   //Vetor with all bb´s of wall
     this.areasBox = [];   //Vetor with all bb´s of areas
     this.ladderBig = new Ladder();
-    // this.ramps = [];
+    this.ramps = [];
+
 
     // create the ground plane
     let plane = createGroundPlaneXZ(500, 500);
@@ -21,6 +22,8 @@ class Map{
 
     // creating bigger area
     let material = setDefaultMaterial("rgb(63,81,181)"); 
+
+    this.createRamp(scene);
 
     let area = this.createBiggerArea(material,0,3,125);
     scene.add(area);
@@ -49,7 +52,7 @@ class Map{
     const ladder = new Ladder(material1);
     area1.add(ladder);
     ladder.position.set(-24,2.6,54.5);
-    // this.ramps.push(ladder.getRamp());
+    this.ramps.push(ladder.ramp);
     
     
     
@@ -74,7 +77,7 @@ class Map{
     const ladder2 = new Ladder(material2);
     area2.add(ladder2);
     ladder2.position.set(0,2.6,54.5);
-    // this.ramps.push(ladder2.getRamp());
+    this.ramps.push(ladder.ramp);
 
     //Create bb
     const wallBox2 = new THREE.Box3().setFromObject(area2);
@@ -102,8 +105,7 @@ class Map{
     const ladder3 = new Ladder(material3);
     area3.add(ladder3);
     ladder3.position.set(24,2.6,54.5);
-
-    // this.ramps.push(ladder3.getRamp());
+    this.ramps.push(ladder.ramp);
 
     //Create bb
     const wallBox3 = new THREE.Box3().setFromObject(area3);
@@ -136,7 +138,7 @@ class Map{
       this.ladder.position.set(8.2*i,2.6,-62.5);
       this.ladder.rotateY(angleLadder);
       const b = new THREE.Box3().setFromObject(this.ladder);
-      // this.ramps.push(this.ladder.getRamp()); 
+      this.ramps.push(this.ladder.ramp);
     }
 
     //Create bb
@@ -189,9 +191,22 @@ class Map{
     return this.areasBox;
   }
 
-  // getRamp(){
-  //   return this.ladder
-  // }
+  getRamp(){
+    return this.ramps;
+  }
+
+  createRamp(scene){
+    const rampGeometry = new THREE.PlaneGeometry(11, 10);
+    const rampMaterial = new THREE.MeshLambertMaterial({color: 0x00f130}); // green color
+    const ramp = new THREE.Mesh(rampGeometry, rampMaterial);
+    ramp.rotation.x = Math.PI/2;
+    ramp.rotation.y = -Math.PI / 6;
+    ramp.position.set(28.5, 2, 0);
+    scene.add(ramp);
+
+    return ramp;
+  }
+
 
   createInfoArea(){
     // Info box

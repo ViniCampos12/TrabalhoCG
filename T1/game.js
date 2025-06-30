@@ -17,12 +17,16 @@ let camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHei
 let light = initDefaultBasicLight(scene);
 let clock = new THREE.Clock();
 // const raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, -1, 0).normalize(), 0, 2);
+const raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, -1, 0).normalize(), 0, 2);
+
 
 
 // Chama o mapa
 let map = new Map(scene);
 const wallBoxes = map.getWallBoxes();
 const areaBoxes = map.getAreaBoxes();
+const rampMesh = map.getRamp();
+console.log(rampMesh);
 
 //Cria pessoa como um cubo
 var cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
@@ -245,16 +249,26 @@ function render() {
 
     let moveDir = new THREE.Vector3();
     
-    // raycaster.ray.origin.copy(controls.getObject().position);
-    // const isIntersectingRamp = raycaster.intersectObject().length > 0;
+    raycaster.ray.origin.copy(cube.position);
+raycaster.ray.origin.y += 1; // evita ficar dentro do chão
+raycaster.ray.direction.set(0, -1, 0);
+
+console.log(rampMesh);
+const rampMeshArray = Array.isArray(rampMesh) ? rampMesh : [rampMesh];
+const rampsFiltered = rampMeshArray.filter(r => r !== undefined && r !== null);
+
+const intersects = raycaster.intersectObjects(rampsFiltered, true);
+
 
     if (movimento.frente) moveDir.add(forward);
     if (movimento.tras) moveDir.add(forward.clone().negate());
     if (movimento.direita) moveDir.add(right);
     if (movimento.esquerda) moveDir.add(right.clone().negate());
-    // else if (isIntersectingRamp) {
-    //     camera.position.y += speed / 2 * delta;
-    // }
+    if (intersects.length > 0 && intersects[0].distance < 2) {
+      const yDoImpacto = intersects[0].point.y;
+      cube.position.y = yDoImpacto;
+  }
+
 
     moveDir.normalize();
 
@@ -282,9 +296,9 @@ function render() {
       }
 
       newPos = pos.clone().add(moveDir.multiplyScalar(velocidade));
-      newPos.y = ramp.getRampHeight(newPos.x, newPos.y, newPos.z);   
+      // newPos.y = ramp.getRampHeight(newPos.x, newPos.y, newPos.z);   
     }
-    atualizaGravidade(cube)
+    // atualizaGravidade(cube)
   }
   renderer.render(scene, camera);
 }
