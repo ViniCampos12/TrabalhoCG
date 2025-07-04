@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Basic Scene</title>
+
+      <link rel="shortcut icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../html/resources/default.css">
+      <meta name="viewport" content="width=device-width, initial-scale=1">  
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+   </head>
+
+   <body>
+      <!-- Import maps polyfill -- Remove this when import maps will be widely supported-->
+      <script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>  
+      <script type="importmap"> 
+         {"imports": {"three": "../build/three.module.js"}} 
+      </script>  
+
+      <div id="webgl-output">     
+         <script type="module" src="game.js"></script>
+      </div>
+      <i id="crosshair" class="bi bi-crosshair"></i>
+      <style>
+         #crosshair {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            font-size: 28px;  
+            margin-left: -10px; 
+            margin-top: -10px;  
+            pointer-events: none;
+            z-index: 1000;
+            color: white;
+            font-weight: 100;
+         }
+      </style>
+   </body>
+</html>
