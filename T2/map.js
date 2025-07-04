@@ -29,7 +29,7 @@ class Map{
     // create area 1
     let material1 = setDefaultMaterial("rgb(46,139,87)");
     let area1 = this.createDefaultArea(material1,-156,2,-125,4);
-    scene.add(area1);
+    
 
     //Create Extend Area of area 1
     let smallExtendedAreaGeometry = new THREE.BoxGeometry(30,4,16);
@@ -55,6 +55,39 @@ class Map{
     console.log("Ladder created and added to area 1");
     console.log(this.ramps);  
 
+    //Add collunms
+    let zInicial = 56;
+    for(let i=0;i<13;i++){
+      if(i%2 == 0)
+        this.createColluns(area1, 60, 12, zInicial,false);
+      else{
+        this.createColluns(area1,-60,12,zInicial,false);
+        zInicial -= 18;
+      }  
+    }
+
+    let xInicial = 51;
+    for(let i=0;i<7;i++){
+      this.createColluns(area1,xInicial,12,-53,true);
+      xInicial -= 18;
+    }
+    
+    let topCollumnGeometry = new THREE.BoxGeometry(5,2,80);
+    let topCollumn = new THREE.Mesh(topCollumnGeometry, setDefaultMaterial("rgb(114, 18, 112)"));
+    topCollumn.position.set(59, 23, -13);
+    area1.add(topCollumn);
+
+    let topCollumn2 = new THREE.Mesh(topCollumnGeometry, setDefaultMaterial("rgb(114, 18, 112)"));
+    topCollumn2.position.set(-59, 23, -13);
+    area1.add(topCollumn2);
+    
+    let topCollumnGeometryBack = new THREE.BoxGeometry(123,2,5);
+    let topCollumnBack = new THREE.Mesh(topCollumnGeometryBack, setDefaultMaterial("rgb(114, 18, 112)"));
+    topCollumnBack.position.set(0, 23, -52);
+    area1.add(topCollumnBack);
+    
+    
+    scene.add(area1);
 
     // create area 2
     let material2 = setDefaultMaterial("rgb(168,50,121)");
@@ -182,6 +215,19 @@ class Map{
 
       this.wallsBox.push(wallBox);
     }
+  }
+
+  createColluns(area, x, y, z, rotacionaFundo){
+    let collumnGeometry = new THREE.CylinderGeometry(2, 2, 20);
+    let collumnMaterial = setDefaultMaterial("rgb(114, 18, 112)");
+    let collumn = new THREE.Mesh(collumnGeometry, collumnMaterial);
+    collumn.position.set(x, y, z);
+    
+  
+
+    area.add(collumn);
+
+
   }
 
   getWallBoxes(){
