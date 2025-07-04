@@ -19,6 +19,32 @@ let clock = new THREE.Clock();
 // const raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, -1, 0).normalize(), 0, 2);
 const raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, -1, 0).normalize(), 0, 2);
 
+const laddersPosition = [
+  {
+    minX: -8,
+    maxX: 8,
+    minZ: -71,
+    maxZ: -64,
+  },
+  {
+    minX: -188,
+    maxX: -172,
+    minZ: -71,
+    maxZ: -64,
+  },
+  {
+    minX: 180,
+    maxX: 196,
+    minZ: -71,
+    maxZ: -64,
+  },
+  {
+    minX: -162,
+    maxX: 162,
+    minZ: 55,
+    maxZ: 70,
+  },
+]
 
 
 // Chama o mapa
@@ -169,29 +195,6 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-const pos = cube.position;
-const ramp = new Ramp();
-
-function atualizaGravidade(cube) {
-  const targetY = ramp.getRampHeight(cube.position.x, cube.position.y, cube.position.z);
-
-  if (cube.position.y > targetY) {
-    velocidadeVertical += gravidade;
-    cube.position.y += velocidadeVertical;
-
-    if (cube.position.y <= targetY) {
-      cube.position.y = targetY;
-      if (Math.abs(velocidadeVertical) < 0.1) {
-        velocidadeVertical = 0;
-      } else {
-        velocidadeVertical = -velocidadeVertical * amortecimento;
-      }
-    }
-  } else {
-    velocidadeVertical = 0;
-    cube.position.y = targetY;
-  }
-}
 
   render();
 // Update loop
@@ -251,13 +254,13 @@ function render() {
     let moveDir = new THREE.Vector3();
     
     raycaster.ray.origin.copy(cube.position);
-  raycaster.ray.origin.y += 1; // evita ficar dentro do chão
-  raycaster.ray.direction.set(0, -1, 0);
+    raycaster.ray.origin.y += 1; // evita ficar dentro do chão
+    raycaster.ray.direction.set(0, -1, 0);
 
-  const rampMeshArray = Array.isArray(rampMesh) ? rampMesh : [rampMesh];
-  const rampsFiltered = rampMeshArray.filter(r => r !== undefined && r !== null);
+    const rampMeshArray = Array.isArray(rampMesh) ? rampMesh : [rampMesh];
+    const rampsFiltered = rampMeshArray.filter(r => r !== undefined && r !== null);
 
-  const intersects = raycaster.intersectObjects(rampsFiltered, true);
+    const intersects = raycaster.intersectObjects(rampsFiltered, true);
 
 
     if (movimento.frente) moveDir.add(forward);
@@ -266,8 +269,11 @@ function render() {
     if (movimento.esquerda) moveDir.add(right.clone().negate());
     if (intersects.length > 0 && intersects[0].distance < 4) {
       const yDoImpacto = intersects[0].point.y;
-      cube.position.y = yDoImpacto;
-  }
+
+      if (cube.position.y < yDoImpacto) {
+        cube.position.y = yDoImpacto;
+      }
+    }
 
 
     moveDir.normalize();
@@ -295,15 +301,44 @@ function render() {
         }
       }
 
-      newPos = pos.clone().add(moveDir.multiplyScalar(velocidade));
-      // newPos.y = ramp.getRampHeight(newPos.x, newPos.y, newPos.z);   
+      //Se estiver fora da área da escada ele atualiza a gravidade
+      const inLadderArea = laddersPosition.some(ladder => cube.position.x >= ladder.minX && cube.position.x <= ladder.maxX &&cube.position.z >= ladder.minZ && cube.position.z <= ladder.maxZ);
+
+       if(!inLadderArea && cube.position.y > 2) {
+        console.log("Entrou");
+        atualizaGravidade(cube);
     }
-    // atualizaGravidade(cube)
+         
+    }
+    
   }
+
   renderer.render(scene, camera);
 }
 
+const pos = cube.position;
+const ramp = new Ramp();
 
+function atualizaGravidade(cube) {
+  const targetY = ramp.getRampHeight(cube.position.x, cube.position.y, cube.position.z);
+
+  if (cube.position.y > targetY) {
+    velocidadeVertical += gravidade;
+    cube.position.y += velocidadeVertical;
+
+    if (cube.position.y <= targetY) {
+      cube.position.y = targetY;
+      if (Math.abs(velocidadeVertical) < 0.1) {
+        velocidadeVertical = 0;
+      } else {
+        velocidadeVertical = -velocidadeVertical * amortecimento;
+      }
+    }
+  } else {
+    velocidadeVertical = 0;
+    cube.position.y = targetY;
+  }
+}
 
 function checkCollisions(walls, areas, newCubePos) { 
 

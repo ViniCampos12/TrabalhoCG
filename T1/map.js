@@ -55,13 +55,7 @@ class Map{
     ladder.position.set(-24,2.6,54.5);
     this.ramps.push(l1.getRampMesh());
     console.log("Ladder created and added to area 1");
-    console.log(this.ramps);
-    // console.log("Ladder ramp: ");
-    // console.log(l1.getRampMesh());
-    // this.ramps.push(ladder.ramp);
-    
-    
-    
+    console.log(this.ramps);  
 
 
     // create area 2
@@ -108,11 +102,6 @@ class Map{
     let bigExtendedArea3= new THREE.Mesh(bigExtendedAreaGeometry3,material3);
     area3.add(bigExtendedArea3);
     bigExtendedArea3.position.set(-23,0,54);
-
-    // const ladder3 = new Ladder(material3);
-    // area3.add(ladder3);
-    // ladder3.position.set(24,2.6,54.5);
-    // this.ramps.push(ladder.ramp);
 
     const l3 = new Ladder(material3);
     const ladder3 = l3.createLadder();
@@ -207,18 +196,6 @@ class Map{
 
   getRamps(){
     return this.ramps;
-  }
-
-  createRamp(scene){
-    const rampGeometry = new THREE.PlaneGeometry(11, 10);
-    const rampMaterial = new THREE.MeshLambertMaterial({color: 0x00f130}); // green color
-    const ramp = new THREE.Mesh(rampGeometry, rampMaterial);
-    ramp.rotation.x = Math.PI/2;
-    ramp.rotation.y = -Math.PI / 6;
-    ramp.position.set(28.5, 2, 0);
-    scene.add(ramp);
-
-    return ramp;
   }
 
 

@@ -23,10 +23,6 @@ class Ladder {
     const angulo = Math.atan(altura / profundidade);
 
     const rampGeometry = new THREE.PlaneGeometry(16, profundidade);
-    const rampMaterial = new THREE.MeshLambertMaterial({ 
-      color: 0xff9900, 
-      side: THREE.DoubleSide 
-    });
     
     // Cria e armazena a rampa
     const ramp = new THREE.Mesh(rampGeometry, invisibleMaterial);
