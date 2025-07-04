@@ -23,23 +23,21 @@ class Map{
     // creating bigger area
     let material = setDefaultMaterial("rgb(63,81,181)"); 
 
-    // this.createRamp(scene);
-
     let area = this.createBiggerArea(material,0,3,125);
     scene.add(area);
 
     // create area 1
     let material1 = setDefaultMaterial("rgb(46,139,87)");
-    let area1 = this.createDefaultArea(material1,-156,3,-125);
+    let area1 = this.createDefaultArea(material1,-156,2,-125,4);
     scene.add(area1);
 
     //Create Extend Area of area 1
-    let smallExtendedAreaGeometry = new THREE.BoxGeometry(30,6,16);
+    let smallExtendedAreaGeometry = new THREE.BoxGeometry(30,4,16);
     let smallExtendedArea = new THREE.Mesh(smallExtendedAreaGeometry,material1);
     area1.add(smallExtendedArea);
     smallExtendedArea.position.set(-47,0,54);
 
-    let bigExtendedAreaGeometry = new THREE.BoxGeometry(78,6,16);
+    let bigExtendedAreaGeometry = new THREE.BoxGeometry(78,4,16);
     let bigExtendedArea = new THREE.Mesh(bigExtendedAreaGeometry,material1);
     area1.add(bigExtendedArea);
     bigExtendedArea.position.set(23,0,54);
@@ -52,7 +50,7 @@ class Map{
     const l1 = new Ladder(material1);
     const ladder = l1.createLadder();
     area1.add(ladder);
-    ladder.position.set(-24,2.6,54.5);
+    ladder.position.set(-24,1.6,54.5);
     this.ramps.push(l1.getRampMesh());
     console.log("Ladder created and added to area 1");
     console.log(this.ramps);  
@@ -60,7 +58,7 @@ class Map{
 
     // create area 2
     let material2 = setDefaultMaterial("rgb(168,50,121)");
-    let area2 = this.createDefaultArea(material2,0,3,-125);
+    let area2 = this.createDefaultArea(material2,0,3,-125,6);
     scene.add(area2);
 
     //Create Extend Area of area 2
@@ -88,7 +86,7 @@ class Map{
 
     // create area 3
     let material3 = setDefaultMaterial("rgb(139,90,43)");
-    let area3 = this.createDefaultArea(material3,156,3,-125);
+    let area3 = this.createDefaultArea(material3,156,3,-125,6);
     area3.position.set(156.0, 3.0, -125.0);
     scene.add(area3);
 
@@ -151,8 +149,8 @@ class Map{
     return area;
    }
 
-  createDefaultArea(material, x, y, z){
-    let areaGeometry = new THREE.BoxGeometry(124, 6, 108);
+  createDefaultArea(material, x, y, z,height){
+    let areaGeometry = new THREE.BoxGeometry(124, height, 108);
     let area = new THREE.Mesh(areaGeometry, material);
     area.position.set(x, y, z);
 
