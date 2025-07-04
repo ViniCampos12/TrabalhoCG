@@ -304,10 +304,10 @@ function render() {
       //Se estiver fora da área da escada ele atualiza a gravidade
       const inLadderArea = laddersPosition.some(ladder => cube.position.x >= ladder.minX && cube.position.x <= ladder.maxX &&cube.position.z >= ladder.minZ && cube.position.z <= ladder.maxZ);
 
-       if(!inLadderArea && cube.position.y > 2) {
-        console.log("Entrou");
-        atualizaGravidade(cube);
-    }
+        if(!inLadderArea && cube.position.y > 2) {
+          console.log("Entrou");
+          atualizaGravidade(cube);
+        }
          
     }
     
@@ -348,7 +348,7 @@ function checkCollisions(walls, areas, newCubePos) {
   const futureBB = new THREE.Box3().setFromCenterAndSize(newCubePos, new THREE.Vector3(5, 4, 5));
 
   //No alto não ter colisão
-  if(newCubePos.y > 5) return false;
+  if(newCubePos.y > 3) return false;
 
   //Testa escadas
   if((newCubePos.z > 52 && newCubePos.x > -17 && newCubePos.x < 17 && newCubePos.z < 62) || ((newCubePos.z > -71 && newCubePos.z < -40) && ((newCubePos.x > -188 && newCubePos.x < -172) || (newCubePos.x > -8 && newCubePos.x < 8) || (newCubePos.x > 172 && newCubePos.x < 188)))){
