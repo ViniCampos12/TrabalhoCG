@@ -10,11 +10,11 @@ class Ladder {
     });
     
     let stepGeometry = new THREE.BoxGeometry(16, 0.75, 1);
-    let ladder = new THREE.Mesh(stepGeometry, invisibleMaterial);
+    this.ladder = new THREE.Mesh(stepGeometry, material);
 
     for(let i = 1; i < 8; i++) {
-      let step = new THREE.Mesh(stepGeometry, invisibleMaterial);
-      ladder.add(step);
+      let step = new THREE.Mesh(stepGeometry, material);
+      this.ladder.add(step);
       step.position.set(0, -0.75 * i, 1 * i);
     }
 
@@ -29,16 +29,18 @@ class Ladder {
     });
     
     // Cria e armazena a rampa
-    const ramp = new THREE.Mesh(rampGeometry, rampMaterial);
+    const ramp = new THREE.Mesh(rampGeometry, invisibleMaterial);
     ramp.rotation.x = -angulo;
     ramp.position.set(0, -altura / 2, profundidade / 2);
-    ladder.add(ramp);
+    this.ladder.add(ramp);
 
     // Armazena a rampa como propriedade da instância
     this.ramp = ramp;
 
-    // Retorna a ladder (comportamento incomum)
-    return ladder;
+  }
+
+  createLadder(){
+    return this.ladder;
   }
 
   createBBHelper(bb, color) {
@@ -46,6 +48,12 @@ class Ladder {
     this.scene.add(helper);
     return helper;
   }
+
+  getRampMesh() {
+    console.log("Returning ramp mesh");
+    console.log(this.ramp);
+    return this.ramp;
+  } 
 }
 
 export default Ladder;

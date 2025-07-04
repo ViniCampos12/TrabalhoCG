@@ -25,7 +25,8 @@ const raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, 
 let map = new Map(scene);
 const wallBoxes = map.getWallBoxes();
 const areaBoxes = map.getAreaBoxes();
-const rampMesh = map.getRamp();
+const rampMesh = map.getRamps();
+console.log("Ramp Meshs:");
 console.log(rampMesh);
 
 //Cria pessoa como um cubo
@@ -250,21 +251,20 @@ function render() {
     let moveDir = new THREE.Vector3();
     
     raycaster.ray.origin.copy(cube.position);
-raycaster.ray.origin.y += 1; // evita ficar dentro do chão
-raycaster.ray.direction.set(0, -1, 0);
+  raycaster.ray.origin.y += 1; // evita ficar dentro do chão
+  raycaster.ray.direction.set(0, -1, 0);
 
-console.log(rampMesh);
-const rampMeshArray = Array.isArray(rampMesh) ? rampMesh : [rampMesh];
-const rampsFiltered = rampMeshArray.filter(r => r !== undefined && r !== null);
+  const rampMeshArray = Array.isArray(rampMesh) ? rampMesh : [rampMesh];
+  const rampsFiltered = rampMeshArray.filter(r => r !== undefined && r !== null);
 
-const intersects = raycaster.intersectObjects(rampsFiltered, true);
+  const intersects = raycaster.intersectObjects(rampsFiltered, true);
 
 
     if (movimento.frente) moveDir.add(forward);
     if (movimento.tras) moveDir.add(forward.clone().negate());
     if (movimento.direita) moveDir.add(right);
     if (movimento.esquerda) moveDir.add(right.clone().negate());
-    if (intersects.length > 0 && intersects[0].distance < 2) {
+    if (intersects.length > 0 && intersects[0].distance < 4) {
       const yDoImpacto = intersects[0].point.y;
       cube.position.y = yDoImpacto;
   }

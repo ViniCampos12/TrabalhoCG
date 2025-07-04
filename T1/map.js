@@ -23,7 +23,7 @@ class Map{
     // creating bigger area
     let material = setDefaultMaterial("rgb(63,81,181)"); 
 
-    this.createRamp(scene);
+    // this.createRamp(scene);
 
     let area = this.createBiggerArea(material,0,3,125);
     scene.add(area);
@@ -49,10 +49,16 @@ class Map{
     this.areasBox.push(wallBox1);
 
     //Create ladder
-    const ladder = new Ladder(material1);
+    const l1 = new Ladder(material1);
+    const ladder = l1.createLadder();
     area1.add(ladder);
     ladder.position.set(-24,2.6,54.5);
-    this.ramps.push(ladder.ramp);
+    this.ramps.push(l1.getRampMesh());
+    console.log("Ladder created and added to area 1");
+    console.log(this.ramps);
+    // console.log("Ladder ramp: ");
+    // console.log(l1.getRampMesh());
+    // this.ramps.push(ladder.ramp);
     
     
     
@@ -74,10 +80,11 @@ class Map{
     extendedArea2.position.set(-35,0,54);
 
     //Create ladder
-    const ladder2 = new Ladder(material2);
+    const l2 = new Ladder(material2);
+    const ladder2 = l2.createLadder();
     area2.add(ladder2);
     ladder2.position.set(0,2.6,54.5);
-    this.ramps.push(ladder.ramp);
+    this.ramps.push(l2.getRampMesh());
 
     //Create bb
     const wallBox2 = new THREE.Box3().setFromObject(area2);
@@ -102,10 +109,16 @@ class Map{
     area3.add(bigExtendedArea3);
     bigExtendedArea3.position.set(-23,0,54);
 
-    const ladder3 = new Ladder(material3);
+    // const ladder3 = new Ladder(material3);
+    // area3.add(ladder3);
+    // ladder3.position.set(24,2.6,54.5);
+    // this.ramps.push(ladder.ramp);
+
+    const l3 = new Ladder(material3);
+    const ladder3 = l3.createLadder();
     area3.add(ladder3);
     ladder3.position.set(24,2.6,54.5);
-    this.ramps.push(ladder.ramp);
+    this.ramps.push(l3.getRampMesh());
 
     //Create bb
     const wallBox3 = new THREE.Box3().setFromObject(area3);
@@ -134,11 +147,12 @@ class Map{
 
     for(let i =-1;i<2;i++){
       this.ladder = new Ladder(material);
-      area.add(this.ladder);
-      this.ladder.position.set(8.2*i,2.6,-62.5);
-      this.ladder.rotateY(angleLadder);
-      const b = new THREE.Box3().setFromObject(this.ladder);
-      this.ramps.push(this.ladder.ramp);
+      let ladderCreated = this.ladder.createLadder();
+      area.add(ladderCreated);
+      ladderCreated.position.set(8.2*i,2.6,-62.5);
+      ladderCreated.rotateY(angleLadder);
+      const b = new THREE.Box3().setFromObject(ladderCreated);
+      this.ramps.push(this.ladder.getRampMesh());
     }
 
     //Create bb
@@ -146,7 +160,7 @@ class Map{
     this.areasBox.push(wallBox);
 
     return area;
-  }
+   }
 
   createDefaultArea(material, x, y, z){
     let areaGeometry = new THREE.BoxGeometry(124, 6, 108);
@@ -191,7 +205,7 @@ class Map{
     return this.areasBox;
   }
 
-  getRamp(){
+  getRamps(){
     return this.ramps;
   }
 
