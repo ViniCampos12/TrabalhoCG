@@ -11,6 +11,7 @@ class Map{
     this.scene = scene;
     this.wallsBox = [];   //Vetor with all bb´s of wall
     this.areasBox = [];   //Vetor with all bb´s of areas
+    this.collumnsBox = []; //Vetor with all bb´s of collumns
     this.ladderBig = new Ladder();
     this.ramps = [];
 
@@ -52,8 +53,8 @@ class Map{
     area1.add(ladder);
     ladder.position.set(-24,1.6,54.5);
     this.ramps.push(l1.getRampMesh());
-    console.log("Ladder created and added to area 1");
-    console.log(this.ramps);  
+    // console.log("Ladder created and added to area 1");
+    // console.log(this.ramps);  
 
     //Add collunms
     let zInicial = 56;
@@ -218,16 +219,22 @@ class Map{
   }
 
   createColluns(area, x, y, z, rotacionaFundo){
-    let collumnGeometry = new THREE.CylinderGeometry(2, 2, 20);
+     let collumnGeometry = new THREE.CylinderGeometry(2, 2, 20);
     let collumnMaterial = setDefaultMaterial("rgb(114, 18, 112)");
     let collumn = new THREE.Mesh(collumnGeometry, collumnMaterial);
     collumn.position.set(x, y, z);
-    
-  
 
-    area.add(collumn);
+    area.add(collumn); // ✅ Adiciona primeiro à área
 
+    // Atualiza matriz mundial para que o THREE saiba a posição correta do objeto no mundo
+    collumn.updateMatrixWorld(true);
 
+    // Agora sim a bounding box representa a posição real
+    let collumnBox = new THREE.Box3().setFromObject(collumn);
+    this.collumnsBox.push(collumnBox);
+
+    // let helper = new THREE.Box3Helper(collumnBox, 'white');
+    // this.scene.add(helper); // helper deve estar na scene
   }
 
   getWallBoxes(){
@@ -236,6 +243,12 @@ class Map{
 
   getAreaBoxes(){
     return this.areasBox;
+  }
+
+  getCollumnsBoxes(){
+    console.log("Returning collumns boxes");
+    console.log(this.collumnsBox);
+    return this.collumnsBox;
   }
 
   getRamps(){

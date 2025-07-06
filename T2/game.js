@@ -51,6 +51,7 @@ const laddersPosition = [
 let map = new Map(scene);
 const wallBoxes = map.getWallBoxes();
 const areaBoxes = map.getAreaBoxes();
+const collumnsBoxes = map.getCollumnsBoxes();
 const rampMesh = map.getRamps();
 console.log("Ramp Meshs:");
 console.log(rampMesh);
@@ -282,6 +283,7 @@ function render() {
     if (moveDir.lengthSq() > 0) {
 
       moveDir.normalize();
+      // console.log(pos);
   
       // Tentativa completa
       let newPos = pos.clone().add(moveDir.clone().multiplyScalar(velocidade));
@@ -305,7 +307,7 @@ function render() {
       const inLadderArea = laddersPosition.some(ladder => cube.position.x >= ladder.minX && cube.position.x <= ladder.maxX &&cube.position.z >= ladder.minZ && cube.position.z <= ladder.maxZ);
 
         if(!inLadderArea && cube.position.y > 2) {
-          console.log("Entrou");
+          // console.log("Entrou");
           atualizaGravidade(cube);
         }
          
@@ -347,8 +349,18 @@ function checkCollisions(walls, areas, newCubePos) {
   //Bounding box na posição futura para verficar colisão
   const futureBB = new THREE.Box3().setFromCenterAndSize(newCubePos, new THREE.Vector3(5, 4, 5));
 
+  //Testa colunas da área 1
+  if(newCubePos.z < -60 && newCubePos.z > -181 && newCubePos.x > -220 && newCubePos.x < -92){
+    for (const collumn of collumnsBoxes) {
+      if (futureBB.intersectsBox(collumn)) {
+        console.log("Colidiu com coluna");
+        return true;
+      }
+    }
+  } 
+
   //No alto não ter colisão
-  if(newCubePos.y > 3) return false;
+  if(newCubePos.y > 3){return false;} 
 
   //Testa escadas
   if((newCubePos.z > 52 && newCubePos.x > -17 && newCubePos.x < 17 && newCubePos.z < 62) || ((newCubePos.z > -71 && newCubePos.z < -40) && ((newCubePos.x > -188 && newCubePos.x < -172) || (newCubePos.x > -8 && newCubePos.x < 8) || (newCubePos.x > 172 && newCubePos.x < 188)))){
