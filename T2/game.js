@@ -19,6 +19,14 @@ let clock = new THREE.Clock();
 // const raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, -1, 0).normalize(), 0, 2);
 const raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, -1, 0).normalize(), 0, 2);
 
+//Lerp config para mexer a plataforma no centro da area
+const lerpConfig = {
+  destination: new THREE.Vector3(0.0, 1, 0.0),
+  alpha: 0.01,
+  move: false
+}
+
+
 const laddersPosition = [
   {
     minX: -8,
@@ -53,6 +61,7 @@ const wallBoxes = map.getWallBoxes();
 const areaBoxes = map.getAreaBoxes();
 const collumnsBoxes = map.getCollumnsBoxes();
 const rampMesh = map.getRamps();
+const plataforma1 = map.plataform1;
 console.log("Ramp Meshs:");
 console.log(rampMesh);
 
@@ -231,6 +240,13 @@ function render() {
           break;
         }
       }
+      for(const collumn of collumnsBoxes) {
+        if (shot.userData.box.intersectsBox(collumn)) {
+          atingiuAlgo = true;
+          lerpConfig.move = true; // Para a plataforma se colidir com a parede
+          break;
+        }
+      } 
     }
 
     if (shot.position.length() > 500 || atingiuAlgo) {
@@ -275,6 +291,7 @@ function render() {
         cube.position.y = yDoImpacto;
       }
     }
+    if(lerpConfig.move) plataforma1.position.lerp(lerpConfig.destination, lerpConfig.alpha);
 
 
     moveDir.normalize();

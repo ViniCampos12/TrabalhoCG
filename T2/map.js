@@ -14,6 +14,7 @@ class Map{
     this.collumnsBox = []; //Vetor with all bb´s of collumns
     this.ladderBig = new Ladder();
     this.ramps = [];
+    this.plataform1 = null;
 
 
     // create the ground plane
@@ -73,6 +74,7 @@ class Map{
       xInicial -= 18;
     }
     
+    //Add collumns on the top
     let topCollumnGeometry = new THREE.BoxGeometry(5,2,80);
     let topCollumn = new THREE.Mesh(topCollumnGeometry, setDefaultMaterial("rgb(114, 18, 112)"));
     topCollumn.position.set(59, 23, -13);
@@ -87,7 +89,22 @@ class Map{
     topCollumnBack.position.set(0, 23, -52);
     area1.add(topCollumnBack);
     
+    //Add plataform on the middle
+    let platformGeometry = new THREE.BoxGeometry(4,10,4);
+    this.plataform1 = new THREE.Mesh(platformGeometry, setDefaultMaterial("rgb(24, 199, 181)"));
+    this.plataform1.position.set(0, -10, 0);
+
+    let chaveGeometry = new THREE.SphereGeometry(1, 32, 16);
+    let chaveMaterial = new THREE.MeshPhongMaterial({color:"yellow", shininess:"200"});
+    let chave = new THREE.Mesh(chaveGeometry, chaveMaterial);
+    chave.position.set(0, 6, 0);
+    this.plataform1.add(chave);
+
+    area1.add(this.plataform1);
+
     
+
+
     scene.add(area1);
 
     // create area 2
