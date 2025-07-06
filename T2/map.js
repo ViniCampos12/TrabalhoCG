@@ -123,11 +123,11 @@ class Map{
     extendedArea2.position.set(-35,0,54);
 
     //Create ladder
-    const l2 = new Ladder(material2);
-    const ladder2 = l2.createLadder();
-    area2.add(ladder2);
-    ladder2.position.set(0,2.6,54.5);
-    this.ramps.push(l2.getRampMesh());
+    // const l2 = new Ladder(material2);
+    // const ladder2 = l2.createLadder();
+    // area2.add(ladder2);
+    // ladder2.position.set(0,2.6,54.5);
+    // this.ramps.push(l2.getRampMesh());
 
     //Create bb
     const wallBox2 = new THREE.Box3().setFromObject(area2);

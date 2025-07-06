@@ -377,10 +377,15 @@ function checkCollisions(walls, areas, newCubePos) {
   } 
 
   //No alto não ter colisão
-  if(newCubePos.y > 3){return false;} 
+  if(newCubePos.y > 3){return false} 
 
   //Testa escadas
-  if((newCubePos.z > 52 && newCubePos.x > -17 && newCubePos.x < 17 && newCubePos.z < 62) || ((newCubePos.z > -71 && newCubePos.z < -40) && ((newCubePos.x > -188 && newCubePos.x < -172) || (newCubePos.x > -8 && newCubePos.x < 8) || (newCubePos.x > 172 && newCubePos.x < 188)))){
+  if((newCubePos.z > 52 && newCubePos.x > -17 && newCubePos.x < 17 && newCubePos.z < 62) || ((newCubePos.z > -71 && newCubePos.z < -40) && ((newCubePos.x > -188 && newCubePos.x < -172) || (newCubePos.x > 172 && newCubePos.x < 188)))){
+    return false;
+  }
+
+  //Testa rampa área 2
+  if((newCubePos.z > -69   && newCubePos.z < -40) && (newCubePos.x > -6 && newCubePos.x < 6)){
     return false;
   }
 
