@@ -144,7 +144,7 @@ class Map{
 
     // create area 3
     let material3 = new THREE.MeshLambertMaterial({ color: "rgb(139,90,43)" });
-    let area3 = this.createDefaultArea(material3,156,3,-125);
+    let area3 = this.createDefaultArea(material3,156,3,-125,6);
     area3.position.set(156.0, 3.0, -125.0);
     scene.add(area3);
 
