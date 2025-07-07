@@ -109,9 +109,9 @@ console.log("Ramp Meshs:");
 console.log(rampMesh);
 
 //Cria pessoa como um cubo
-var cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
+var cubeGeometry = new THREE.BoxGeometry(2, 2, 2);
 var cube = new THREE.Mesh(cubeGeometry, material);
-cube.position.set(0.0, 2.0, 0.0);
+cube.position.set(0.0, 1.0, 0.0);
 
 scene.add(cube);
 
@@ -264,7 +264,7 @@ window.addEventListener('resize', () => {
 function render() {
   requestAnimationFrame(render);
   const delta = clock.getDelta();
-  const velocidade = 20.0 * delta;
+  const velocidade = 50.0 * delta;
 
   if (controls.isLocked) {
 

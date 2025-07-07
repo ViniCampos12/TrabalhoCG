@@ -1,6 +1,7 @@
 import * as THREE from  'three';
 import { createGroundPlaneXZ, InfoBox, setDefaultMaterial } from '../libs/util/util.js';
 import Ladder from './ladder.js';
+import { MeshLambertMaterial } from '../build/three.module.js';
 
 export let wallBox;
  export   let wall; 
@@ -81,22 +82,30 @@ class Map{
     
     //Add collumns on the top
     let topCollumnGeometry = new THREE.BoxGeometry(5,2,80);
-    let topCollumn = new THREE.Mesh(topCollumnGeometry, setDefaultMaterial("rgb(114, 18, 112)"));
+    let topCollumn = new THREE.Mesh(topCollumnGeometry, new THREE.MeshLambertMaterial({ color: "rgb(114, 18, 112)" }));
+    topCollumn.castShadow = true;
+    topCollumn.receiveShadow = true;
     topCollumn.position.set(59, 23, -13);
     area1.add(topCollumn);
 
-    let topCollumn2 = new THREE.Mesh(topCollumnGeometry, setDefaultMaterial("rgb(114, 18, 112)"));
+    let topCollumn2 = new THREE.Mesh(topCollumnGeometry, new THREE.MeshLambertMaterial({ color: "rgb(114, 18, 112)" }));
+    topCollumn2.castShadow = true;
+    topCollumn2.receiveShadow = true;
     topCollumn2.position.set(-59, 23, -13);
     area1.add(topCollumn2);
     
     let topCollumnGeometryBack = new THREE.BoxGeometry(123,2,5);
-    let topCollumnBack = new THREE.Mesh(topCollumnGeometryBack, setDefaultMaterial("rgb(114, 18, 112)"));
+    let topCollumnBack = new THREE.Mesh(topCollumnGeometryBack, new THREE.MeshLambertMaterial({ color: "rgb(114, 18, 112)" }));
+    topCollumnBack.castShadow = true;
+    topCollumnBack.receiveShadow = true;
     topCollumnBack.position.set(0, 23, -52);
     area1.add(topCollumnBack);
     
     //Add plataform on the middle
     let platformGeometry = new THREE.BoxGeometry(4,10,4);
-    this.plataform1 = new THREE.Mesh(platformGeometry, setDefaultMaterial("rgb(24, 199, 181)"));
+    this.plataform1 = new THREE.Mesh(platformGeometry, new THREE.MeshLambertMaterial({ color: "rgb(24, 199, 181)" }));
+    this.plataform1.castShadow = true; // A plataforma deve projetar sombras
+    this.plataform1.receiveShadow = true; // A plataforma deve receber sombras
     this.plataform1.position.set(0, -10, 0);
 
     let chaveGeometry = new THREE.SphereGeometry(1, 32, 16);
@@ -126,6 +135,8 @@ class Map{
     extendedArea.position.set(35,0,54);
     
     let extendedArea2 = new THREE.Mesh(extendedAreaGeometry2,material2);
+    extendedArea2.castShadow = true; // A área também deve projetar sombras
+    extendedArea2.receiveShadow = true; // A área também deve receber sombras
     area2.add(extendedArea2);
     extendedArea2.position.set(-35,0,54);
 
@@ -256,9 +267,11 @@ class Map{
   }
 
   createColluns(area, x, y, z, rotacionaFundo){
-     let collumnGeometry = new THREE.CylinderGeometry(2, 2, 20);
-    let collumnMaterial = setDefaultMaterial("rgb(114, 18, 112)");
+    let collumnGeometry = new THREE.CylinderGeometry(2, 2, 20);
+    let collumnMaterial = new THREE.MeshLambertMaterial({ color: "rgb(114, 18, 112)" });
     let collumn = new THREE.Mesh(collumnGeometry, collumnMaterial);
+    collumn.castShadow = true; // A coluna deve projetar sombras
+    collumn.receiveShadow = true; // A coluna deve receber sombras
     collumn.position.set(x, y, z);
 
     area.add(collumn); // ✅ Adiciona primeiro à área
