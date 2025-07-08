@@ -21,8 +21,14 @@ let clock = new THREE.Clock();
 const raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, -1, 0).normalize(), 0, 2);
 
 //Lerp config para mexer a plataforma no centro da area
-const lerpConfig = {
-  destination: new THREE.Vector3(0.0, 1, 0.0),
+const lerpConfigSuport = {
+  destination: new THREE.Vector3(0.0, 4, 0.0),
+  alpha: 0.01,
+  move: false
+}
+
+const lerpConfigDoor = {
+  destination: new THREE.Vector3(0, -8, 62),
   alpha: 0.01,
   move: false
 }
@@ -106,8 +112,13 @@ console.log("Area Boxes:");
 console.log(areaBoxes);
 const collumnsBoxes = map.getCollumnsBoxes();
 const blockBoxes = map.getBlocksBoxes();
+console.log("Block Boxes:");
+console.log(blockBoxes);
 const rampMesh = map.getRamps();
-const plataforma1 = map.plataform1;
+const plataforma1 = map.suport1;
+const doorArea2 = map.door;
+const doorBox = map.doorBox; // Bounding box da porta
+const suport2Box = map.getSuport2Box();
 
 //Cria pessoa como um cubo
 var cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
@@ -215,7 +226,6 @@ document.addEventListener('mouseup', (event) => {
 function shoot() {
   const now = Date.now();
   if ((now - lastShotTime) >= cadenciaMin) {
-    console.log("Disparo iniciado"); // DEBUG
     lastShotTime = now;
 
     // Clona o tiro
@@ -270,7 +280,6 @@ function render() {
 
   if (controls.isLocked) {
 
-    console.log("Locked:", controls.isLocked);
     //PARTE DO TIRO
     activeShots.forEach((shot, index) => {
       const speed = 50 * delta;
@@ -301,7 +310,7 @@ function render() {
       for(const collumn of collumnsBoxes) {
         if (shot.userData.box.intersectsBox(collumn)) {
           atingiuAlgo = true;
-          lerpConfig.move = true; // Para a plataforma se colidir com a parede
+          lerpConfigSuport.move = true; // Para a plataforma se colidir com a parede
           break;
         }
       } 
@@ -320,10 +329,9 @@ function render() {
 
     if (shot.position.length() > 500 || atingiuAlgo) {
       scene.remove(shot);
-      console.log("Disparo removido");
       if (shot.userData.helper) {
-  scene.remove(shot.userData.helper);
-}
+        scene.remove(shot.userData.helper);
+      }
       // scene.remove(shot.userData.helper); // Remove helper 
       activeShots.splice(index, 1);
     }
@@ -364,7 +372,11 @@ function render() {
         cube.position.y = yDoImpacto;
       }
     }
-    if(lerpConfig.move) plataforma1.position.lerp(lerpConfig.destination, lerpConfig.alpha);
+    if(lerpConfigSuport.move) plataforma1.position.lerp(lerpConfigSuport.destination, lerpConfigSuport.alpha);
+    if(lerpConfigDoor.move) {
+      doorArea2.position.lerp(lerpConfigDoor.destination, lerpConfigDoor.alpha);
+      doorBox.setFromObject(doorArea2); // Atualiza a bounding box da porta
+    }
 
 
     moveDir.normalize();
@@ -450,7 +462,13 @@ function checkCollisions(walls, areas, newCubePos) {
   }
 
   //Testa blocos da área 2
-  if(newCubePos.z < -60 && newCubePos.z > -181 && newCubePos.x > -64 && newCubePos.x < 64){
+  if(newCubePos.z < -53 && newCubePos.z > -181 && newCubePos.x > -64 && newCubePos.x < 64){
+
+    if(futureBB.intersectsBox(suport2Box)){
+      console.log("Colidiu com suporte 2");
+      openArea2Door();
+      return true;
+    }
     for (const block of blockBoxes) {
       if (futureBB.intersectsBox(block)) {
         console.log("Colidiu com bloco");
@@ -468,7 +486,8 @@ function checkCollisions(walls, areas, newCubePos) {
   }
 
   //Testa rampa área 2
-  if((newCubePos.z > -69   && newCubePos.z < -40) && (newCubePos.x > -6 && newCubePos.x < 6)){
+  if((newCubePos.z > -69   && newCubePos.z < -64) && (newCubePos.x > -6 && newCubePos.x < 6)){
+    console.log("Colidiu com rampa");
     return false;
   }
 
@@ -476,6 +495,7 @@ function checkCollisions(walls, areas, newCubePos) {
   if(Math.abs(newCubePos.x) > 248 || Math.abs(newCubePos.z) > 248){
     for (const wall of walls) {
       if (futureBB.intersectsBox(wall)) {
+        console.log("Colidiu com parede");
         collision = true;
         break; 
       }
@@ -490,14 +510,22 @@ function checkCollisions(walls, areas, newCubePos) {
   else if(newCubePos.z < -60 && newCubePos.z > -181){
     if(newCubePos.x > -220 && newCubePos.x < -92)
       collision = futureBB.intersectsBox(areas[1]);
-    if(newCubePos.x > -64 && newCubePos.x < 64)
+    if(newCubePos.x > -64 && newCubePos.x < 64 && newCubePos.z < -65 ){
+      console.log("Colidiu com area 2");
       collision = futureBB.intersectsBox(areas[2]);
+    }
+      
     if(newCubePos.x > 92 && newCubePos.x < 220)
       collision = futureBB.intersectsBox(areas[3]);
   }
 
 
   return collision; 
+}
+
+function openArea2Door(){
+  lerpConfigDoor.move = true; // Ativa o movimento da porta
+  
 }
 
 render();

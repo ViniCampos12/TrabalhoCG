@@ -15,7 +15,10 @@ class Map{
     this.blocksBox = []; //Vetor with all bb´s of blocks
     this.ladderBig = new Ladder();
     this.ramps = [];
-    this.plataform1 = null;
+    this.suport1 = null;
+    this.suport2Box = null;
+    this.door = null; // Porta da área 2
+    this.doorBox = null; // Bounding box da porta
 
 
     // create the ground plane
@@ -96,17 +99,19 @@ class Map{
     area1.add(topCollumnBack);
     
     //Add plataform on the middle
-    let platformGeometry = new THREE.BoxGeometry(4,10,4);
-    this.plataform1 = new THREE.Mesh(platformGeometry, setDefaultMaterial("rgb(24, 199, 181)"));
-    this.plataform1.position.set(0, -10, 0);
+    let suportGeometry = new THREE.BoxGeometry(2,6,2);
+    this.suport1 = new THREE.Mesh(suportGeometry, setDefaultMaterial("rgb(24, 199, 181)"));
+    this.suport1.position.set(0, -10, 0);
+    let suport1Box = new THREE.Box3().setFromObject(this.suport1);
+    this.collumnsBox.push(suport1Box);
 
     let chaveGeometry = new THREE.SphereGeometry(1, 32, 16);
     let chaveMaterial = new THREE.MeshPhongMaterial({color:"yellow", shininess:"200"});
     let chave = new THREE.Mesh(chaveGeometry, chaveMaterial);
-    chave.position.set(0, 6, 0);
-    this.plataform1.add(chave);
+    chave.position.set(0, 4 , 0);
+    this.suport1.add(chave);
 
-    area1.add(this.plataform1);
+    area1.add(this.suport1);
 
     // let helper2 = new THREE.Box3Helper(wallBox1, 'white');
     // this.scene.add(helper2); // helper deve estar na scene 
@@ -135,12 +140,48 @@ class Map{
     const wallBox2 = new THREE.Box3().setFromObject(area2);
     this.areasBox.push(wallBox2);
 
-    // Create ladder
-    const l2 = new Ladder(material2);
-    const ladder2 = l2.createLadder();
-    area2.add(ladder2);
-    ladder2.position.set(0,2.6,54.5);
-    this.ramps.push(l2.getRampMesh());
+    // Create door
+    const doorGeometry = new THREE.BoxGeometry(16, 8, 0.1);
+    const doorMaterial = new THREE.MeshLambertMaterial({ color: "rgb(157, 157, 157)" });
+    this.door = new THREE.Mesh(doorGeometry, doorMaterial);
+    this.door.castShadow = true; // A porta também deve projetar sombras
+    this.door.receiveShadow = true; // A porta também deve receber sombras 
+    
+    this.door.position.set(0, 0, 62);
+    area2.add(this.door);
+
+    this.doorBox = new THREE.Box3().setFromObject(this.door);
+    this.blocksBox.push(this.doorBox);
+    let helper = new THREE.Box3Helper(this.doorBox, 'white');
+    this.scene.add(helper); // helper deve estar na scene
+    
+    const doorfloorGeometry = new THREE.BoxGeometry(16, 0.05, 0.1);
+    const doorfloor = new THREE.Mesh(doorfloorGeometry, doorMaterial);
+    doorfloor.receiveShadow = true;
+    doorfloor.position.set(0, -3, 62);
+    area2.add(doorfloor); 
+    
+
+    const plataformGeometry = new THREE.BoxGeometry(16,0.1,6);
+    const plataformMaterial = new THREE.MeshLambertMaterial({ color: "rgb(153, 39, 39)" });
+    const plataform = new THREE.Mesh(plataformGeometry, plataformMaterial);
+    plataform.castShadow = true; 
+    plataform.receiveShadow = true; 
+    plataform.position.set(0, -3, 57);
+    area2.add(plataform);
+
+    this.suport2 = new THREE.Mesh(suportGeometry, setDefaultMaterial("rgb(24, 199, 181)"));
+    this.suport2.position.set(10, 0, -55);
+    scene.add(this.suport2);
+    this.suport2Box = new THREE.Box3().setFromObject(this.suport2);
+    
+    
+
+    // const l2 = new Ladder(material2);
+    // const ladder2 = l2.createLadder();
+    // area2.add(ladder2);
+    // ladder2.position.set(0,2.6,54.5);
+    // this.ramps.push(l2.getRampMesh());
 
     //Create blocks
     this.createBlocks(area2,20,10,20,20);
@@ -287,8 +328,8 @@ class Map{
     let collumnBox = new THREE.Box3().setFromObject(collumn);
     this.collumnsBox.push(collumnBox);
 
-    let helper = new THREE.Box3Helper(collumnBox, 'white');
-    this.scene.add(helper); // helper deve estar na scene
+    // let helper = new THREE.Box3Helper(collumnBox, 'white');
+    // this.scene.add(helper); // helper deve estar na scene
   }
 
   createBlocks(area,x,y,z,height){
@@ -323,6 +364,10 @@ class Map{
 
   getBlocksBoxes(){
     return this.blocksBox;
+  }
+
+  getSuport2Box(){
+    return this.suport2Box;
   }
 
   getRamps(){
