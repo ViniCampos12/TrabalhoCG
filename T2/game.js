@@ -17,7 +17,6 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Adiciona tipo de shadow map
 let material = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
 let camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 let clock = new THREE.Clock();
-// const raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, -1, 0).normalize(), 0, 2);
 const raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, -1, 0).normalize(), 0, 2);
 
 //Lerp config para mexer a plataforma no centro da area
@@ -29,6 +28,12 @@ const lerpConfigSuport = {
 
 const lerpConfigDoor = {
   destination: new THREE.Vector3(0, -8, 62),
+  alpha: 0.01,
+  move: false
+}
+
+const lerpConfigPlataform = {
+  destination: new THREE.Vector3(0, 3, 57),
   alpha: 0.01,
   move: false
 }
@@ -115,10 +120,13 @@ const blockBoxes = map.getBlocksBoxes();
 console.log("Block Boxes:");
 console.log(blockBoxes);
 const rampMesh = map.getRamps();
-const plataforma1 = map.suport1;
+const suport1 = map.suport1;
 const doorArea2 = map.door;
 const doorBox = map.doorBox; // Bounding box da porta
 const suport2Box = map.getSuport2Box();
+const plataform = map.plataform; // Plataforma da área 2
+const plataformBox = map.plataformBox;
+// scene.attach(plataform);
 
 //Cria pessoa como um cubo
 var cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
@@ -360,6 +368,9 @@ function render() {
 
     const intersects = raycaster.intersectObjects(rampsFiltered, true);
 
+    // plataform.updateMatrixWorld(true);
+    // const isIntersectPlataform = raycaster.intersectObject(plataform, true).length > 0;
+
 
     if (movimento.frente) moveDir.add(forward);
     if (movimento.tras) moveDir.add(forward.clone().negate());
@@ -372,10 +383,34 @@ function render() {
         cube.position.y = yDoImpacto;
       }
     }
-    if(lerpConfigSuport.move) plataforma1.position.lerp(lerpConfigSuport.destination, lerpConfigSuport.alpha);
+    if(lerpConfigSuport.move) suport1.position.lerp(lerpConfigSuport.destination, lerpConfigSuport.alpha);
     if(lerpConfigDoor.move) {
       doorArea2.position.lerp(lerpConfigDoor.destination, lerpConfigDoor.alpha);
       doorBox.setFromObject(doorArea2); // Atualiza a bounding box da porta
+    }
+    
+    const isIntersectPlataform = raycaster.intersectObject(plataform, true).length > 0;
+
+    if (isIntersectPlataform) {
+      if (cube.parent !== plataform) {
+        plataform.attach(cube); // Anexa o personagem à plataforma
+      }
+
+      // Ajusta a altura suavemente se quiser
+      cube.position.y = plataform.position.y + 2; // Considera altura do personagem
+      // lerpConfigPlataform.move = true;
+
+    } else {
+      if (cube.parent !== scene) {
+        scene.attach(cube); // Remove da plataforma se saiu
+      }
+    }
+
+
+
+    if(lerpConfigPlataform.move) {
+      plataform.position.lerp(lerpConfigPlataform.destination, lerpConfigPlataform.alpha);
+      plataformBox.setFromObject(plataform)
     }
 
 
@@ -455,7 +490,7 @@ function checkCollisions(walls, areas, newCubePos) {
   if(newCubePos.z < -60 && newCubePos.z > -181 && newCubePos.x > -220 && newCubePos.x < -92){
     for (const collumn of collumnsBoxes) {
       if (futureBB.intersectsBox(collumn)) {
-        console.log("Colidiu com coluna");
+        // console.log("Colidiu com coluna");
         return true;
       }
     }
@@ -464,14 +499,19 @@ function checkCollisions(walls, areas, newCubePos) {
   //Testa blocos da área 2
   if(newCubePos.z < -53 && newCubePos.z > -181 && newCubePos.x > -64 && newCubePos.x < 64){
 
+    if(futureBB.intersectsBox(plataformBox)){
+      upPlataform();
+      return false;
+    }
+
     if(futureBB.intersectsBox(suport2Box)){
-      console.log("Colidiu com suporte 2");
+      // console.log("Colidiu com suporte 2");
       openArea2Door();
       return true;
     }
     for (const block of blockBoxes) {
       if (futureBB.intersectsBox(block)) {
-        console.log("Colidiu com bloco");
+        // console.log("Colidiu com bloco");
         return true;
       }
     }
@@ -487,7 +527,7 @@ function checkCollisions(walls, areas, newCubePos) {
 
   //Testa rampa área 2
   if((newCubePos.z > -69   && newCubePos.z < -64) && (newCubePos.x > -6 && newCubePos.x < 6)){
-    console.log("Colidiu com rampa");
+    // console.log("Colidiu com rampa");
     return false;
   }
 
@@ -495,7 +535,7 @@ function checkCollisions(walls, areas, newCubePos) {
   if(Math.abs(newCubePos.x) > 248 || Math.abs(newCubePos.z) > 248){
     for (const wall of walls) {
       if (futureBB.intersectsBox(wall)) {
-        console.log("Colidiu com parede");
+        // console.log("Colidiu com parede");
         collision = true;
         break; 
       }
@@ -511,7 +551,7 @@ function checkCollisions(walls, areas, newCubePos) {
     if(newCubePos.x > -220 && newCubePos.x < -92)
       collision = futureBB.intersectsBox(areas[1]);
     if(newCubePos.x > -64 && newCubePos.x < 64 && newCubePos.z < -65 ){
-      console.log("Colidiu com area 2");
+      // console.log("Colidiu com area 2");
       collision = futureBB.intersectsBox(areas[2]);
     }
       
@@ -528,4 +568,7 @@ function openArea2Door(){
   
 }
 
-render();
+function upPlataform(){
+  lerpConfigPlataform.move = true; // Ativa o movimento da plataforma
+  // cube.position.y = plataform.position.y; 
+}

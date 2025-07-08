@@ -161,14 +161,16 @@ class Map{
     doorfloor.position.set(0, -3, 62);
     area2.add(doorfloor); 
     
-
     const plataformGeometry = new THREE.BoxGeometry(16,0.1,6);
     const plataformMaterial = new THREE.MeshLambertMaterial({ color: "rgb(153, 39, 39)" });
-    const plataform = new THREE.Mesh(plataformGeometry, plataformMaterial);
-    plataform.castShadow = true; 
-    plataform.receiveShadow = true; 
-    plataform.position.set(0, -3, 57);
-    area2.add(plataform);
+    this.plataform = new THREE.Mesh(plataformGeometry, plataformMaterial);
+    this.plataform.castShadow = true; 
+    this.plataform.receiveShadow = true; 
+    this.plataform.position.set(0, -3, 57);
+    area2.add(this.plataform);
+    this.plataformBox = new THREE.Box3().setFromObject(this.plataform);
+    // const helperp = new THREE.Box3Helper(this.plataformBox, 0xffff00);
+    // scene.add(helperp);
 
     this.suport2 = new THREE.Mesh(suportGeometry, setDefaultMaterial("rgb(24, 199, 181)"));
     this.suport2.position.set(10, 0, -55);
