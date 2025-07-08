@@ -102,11 +102,12 @@ scene.add(directionalLightBack);
 let map = new Map(scene);
 const wallBoxes = map.getWallBoxes();
 const areaBoxes = map.getAreaBoxes();
+console.log("Area Boxes:");
+console.log(areaBoxes);
 const collumnsBoxes = map.getCollumnsBoxes();
+const blockBoxes = map.getBlocksBoxes();
 const rampMesh = map.getRamps();
 const plataforma1 = map.plataform1;
-console.log("Ramp Meshs:");
-console.log(rampMesh);
 
 //Cria pessoa como um cubo
 var cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
@@ -214,6 +215,7 @@ document.addEventListener('mouseup', (event) => {
 function shoot() {
   const now = Date.now();
   if ((now - lastShotTime) >= cadenciaMin) {
+    console.log("Disparo iniciado"); // DEBUG
     lastShotTime = now;
 
     // Clona o tiro
@@ -246,7 +248,7 @@ function shoot() {
 
     // Armazena a bala ativa
     activeShots.push(shotClone);
-  }
+  } 
 }
 let velocidadeVertical = 0;
 let amortecimento = 0.5;
@@ -268,6 +270,7 @@ function render() {
 
   if (controls.isLocked) {
 
+    console.log("Locked:", controls.isLocked);
     //PARTE DO TIRO
     activeShots.forEach((shot, index) => {
       const speed = 50 * delta;
@@ -293,6 +296,8 @@ function render() {
           break;
         }
       }
+    }
+    if(!atingiuAlgo) {
       for(const collumn of collumnsBoxes) {
         if (shot.userData.box.intersectsBox(collumn)) {
           atingiuAlgo = true;
@@ -301,10 +306,25 @@ function render() {
         }
       } 
     }
+    if(!atingiuAlgo) {
+      for(const block of blockBoxes){
+        if (shot.userData.box.intersectsBox(block)) {
+          atingiuAlgo = true;
+          break;
+        }
+      }
+    }
+
+
+      
 
     if (shot.position.length() > 500 || atingiuAlgo) {
       scene.remove(shot);
-      scene.remove(shot.userData.helper); // Remove helper
+      console.log("Disparo removido");
+      if (shot.userData.helper) {
+  scene.remove(shot.userData.helper);
+}
+      // scene.remove(shot.userData.helper); // Remove helper 
       activeShots.splice(index, 1);
     }
 
@@ -424,6 +444,16 @@ function checkCollisions(walls, areas, newCubePos) {
     for (const collumn of collumnsBoxes) {
       if (futureBB.intersectsBox(collumn)) {
         console.log("Colidiu com coluna");
+        return true;
+      }
+    }
+  }
+
+  //Testa blocos da área 2
+  if(newCubePos.z < -60 && newCubePos.z > -181 && newCubePos.x > -64 && newCubePos.x < 64){
+    for (const block of blockBoxes) {
+      if (futureBB.intersectsBox(block)) {
+        console.log("Colidiu com bloco");
         return true;
       }
     }

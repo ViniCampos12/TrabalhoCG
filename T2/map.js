@@ -12,6 +12,7 @@ class Map{
     this.wallsBox = [];   //Vetor with all bb´s of wall
     this.areasBox = [];   //Vetor with all bb´s of areas
     this.collumnsBox = []; //Vetor with all bb´s of collumns
+    this.blocksBox = []; //Vetor with all bb´s of blocks
     this.ladderBig = new Ladder();
     this.ramps = [];
     this.plataform1 = null;
@@ -107,7 +108,8 @@ class Map{
 
     area1.add(this.plataform1);
 
-    
+    // let helper2 = new THREE.Box3Helper(wallBox1, 'white');
+    // this.scene.add(helper2); // helper deve estar na scene 
 
 
     scene.add(area1);
@@ -115,7 +117,7 @@ class Map{
     // create area 2
     let material2 = new THREE.MeshLambertMaterial({ color: "rgb(168,50,121)" });
     let area2 = this.createDefaultArea(material2,0,3,-125,6);
-    scene.add(area2);
+    
 
     //Create Extend Area of area 2
     let extendedAreaGeometry2 = new THREE.BoxGeometry(54,6,16);
@@ -129,18 +131,33 @@ class Map{
     area2.add(extendedArea2);
     extendedArea2.position.set(-35,0,54);
 
-    //Create ladder
-    // const l2 = new Ladder(material2);
-    // const ladder2 = l2.createLadder();
-    // area2.add(ladder2);
-    // ladder2.position.set(0,2.6,54.5);
-    // this.ramps.push(l2.getRampMesh());
-
     //Create bb
     const wallBox2 = new THREE.Box3().setFromObject(area2);
     this.areasBox.push(wallBox2);
 
+    // Create ladder
+    const l2 = new Ladder(material2);
+    const ladder2 = l2.createLadder();
+    area2.add(ladder2);
+    ladder2.position.set(0,2.6,54.5);
+    this.ramps.push(l2.getRampMesh());
 
+    //Create blocks
+    this.createBlocks(area2,20,10,20,20);
+    this.createBlocks(area2,-50,10,50,20);
+    this.createBlocks(area2,30,10,10,20);
+    this.createBlocks(area2,0,10,0,20);
+    this.createBlocks(area2,-20,10,10,20);
+    this.createBlocks(area2,-40,10,30,20);
+    this.createBlocks(area2,40,10,50,20);
+    this.createBlocks(area2,50,10,-20,20);
+    this.createBlocks(area2,-40,10,-40,20);
+    this.createBlocks(area2,-1,10,-40,20);
+
+    
+    // let helper = new THREE.Box3Helper(wallBox2, 'white');
+    // this.scene.add(helper); // helper deve estar na scene 
+    scene.add(area2);
 
     // create area 3
     let material3 = new THREE.MeshLambertMaterial({ color: "rgb(139,90,43)" });
@@ -261,17 +278,35 @@ class Map{
     let collumn = new THREE.Mesh(collumnGeometry, collumnMaterial);
     collumn.position.set(x, y, z);
 
-    area.add(collumn); // ✅ Adiciona primeiro à área
+    area.add(collumn); // Adiciona primeiro à área
 
     // Atualiza matriz mundial para que o THREE saiba a posição correta do objeto no mundo
     collumn.updateMatrixWorld(true);
 
-    // Agora sim a bounding box representa a posição real
+    // Adiciona bb
     let collumnBox = new THREE.Box3().setFromObject(collumn);
     this.collumnsBox.push(collumnBox);
 
-    // let helper = new THREE.Box3Helper(collumnBox, 'white');
-    // this.scene.add(helper); // helper deve estar na scene
+    let helper = new THREE.Box3Helper(collumnBox, 'white');
+    this.scene.add(helper); // helper deve estar na scene
+  }
+
+  createBlocks(area,x,y,z,height){
+    let blockGeometry = new THREE.BoxGeometry(4, height, 4);
+    let blockMaterial = new THREE.MeshLambertMaterial({ color: "rgb(171, 98, 21)" });
+    let block = new THREE.Mesh(blockGeometry, blockMaterial);
+    block.castShadow = true; 
+    block.receiveShadow = true; 
+    block.position.set(x, y, z);
+
+    area.add(block); // Adiciona à área (Group)
+
+    // IMPORTANTE: atualiza transformações até a cena
+    block.updateMatrixWorld(true); // <-- aqui
+
+    // Bounding box com posição correta no mundo
+    let blockBox = new THREE.Box3().setFromObject(block);
+    this.blocksBox.push(blockBox);
   }
 
   getWallBoxes(){
@@ -283,9 +318,11 @@ class Map{
   }
 
   getCollumnsBoxes(){
-    console.log("Returning collumns boxes");
-    console.log(this.collumnsBox);
     return this.collumnsBox;
+  }
+
+  getBlocksBoxes(){
+    return this.blocksBox;
   }
 
   getRamps(){
