@@ -1,6 +1,7 @@
 import * as THREE from  'three';
 import { createGroundPlaneXZ, InfoBox, setDefaultMaterial } from '../libs/util/util.js';
 import Ladder from './ladder.js';
+import { CSG } from '../libs/other/CSGMesh.js';
 
 export let wallBox;
  export   let wall; 
@@ -16,6 +17,7 @@ class Map{
     this.ladderBig = new Ladder();
     this.ramps = [];
     this.suport1 = null;
+    this.suport1Box = null;
     this.suport2Box = null;
     this.door = null; // Porta da área 2
     this.doorBox = null; // Bounding box da porta
@@ -99,22 +101,22 @@ class Map{
     area1.add(topCollumnBack);
     
     //Add plataform on the middle
-    let suportGeometry = new THREE.BoxGeometry(2,6,2);
+    let suportGeometry = new THREE.BoxGeometry(2,4,2);
     this.suport1 = new THREE.Mesh(suportGeometry, setDefaultMaterial("rgb(24, 199, 181)"));
     this.suport1.position.set(0, -10, 0);
-    let suport1Box = new THREE.Box3().setFromObject(this.suport1);
-    this.collumnsBox.push(suport1Box);
+    this.suport1Box = new THREE.Box3().setFromObject(this.suport1);
+    // let helper3 = new THREE.Box3Helper(this.suport1Box, 'white');
+    // this.scene.add(helper3); // helper deve estar na scene
+    this.collumnsBox.push(this.suport1Box);
 
-    let chaveGeometry = new THREE.SphereGeometry(1, 32, 16);
-    let chaveMaterial = new THREE.MeshPhongMaterial({color:"yellow", shininess:"200"});
-    let chave = new THREE.Mesh(chaveGeometry, chaveMaterial);
-    chave.position.set(0, 4 , 0);
-    this.suport1.add(chave);
+    let keyMesh = this.createKey();
+    let keyBox = new THREE.Box3().setFromObject(keyMesh);
+    this.collumnsBox.push(keyBox);
+    this.suport1.add(keyMesh);
 
     area1.add(this.suport1);
 
-    // let helper2 = new THREE.Box3Helper(wallBox1, 'white');
-    // this.scene.add(helper2); // helper deve estar na scene 
+     
 
 
     scene.add(area1);
@@ -173,17 +175,10 @@ class Map{
     // scene.add(helperp);
 
     this.suport2 = new THREE.Mesh(suportGeometry, setDefaultMaterial("rgb(24, 199, 181)"));
-    this.suport2.position.set(10, 0, -55);
+    this.suport2.position.set(10, 1, -55);
     scene.add(this.suport2);
     this.suport2Box = new THREE.Box3().setFromObject(this.suport2);
     
-    
-
-    // const l2 = new Ladder(material2);
-    // const ladder2 = l2.createLadder();
-    // area2.add(ladder2);
-    // ladder2.position.set(0,2.6,54.5);
-    // this.ramps.push(l2.getRampMesh());
 
     //Create blocks
     this.createBlocks(area2,20,10,20,20);
@@ -350,6 +345,40 @@ class Map{
     // Bounding box com posição correta no mundo
     let blockBox = new THREE.Box3().setFromObject(block);
     this.blocksBox.push(blockBox);
+  }
+
+  createKey(){
+    let auxMat = new THREE.Matrix4();
+    let cubeMesh = new THREE.Mesh(new THREE.BoxGeometry(1.4,1.4,1.4));
+    let cylinderMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.4, 20));
+    let cylinderMesh2 = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.4, 20));
+    let cylinderMesh3 = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.4, 20));
+
+    cylinderMesh.position.set(0, 0, 0)
+    cylinderMesh.matrixAutoUpdate = false;
+    cylinderMesh.updateMatrix();
+    cylinderMesh2.position.set(0, 0, 0)
+    cylinderMesh2.rotateX(THREE.MathUtils.degToRad(90));
+    cylinderMesh2.rotateZ(THREE.MathUtils.degToRad(90));
+    cylinderMesh2.matrixAutoUpdate = false;
+    cylinderMesh2.updateMatrix();
+    cylinderMesh3.position.set(0, 0, 0)
+    cylinderMesh3.rotateX(THREE.MathUtils.degToRad(90));
+    cylinderMesh3.matrixAutoUpdate = false;
+    cylinderMesh3.updateMatrix();
+    
+
+    let cubeCSG = CSG.fromMesh(cubeMesh);
+    let cylinderCSG = CSG.fromMesh(cylinderMesh);
+    let cylinderCSG2 = CSG.fromMesh(cylinderMesh2);
+    let cylinderCSG3 = CSG.fromMesh(cylinderMesh3);
+    let csgObject = cubeCSG.subtract(cylinderCSG).subtract(cylinderCSG2).subtract(cylinderCSG3);
+    // csgObject = cubeCSG.subtract(cylinderCSG2);
+    let keyMesh = CSG.toMesh(csgObject, auxMat);
+    keyMesh.material = new THREE.MeshPhongMaterial({color:"red", shininess:"200"});
+    keyMesh.position.set(0, 2.6 , 0);
+
+    return keyMesh;
   }
 
   getWallBoxes(){

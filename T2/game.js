@@ -123,6 +123,7 @@ console.log("Block Boxes:");
 console.log(blockBoxes);
 const rampMesh = map.getRamps();
 const suport1 = map.suport1;
+const suport1Box = map.suport1Box;
 const doorArea2 = map.door;
 const doorBox = map.doorBox; // Bounding box da porta
 const suport2Box = map.getSuport2Box();
@@ -385,7 +386,10 @@ function render() {
         cube.position.y = yDoImpacto;
       }
     }
-    if(lerpConfigSuport.move) suport1.position.lerp(lerpConfigSuport.destination, lerpConfigSuport.alpha);
+    if(lerpConfigSuport.move) {
+      suport1.position.lerp(lerpConfigSuport.destination, lerpConfigSuport.alpha);
+      suport1Box.setFromObject(suport1);
+    }
     if(lerpConfigDoor.move) {
       doorArea2.position.lerp(lerpConfigDoor.destination, lerpConfigDoor.alpha);
       doorBox.setFromObject(doorArea2); // Atualiza a bounding box da porta

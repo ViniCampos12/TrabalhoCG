@@ -65,7 +65,7 @@ function keyboardUpdate()
    if ( keyboard.pressed("pagedown") ) cube.translateZ( -1 );
 
    let angle = THREE.MathUtils.degToRad(10); 
-   if ( keyboard.pressed("A") )  cube.rotateY(  angle );
+   if ( keyboard.pressed("A") )  cube.rotateX(  angle );
    if ( keyboard.pressed("D") )  cube.rotateY( -angle );
 
    if ( keyboard.pressed("W") )
