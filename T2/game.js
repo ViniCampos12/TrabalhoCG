@@ -261,6 +261,11 @@ document.addEventListener('mouseup', (event) => {
     isShooting = false;
     clearInterval(shotInterval);
     shotInterval = null;
+
+    if (armaAtual === 'metralhadora') {
+        spriteTexture.offset.x = 0; // Set back to the first frame
+        spriteFrame = 0; // Reset the frame counter
+    }
 });
 
 window.addEventListener('wheel', (event) => {
