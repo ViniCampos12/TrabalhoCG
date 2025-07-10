@@ -32,9 +32,11 @@ const lerpConfigDoor = {
   move: false
 }
 
+let doorOpen = false;
+
 const lerpConfigPlataform = {
   destination: new THREE.Vector3(0, 3, 57),
-  alpha: 0.01,
+  alpha: 0.02,
   move: false
 }
 
@@ -411,6 +413,9 @@ function render() {
     if(lerpConfigPlataform.move) {
       plataform.position.lerp(lerpConfigPlataform.destination, lerpConfigPlataform.alpha);
       plataformBox.setFromObject(plataform)
+
+      if(plataform.position.distanceTo(lerpConfigPlataform.destination) < 0.1) 
+        downPlataform();
     }
 
 
@@ -420,7 +425,7 @@ function render() {
     if (moveDir.lengthSq() > 0) {
 
       moveDir.normalize();
-      // console.log(pos);
+      console.log(pos.y);
   
       // Tentativa completa
       let newPos = pos.clone().add(moveDir.clone().multiplyScalar(velocidade));
@@ -447,7 +452,14 @@ function render() {
           // console.log("Entrou");
           atualizaGravidade(cube);
         }
-         
+        
+
+      //Teste da plataforma
+      if(cube.position.x > -9 && cube.position.x < 9 && cube.position.z < - 55 && cube.position.z > -65 && doorOpen) {
+        downPlataform();
+        console.log("Entroy")
+      }
+        
     }
     
   }
@@ -495,6 +507,11 @@ function checkCollisions(walls, areas, newCubePos) {
       }
     }
   }
+
+  if (Math.abs(plataform.position.y - 3) > 0.1 && Math.abs(plataform.position.y + 3) > 0.1 && newCubePos.z < -64 && newCubePos.z > -71 && newCubePos.y == 2) {
+  // Está em movimento
+  return true;
+}
 
   //Testa blocos da área 2
   if(newCubePos.z < -53 && newCubePos.z > -181 && newCubePos.x > -64 && newCubePos.x < 64){
@@ -565,10 +582,17 @@ function checkCollisions(walls, areas, newCubePos) {
 
 function openArea2Door(){
   lerpConfigDoor.move = true; // Ativa o movimento da porta
+  doorOpen = true;
   
 }
 
 function upPlataform(){
+  lerpConfigPlataform.destination = new THREE.Vector3(0, 3, 57)
   lerpConfigPlataform.move = true; // Ativa o movimento da plataforma
   // cube.position.y = plataform.position.y; 
+}
+
+function downPlataform(){
+  lerpConfigPlataform.destination = new THREE.Vector3(0,-3,57);
+  lerpConfigPlataform.move = true;
 }

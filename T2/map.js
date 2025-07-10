@@ -166,7 +166,7 @@ class Map{
     this.plataform = new THREE.Mesh(plataformGeometry, plataformMaterial);
     this.plataform.castShadow = true; 
     this.plataform.receiveShadow = true; 
-    this.plataform.position.set(0, -3, 57);
+    this.plataform.position.set(0, 3, 57);
     area2.add(this.plataform);
     this.plataformBox = new THREE.Box3().setFromObject(this.plataform);
     // const helperp = new THREE.Box3Helper(this.plataformBox, 0xffff00);
