@@ -17,6 +17,8 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Adiciona tipo de shadow map
 let material = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
 let camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 let clock = new THREE.Clock();
+
+
 // const raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, -1, 0).normalize(), 0, 2);
 const raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, -1, 0).normalize(), 0, 2);
 
@@ -55,7 +57,49 @@ const laddersPosition = [
   },
 ]
 
+let armaAtual = 'lançador';
 
+function alternarParaLançador() {
+  armaAtual = 'lançador';
+  gunSprite.visible = false;
+  shot.visible = true;
+  cylinder.visible = true;
+}
+
+function alternarParaMetralhadora() {
+  armaAtual = 'metralhadora';
+  gunSprite.visible = true;
+  shot.visible = false;
+  cylinder.visible = false;
+}
+
+
+
+// Cria a metralhadora como um sprite
+const textureLoader = new THREE.TextureLoader();
+const spriteTexture = textureLoader.load('../assets/2025.1_T2_Assets/chaingun.png');
+spriteTexture.repeat.set(1 / 3, 1); // 3 quadros na horizontal
+spriteTexture.offset.set(0, 0); // começa do primeiro frame
+
+const spriteMaterial = new THREE.SpriteMaterial({ 
+  map: spriteTexture, 
+  transparent: true,
+  color: 0xffffff
+});
+const gunSprite = new THREE.Sprite(spriteMaterial);
+
+gunSprite.scale.set(1, 1.5, 1); // aumenta o tamanho para garantir visibilidade
+camera.add(gunSprite);
+gunSprite.position.set(0, -0.8, -2); // posição mais central e próxima
+gunSprite.visible = false; // só mostra quando metralhadora estiver ativa
+
+let spriteFrame = 0;
+const totalFrames = 3;
+
+function animarMetralhadoraSprite() {
+  spriteFrame = (spriteFrame + 1) % totalFrames;
+  spriteTexture.offset.x = spriteFrame / totalFrames;
+}
 
 //criando iluminação
 let ligthposition = new THREE.Vector3(30, 60, 30);
@@ -169,6 +213,14 @@ document.addEventListener('keydown', (event) => {
     case "ArrowRight": 
       movimento.direita = true; 
       break;
+    case 'Digit1':
+        alternarParaMetralhadora();
+        console.log("Troca para metralhadora");
+        break;
+    case 'Digit2':
+        alternarParaLançador();
+        console.log("Troca para lançador");
+        break;
   }
 }, false);
 
@@ -211,11 +263,20 @@ document.addEventListener('mouseup', (event) => {
     shotInterval = null;
 });
 
+window.addEventListener('wheel', (event) => {
+  if (event.deltaY > 0) {
+    alternarParaMetralhadora();
+  } else {
+    alternarParaLançador();
+  }
+  console.log("Arma atual:", armaAtual);
+});
+
 function shoot() {
   const now = Date.now();
-  if ((now - lastShotTime) >= cadenciaMin) {
+  if ((now - lastShotTime) >= cadenciaMin && armaAtual === 'lançador') {
     lastShotTime = now;
-
+        
     // Clona o tiro
     const shotClone = shot.clone();
     
@@ -247,6 +308,32 @@ function shoot() {
     // Armazena a bala ativa
     activeShots.push(shotClone);
   }
+  else if (armaAtual === 'metralhadora') {
+    animarMetralhadoraSprite();
+    // Metralhadora: apenas raycasting
+      const origin = new THREE.Vector3();
+      camera.getWorldPosition(origin);
+      const direction = new THREE.Vector3();
+      camera.getWorldDirection(direction).normalize();
+
+      const raycasterShoot = new THREE.Raycaster(origin, direction);
+      
+      // Pega todos os objetos da cena que podem ser atingidos
+      const allObjects = [];
+      scene.traverse((child) => {
+        if (child.isMesh && child !== cube && child !== cylinder && child !== shot && !activeShots.includes(child)) {
+          allObjects.push(child);
+        }
+      });
+
+      const intersects = raycasterShoot.intersectObjects(allObjects, true);
+
+      if (intersects.length > 0) {
+        const hit = intersects[0];
+        console.log("Acertou", hit.object.name || hit.object);
+        // Aqui você pode exibir um efeito de impacto, som, etc.
+        }
+    }
 }
 let velocidadeVertical = 0;
 let amortecimento = 0.5;
