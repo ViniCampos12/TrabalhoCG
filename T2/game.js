@@ -11,6 +11,9 @@ import Map from './map.js';
 import Ramp from './ramp.js';
 
 let scene = new THREE.Scene();
+// Define a cor de fundo da cena para azul céu
+scene.background = new THREE.Color(0x6BB6FF); // Cor azul céu um pouco mais escura
+
 let renderer = initRenderer();
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Adiciona tipo de shadow map para sombras mais suaves
@@ -68,21 +71,64 @@ const laddersPosition = [
   },
 ]
 
+let armaAtual = 'lançador';
+
+function alternarParaLançador() {
+  armaAtual = 'lançador';
+  gunSprite.visible = false;
+  shot.visible = true;
+  cylinder.visible = true;
+}
+
+function alternarParaMetralhadora() {
+  armaAtual = 'metralhadora';
+  gunSprite.visible = true;
+  shot.visible = false;
+  cylinder.visible = false;
+}
 
 
-//ILUMINAÇÃO
-let ligthposition = new THREE.Vector3(30, 60, 30);
+
+// Cria a metralhadora como um sprite
+const textureLoader = new THREE.TextureLoader();
+const spriteTexture = textureLoader.load('../assets/2025.1_T2_Assets/chaingun.png');
+spriteTexture.repeat.set(1 / 3, 1); // 3 quadros na horizontal
+spriteTexture.offset.set(0, 0); // começa do primeiro frame
+
+const spriteMaterial = new THREE.SpriteMaterial({ 
+  map: spriteTexture, 
+  transparent: true,
+  color: 0xffffff
+});
+const gunSprite = new THREE.Sprite(spriteMaterial);
+
+gunSprite.scale.set(1, 1.5, 1); // aumenta o tamanho para garantir visibilidade
+camera.add(gunSprite);
+gunSprite.position.set(0, -0.8, -2); // posição mais central e próxima
+gunSprite.visible = false; // só mostra quando metralhadora estiver ativa
+
+let spriteFrame = 0;
+const totalFrames = 3;
+
+function animarMetralhadoraSprite() {
+  spriteFrame = (spriteFrame + 1) % totalFrames;
+  spriteTexture.offset.x = spriteFrame / totalFrames;
+}
+
+//criando iluminação - Sol às 10-11h da manhã no verão
+let ligthposition = new THREE.Vector3(100, 150, 50); // Posição alto e ligeiramente sudeste
 let ligthColor = "rgb(255, 255, 255)";
-let directionalLight = new THREE.DirectionalLight(ligthColor, 5.0);
+let directionalLight = new THREE.DirectionalLight(ligthColor, 6.0); // Intensidade um pouco maior (sol forte do verão)
 directionalLight.position.copy(ligthposition);
 directionalLight.castShadow = true;
 directionalLight.shadow.mapSize.width = 4096; 
 directionalLight.shadow.mapSize.height = 4096;
 
-directionalLight.shadow.camera.left = -300; 
-directionalLight.shadow.camera.right = 300;
-directionalLight.shadow.camera.top = 300;
-directionalLight.shadow.camera.bottom = -300;
+// Aumenta significativamente a área de cobertura da sombra para cobrir as paredes grandes
+directionalLight.shadow.camera.left = -600; 
+directionalLight.shadow.camera.right = 600;
+directionalLight.shadow.camera.top = 600;
+directionalLight.shadow.camera.bottom = -600;
 directionalLight.shadow.camera.near = 1;
 directionalLight.shadow.camera.far = 1000;
 scene.add(directionalLight);
@@ -136,7 +182,7 @@ const key2 = map.keyMesh2;
 let hasKey1 = false;
 
 //Cria pessoa como um cubo
-var cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
+var cubeGeometry = new THREE.BoxGeometry(2, 2, 2);
 var cube = new THREE.Mesh(cubeGeometry, material);
 cube.position.set(0.0, 2.0, 0.0);
 scene.add(cube);
@@ -195,6 +241,14 @@ document.addEventListener('keydown', (event) => {
     case "ArrowRight": 
       movimento.direita = true; 
       break;
+    case 'Digit1':
+        alternarParaMetralhadora();
+        console.log("Troca para metralhadora");
+        break;
+    case 'Digit2':
+        alternarParaLançador();
+        console.log("Troca para lançador");
+        break;
   }
 }, false);
 
@@ -235,13 +289,27 @@ document.addEventListener('mouseup', (event) => {
     isShooting = false;
     clearInterval(shotInterval);
     shotInterval = null;
+
+    if (armaAtual === 'metralhadora') {
+        spriteTexture.offset.x = 0; // Set back to the first frame
+        spriteFrame = 0; // Reset the frame counter
+    }
+});
+
+window.addEventListener('wheel', (event) => {
+  if (event.deltaY > 0) {
+    alternarParaMetralhadora();
+  } else {
+    alternarParaLançador();
+  }
+  console.log("Arma atual:", armaAtual);
 });
 
 function shoot() {
   const now = Date.now();
-  if ((now - lastShotTime) >= cadenciaMin) {
+  if ((now - lastShotTime) >= cadenciaMin && armaAtual === 'lançador') {
     lastShotTime = now;
-
+        
     // Clona o tiro
     const shotClone = shot.clone();
     
@@ -272,7 +340,33 @@ function shoot() {
 
     // Armazena a bala ativa
     activeShots.push(shotClone);
-  } 
+  }
+  else if (armaAtual === 'metralhadora') {
+    animarMetralhadoraSprite();
+    // Metralhadora: apenas raycasting
+      const origin = new THREE.Vector3();
+      camera.getWorldPosition(origin);
+      const direction = new THREE.Vector3();
+      camera.getWorldDirection(direction).normalize();
+
+      const raycasterShoot = new THREE.Raycaster(origin, direction);
+      
+      // Pega todos os objetos da cena que podem ser atingidos
+      const allObjects = [];
+      scene.traverse((child) => {
+        if (child.isMesh && child !== cube && child !== cylinder && child !== shot && !activeShots.includes(child)) {
+          allObjects.push(child);
+        }
+      });
+
+      const intersects = raycasterShoot.intersectObjects(allObjects, true);
+
+      if (intersects.length > 0) {
+        const hit = intersects[0];
+        console.log("Acertou", hit.object.name || hit.object);
+        // Aqui você pode exibir um efeito de impacto, som, etc.
+        }
+    }
 }
 let velocidadeVertical = 0;
 let amortecimento = 0.5;
@@ -291,7 +385,7 @@ window.addEventListener('resize', () => {
 function render() {
   requestAnimationFrame(render);
   const delta = clock.getDelta();
-  const velocidade = 20.0 * delta;
+  const velocidade = 50.0 * delta;
 
   if (controls.isLocked) {
 
