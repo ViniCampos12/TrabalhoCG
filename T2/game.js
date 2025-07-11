@@ -9,6 +9,8 @@ import {
 } from "../libs/util/util.js";
 import Map from './map.js';
 import Ramp from './ramp.js';
+import { spawnLostSouls, updateLostSouls, checkCollisionForSouls } from './lostSoul.js';
+
 
 let scene = new THREE.Scene();
 let renderer = initRenderer();
@@ -115,6 +117,7 @@ var cube = new THREE.Mesh(cubeGeometry, material);
 cube.position.set(0.0, 2.0, 0.0);
 
 scene.add(cube);
+spawnLostSouls();
 
 //Cria arma como cilindro
 const geometryC = new THREE.CylinderGeometry( 0.13, 0.13, 2.5, 32 ); 
@@ -400,11 +403,10 @@ function render() {
           // console.log("Entrou");
           atualizaGravidade(cube);
         }
-         
-    }
-    
-  }
 
+    }
+      updateLostSouls(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
+  }
   renderer.render(scene, camera);
 }
 
@@ -501,3 +503,5 @@ function checkCollisions(walls, areas, newCubePos) {
 }
 
 render();
+
+export {scene};
