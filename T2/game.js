@@ -19,7 +19,7 @@ let camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHei
 let clock = new THREE.Clock();
 const raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, -1, 0).normalize(), 0, 2);
 
-//Lerp config para mexer a plataforma no centro da area
+//LERP CONFIG
 const lerpConfigSuport = {
   destination: new THREE.Vector3(0.0, 4, 0.0),
   alpha: 0.01,
@@ -46,14 +46,8 @@ const lerpConfigPlataform = {
   move: false
 }
 
-
+//Verificação da posição das escadas
 const laddersPosition = [
-  {
-    minX: -8,
-    maxX: 8,
-    minZ: -71,
-    maxZ: -64,
-  },
   {
     minX: -188,
     maxX: -172,
@@ -76,7 +70,7 @@ const laddersPosition = [
 
 
 
-//criando iluminação
+//ILUMINAÇÃO
 let ligthposition = new THREE.Vector3(30, 60, 30);
 let ligthColor = "rgb(255, 255, 255)";
 let directionalLight = new THREE.DirectionalLight(ligthColor, 5.0);
@@ -117,37 +111,34 @@ directionalLightBack.castShadow = false; // não projeta sombras
 
 scene.add(directionalLightBack);
 
+
 // Chama o mapa
 let map = new Map(scene);
+
+//Variáveis importante advindas do map
 const wallBoxes = map.getWallBoxes();
 const areaBoxes = map.getAreaBoxes();
-console.log("Area Boxes:");
-console.log(areaBoxes);
 const collumnsBoxes = map.getCollumnsBoxes();
 const blockBoxes = map.getBlocksBoxes();
-console.log("Block Boxes:");
-console.log(blockBoxes);
 const rampMesh = map.getRamps();
 const suport1 = map.suport1;
 const suport1Box = map.suport1Box;
 const doorArea2 = map.door;
-const doorBox = map.doorBox; // Bounding box da porta
+const doorBox = map.doorBox;
 const suport2 = map.suport2;
 const suport2Box = map.getSuport2Box();
-const plataform = map.plataform; // Plataforma da área 2
+const plataform = map.plataform; 
 const plataformBox = map.plataformBox;
 const suportTop2 = map.suportTop2;
 const suportTop2Box = map.suportTop2Box;
 const key = map.keyMesh;
 const key2 = map.keyMesh2;
-let hasKey1 = true;
-// scene.attach(plataform);
+let hasKey1 = false;
 
 //Cria pessoa como um cubo
 var cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
 var cube = new THREE.Mesh(cubeGeometry, material);
 cube.position.set(0.0, 2.0, 0.0);
-
 scene.add(cube);
 
 //Cria arma como cilindro
@@ -295,6 +286,7 @@ window.addEventListener('resize', () => {
 
 
   render();
+
 // Update loop
 function render() {
   requestAnimationFrame(render);
@@ -347,9 +339,7 @@ function render() {
         }
       }
     }
-
-
-      
+ 
 
     if (shot.position.length() > 500 || atingiuAlgo) {
       scene.remove(shot);
@@ -384,14 +374,13 @@ function render() {
 
     const intersects = raycaster.intersectObjects(rampsFiltered, true);
 
-    // plataform.updateMatrixWorld(true);
-    // const isIntersectPlataform = raycaster.intersectObject(plataform, true).length > 0;
-
 
     if (movimento.frente) moveDir.add(forward);
     if (movimento.tras) moveDir.add(forward.clone().negate());
     if (movimento.direita) moveDir.add(right);
     if (movimento.esquerda) moveDir.add(right.clone().negate());
+
+    //Subida escada area 1
     if (intersects.length > 0 && intersects[0].distance < 4) {
       const yDoImpacto = intersects[0].point.y;
 
@@ -399,6 +388,8 @@ function render() {
         cube.position.y = yDoImpacto;
       }
     }
+
+    //Atualizações dos lerpConfigs
     if(lerpConfigSuport.move) {
       suport1.position.lerp(lerpConfigSuport.destination, lerpConfigSuport.alpha);
       suport1Box.setFromObject(suport1);
@@ -412,6 +403,7 @@ function render() {
       doorBox.setFromObject(doorArea2); // Atualiza a bounding box da porta
     }
     
+    //Subida da plataforma da area 2
     const isIntersectPlataform = raycaster.intersectObject(plataform, true).length > 0;
 
     if (isIntersectPlataform) {
@@ -419,17 +411,13 @@ function render() {
         plataform.attach(cube); // Anexa o personagem à plataforma
       }
 
-      // Ajusta a altura suavemente se quiser
-      cube.position.y = plataform.position.y + 2; // Considera altura do personagem
-      // lerpConfigPlataform.move = true;
+      cube.position.y = plataform.position.y + 2; //Por conta da altura do cubo
 
     } else {
       if (cube.parent !== scene) {
         scene.attach(cube); // Remove da plataforma se saiu
       }
     }
-
-
 
     if(lerpConfigPlataform.move) {
       plataform.position.lerp(lerpConfigPlataform.destination, lerpConfigPlataform.alpha);
@@ -469,25 +457,21 @@ function render() {
       //Se estiver fora da área da escada ele atualiza a gravidade
       const inLadderArea = laddersPosition.some(ladder => cube.position.x >= ladder.minX && cube.position.x <= ladder.maxX &&cube.position.z >= ladder.minZ && cube.position.z <= ladder.maxZ);
 
-        if(!inLadderArea && cube.position.y > 2) {
-          // console.log("Entrou");
-          atualizaGravidade(cube);
-        }
-        
+      if(!inLadderArea && cube.position.y > 2) 
+        atualizaGravidade(cube);  
 
       //Teste da plataforma
       if(cube.position.x > -9 && cube.position.x < 9 && cube.position.z < - 55 && cube.position.z > -65 && doorOpen) {
         downPlataform();
-        console.log("Entroy")
-      }
-        
-    }
-    
+      }   
+    }   
   }
 
   renderer.render(scene, camera);
 }
 
+
+//FUNÇÕES
 const pos = cube.position;
 const ramp = new Ramp();
 
@@ -551,7 +535,6 @@ function checkCollisions(walls, areas, newCubePos) {
 
     if(futureBB.intersectsBox(suport2Box)){
       if(hasKey1){
-        console.log("Tenho key1")
         suport2.add(key);
         key.visible = true;
         openArea2Door();
@@ -568,7 +551,6 @@ function checkCollisions(walls, areas, newCubePos) {
 
     for (const block of blockBoxes) {
       if (futureBB.intersectsBox(block)) {
-        // console.log("Colidiu com bloco");
         return true;
       }
     }
@@ -584,7 +566,6 @@ function checkCollisions(walls, areas, newCubePos) {
 
   //Testa rampa área 2
   if((newCubePos.z > -69   && newCubePos.z < -64) && (newCubePos.x > -6 && newCubePos.x < 6)){
-    // console.log("Colidiu com rampa");
     return false;
   }
 
@@ -592,7 +573,6 @@ function checkCollisions(walls, areas, newCubePos) {
   if(Math.abs(newCubePos.x) > 248 || Math.abs(newCubePos.z) > 248){
     for (const wall of walls) {
       if (futureBB.intersectsBox(wall)) {
-        // console.log("Colidiu com parede");
         collision = true;
         break; 
       }
@@ -608,7 +588,6 @@ function checkCollisions(walls, areas, newCubePos) {
     if(newCubePos.x > -220 && newCubePos.x < -92)
       collision = futureBB.intersectsBox(areas[1]);
     if(newCubePos.x > -64 && newCubePos.x < 64 && newCubePos.z < -65 ){
-      // console.log("Colidiu com area 2");
       collision = futureBB.intersectsBox(areas[2]);
     }
       
@@ -621,15 +600,14 @@ function checkCollisions(walls, areas, newCubePos) {
 }
 
 function openArea2Door(){
-  lerpConfigDoor.move = true; // Ativa o movimento da porta
+  lerpConfigDoor.move = true;   
   doorOpen = true;
   
 }
 
 function upPlataform(){
   lerpConfigPlataform.destination = new THREE.Vector3(0, 3, 57)
-  lerpConfigPlataform.move = true; // Ativa o movimento da plataforma
-  // cube.position.y = plataform.position.y; 
+  lerpConfigPlataform.move = true; 
 }
 
 function downPlataform(){

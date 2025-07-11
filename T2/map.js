@@ -9,6 +9,7 @@ export let wallBox;
 class Map{
   
   constructor(scene){
+    //Atributos importante que são pegos pela game
     this.scene = scene;
     this.wallsBox = [];   //Vetor with all bb´s of wall
     this.areasBox = [];   //Vetor with all bb´s of areas
@@ -36,9 +37,8 @@ class Map{
     scene.add(area);
 
     // create area 1
-    let material1 = new THREE.MeshLambertMaterial({ color: "rgb(46,139,87)" });
-    let area1 = this.createDefaultArea(material1,-156,2,-125,4);
-    
+    let material1 = new THREE.MeshLambertMaterial({ color: "rgb(123, 117, 99)" });
+    let area1 = this.createDefaultArea(material1,-156,2,-125,4);   
 
     //Create Extend Area of area 1
     let smallExtendedAreaGeometry = new THREE.BoxGeometry(30,4,16);
@@ -76,54 +76,51 @@ class Map{
         zInicial -= 18;
       }  
     }
-
     let xInicial = 51;
     for(let i=0;i<7;i++){
       this.createColluns(area1,xInicial,12,-53,true);
       xInicial -= 18;
     }
+
     
     //Add collumns on the top
     let topCollumnGeometry = new THREE.BoxGeometry(5,2,80);
-    let topCollumn = new THREE.Mesh(topCollumnGeometry, setDefaultMaterial("rgb(114, 18, 112)"));
+    let topCollumn = new THREE.Mesh(topCollumnGeometry, setDefaultMaterial("rgb(159, 146, 121)"));
     topCollumn.position.set(59, 23, -13);
     area1.add(topCollumn);
 
-    let topCollumn2 = new THREE.Mesh(topCollumnGeometry, setDefaultMaterial("rgb(114, 18, 112)"));
+    let topCollumn2 = new THREE.Mesh(topCollumnGeometry, setDefaultMaterial("rgb(159, 146, 121)"));
     topCollumn2.position.set(-59, 23, -13);
     area1.add(topCollumn2);
     
     let topCollumnGeometryBack = new THREE.BoxGeometry(123,2,5);
-    let topCollumnBack = new THREE.Mesh(topCollumnGeometryBack, setDefaultMaterial("rgb(114, 18, 112)"));
+    let topCollumnBack = new THREE.Mesh(topCollumnGeometryBack, setDefaultMaterial("rgb(159, 146, 121)"));
     topCollumnBack.position.set(0, 23, -52);
     area1.add(topCollumnBack);
     
-    //Add plataform on the middle
+
+    //Add suport on the middle
     let suportGeometry = new THREE.BoxGeometry(2,4,2);
-    this.suport1 = new THREE.Mesh(suportGeometry, new THREE.MeshLambertMaterial({ color: "rgb(24, 199, 181)" }));
+    this.suport1 = new THREE.Mesh(suportGeometry, new THREE.MeshLambertMaterial({ color: "rgb(143, 72, 38)" }));
     this.suport1.position.set(0, -10, 0);
     this.suport1Box = new THREE.Box3().setFromObject(this.suport1);
-    // let helper3 = new THREE.Box3Helper(this.suport1Box, 'white');
-    // this.scene.add(helper3); // helper deve estar na scene
     this.collumnsBox.push(this.suport1Box);
 
+    //Add key on suport
     this.keyMesh = this.createKey("red");
     let keyBox = new THREE.Box3().setFromObject(this.keyMesh);
     this.collumnsBox.push(keyBox);
     this.suport1.add(this.keyMesh);
-
     area1.add(this.suport1);
-
-     
-
 
     scene.add(area1);
 
+
+
     // create area 2
-    let material2 = new THREE.MeshLambertMaterial({ color: "rgb(168,50,121)" });
+    let material2 = new THREE.MeshLambertMaterial({ color: "rgb(14, 21, 55)" });
     let area2 = this.createDefaultArea(material2,0,3,-125,6);
     
-
     //Create Extend Area of area 2
     let extendedAreaGeometry2 = new THREE.BoxGeometry(54,6,16);
     let extendedArea = new THREE.Mesh(extendedAreaGeometry2,material2);
@@ -142,27 +139,25 @@ class Map{
 
     // Create door
     const doorGeometry = new THREE.BoxGeometry(16, 8, 0.1);
-    const doorMaterial = new THREE.MeshLambertMaterial({ color: "rgb(157, 157, 157)" });
+    const doorMaterial = new THREE.MeshLambertMaterial({ color: "rgb(186, 184, 184)" });
     this.door = new THREE.Mesh(doorGeometry, doorMaterial);
     this.door.castShadow = true; // A porta também deve projetar sombras
     this.door.receiveShadow = true; // A porta também deve receber sombras 
-    
     this.door.position.set(0, 0, 62);
     area2.add(this.door);
-
     this.doorBox = new THREE.Box3().setFromObject(this.door);
     this.blocksBox.push(this.doorBox);
-    let helper = new THREE.Box3Helper(this.doorBox, 'white');
-    this.scene.add(helper); // helper deve estar na scene
     
+    //Para parecer que a porta não some para baixo
     const doorfloorGeometry = new THREE.BoxGeometry(16, 0.05, 0.1);
     const doorfloor = new THREE.Mesh(doorfloorGeometry, doorMaterial);
     doorfloor.receiveShadow = true;
     doorfloor.position.set(0, -3, 62);
     area2.add(doorfloor); 
     
+    //Create plataform
     const plataformGeometry = new THREE.BoxGeometry(16,0.1,6);
-    const plataformMaterial = new THREE.MeshLambertMaterial({ color: "rgb(153, 39, 39)" });
+    const plataformMaterial = new THREE.MeshLambertMaterial({ color: "rgb(14, 21, 55)" });
     this.plataform = new THREE.Mesh(plataformGeometry, plataformMaterial);
     this.plataform.castShadow = true; 
     this.plataform.receiveShadow = true; 
@@ -172,27 +167,27 @@ class Map{
     // const helperp = new THREE.Box3Helper(this.plataformBox, 0xffff00);
     // scene.add(helperp);
 
-    this.suport2 = new THREE.Mesh(suportGeometry, setDefaultMaterial("rgb(24, 199, 181)"));
+    //Create out suport
+    this.suport2 = new THREE.Mesh(suportGeometry, setDefaultMaterial("rgb(143, 72, 38)"));
     this.suport2.position.set(10, 1, -55);
     scene.add(this.suport2);
     this.suport2Box = new THREE.Box3().setFromObject(this.suport2);
     
 
-
     //Create blocks
-    this.createBlocks(area2,20,10,20,20);
-    this.createBlocks(area2,-50,10,50,20);
-    this.createBlocks(area2,30,10,10,20);
-    this.createBlocks(area2,0,10,0,20);
-    this.createBlocks(area2,-20,10,10,20);
-    this.createBlocks(area2,-40,10,30,20);
-    this.createBlocks(area2,40,10,50,20);
-    this.createBlocks(area2,50,10,-20,20);
-    this.createBlocks(area2,-40,10,-40,20);
-    this.createBlocks(area2,-1,10,-40,20);
+    this.createBlocks(area2,20,20,10);
+    this.createBlocks(area2,-50,50,20);
+    this.createBlocks(area2,30,10,15);
+    this.createBlocks(area2,0,0,12);
+    this.createBlocks(area2,-20,10,9);
+    this.createBlocks(area2,-40,30,8);
+    this.createBlocks(area2,40,50,8);
+    this.createBlocks(area2,50,-20,20);
+    this.createBlocks(area2,-40,-40,20);
+    this.createBlocks(area2,-1,-40,10);
     
     //Add plataform on the middle
-    this.suportTop2 = new THREE.Mesh(suportGeometry, new THREE.MeshLambertMaterial({ color: "rgb(24, 199, 181)" }));
+    this.suportTop2 = new THREE.Mesh(suportGeometry, new THREE.MeshLambertMaterial({ color: "rgb(143, 72, 38)" }));
     this.suportTop2.position.set(0, -8, 30);
     this.suportTop2Box = new THREE.Box3().setFromObject(this.suportTop2);
     this.blocksBox.push(this.suportTop2Box);
@@ -203,8 +198,6 @@ class Map{
     this.blocksBox.push(keyBox2);
     this.suportTop2.add(this.keyMesh2);
     
-    // let helper = new THREE.Box3Helper(wallBox2, 'white');
-    // this.scene.add(helper); // helper deve estar na scene 
     scene.add(area2);
 
     // create area 3
@@ -322,7 +315,7 @@ class Map{
 
   createColluns(area, x, y, z, rotacionaFundo){
      let collumnGeometry = new THREE.CylinderGeometry(2, 2, 20);
-    let collumnMaterial = setDefaultMaterial("rgb(114, 18, 112)");
+    let collumnMaterial = setDefaultMaterial("rgb(159, 146, 121)");
     let collumn = new THREE.Mesh(collumnGeometry, collumnMaterial);
     collumn.position.set(x, y, z);
 
@@ -339,13 +332,13 @@ class Map{
     // this.scene.add(helper); // helper deve estar na scene
   }
 
-  createBlocks(area,x,y,z,height){
+  createBlocks(area,x,z,height){
     let blockGeometry = new THREE.BoxGeometry(4, height, 4);
     let blockMaterial = new THREE.MeshLambertMaterial({ color: "rgb(171, 98, 21)" });
     let block = new THREE.Mesh(blockGeometry, blockMaterial);
     block.castShadow = true; 
     block.receiveShadow = true; 
-    block.position.set(x, y, z);
+    block.position.set(x, 3+height/2, z);
 
     area.add(block); // Adiciona à área (Group)
 
