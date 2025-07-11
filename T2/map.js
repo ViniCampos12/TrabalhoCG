@@ -85,16 +85,19 @@ class Map{
     
     //Add collumns on the top
     let topCollumnGeometry = new THREE.BoxGeometry(5,2,80);
-    let topCollumn = new THREE.Mesh(topCollumnGeometry, setDefaultMaterial("rgb(159, 146, 121)"));
+    let topCollumn = new THREE.Mesh(topCollumnGeometry, new THREE.MeshLambertMaterial({color: "rgb(159, 146, 121)"}));
+    topCollumn.castShadow = true;
     topCollumn.position.set(59, 23, -13);
     area1.add(topCollumn);
 
-    let topCollumn2 = new THREE.Mesh(topCollumnGeometry, setDefaultMaterial("rgb(159, 146, 121)"));
+    let topCollumn2 = new THREE.Mesh(topCollumnGeometry, new THREE.MeshLambertMaterial({color: "rgb(159, 146, 121)"}));
+    topCollumn2.castShadow = true;
     topCollumn2.position.set(-59, 23, -13);
     area1.add(topCollumn2);
     
     let topCollumnGeometryBack = new THREE.BoxGeometry(123,2,5);
-    let topCollumnBack = new THREE.Mesh(topCollumnGeometryBack, setDefaultMaterial("rgb(159, 146, 121)"));
+    let topCollumnBack = new THREE.Mesh(topCollumnGeometryBack, new THREE.MeshLambertMaterial({color: "rgb(159, 146, 121)"}));
+    topCollumnBack.castShadow = true;
     topCollumnBack.position.set(0, 23, -52);
     area1.add(topCollumnBack);
     
@@ -102,6 +105,8 @@ class Map{
     //Add suport on the middle
     let suportGeometry = new THREE.BoxGeometry(2,4,2);
     this.suport1 = new THREE.Mesh(suportGeometry, new THREE.MeshLambertMaterial({ color: "rgb(143, 72, 38)" }));
+    this.suport1.castShadow = true;
+    this.suport1.receiveShadow = true;
     this.suport1.position.set(0, -10, 0);
     this.suport1Box = new THREE.Box3().setFromObject(this.suport1);
     this.collumnsBox.push(this.suport1Box);
@@ -188,6 +193,8 @@ class Map{
     
     //Add plataform on the middle
     this.suportTop2 = new THREE.Mesh(suportGeometry, new THREE.MeshLambertMaterial({ color: "rgb(143, 72, 38)" }));
+    this.suportTop2.receiveShadow = true;
+    this.suportTop2.castShadow = true;
     this.suportTop2.position.set(0, -8, 30);
     this.suportTop2Box = new THREE.Box3().setFromObject(this.suportTop2);
     this.blocksBox.push(this.suportTop2Box);
