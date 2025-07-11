@@ -1,6 +1,7 @@
 // lostSoul.js
 import * as THREE from 'three';
 import { scene } from './game.js'; // assegure que main.js exporte scene
+import { OBJLoader } from '../build/jsm/loaders/OBJLoader.js';
 
 const lostSouls = [];
 const numSouls = 5;
@@ -8,31 +9,65 @@ const safeDist = 30;
 const chargeDur = 1000;
 const cooldownDur = 2000;
 
+const loader = new OBJLoader();
+let scrullPrefab = null;
+
+loader.load('../assets/skull.obj', (obj) => {
+  scrullPrefab = obj;
+}, undefined, (err) => {
+  console.error('Erro ao carregar scrull.obj:', err);
+});
+
 // Cria mesh simples — substitua por asset real se preferir
 function createMesh() {
-  const geo = new THREE.SphereGeometry(2, 16, 16);
-  const mat = new THREE.MeshStandardMaterial({ color: 0xff3300, emissive: 0xaa0000 });
-  return new THREE.Mesh(geo, mat);
+ if (!scrullPrefab) {
+    console.warn("scrullPrefab ainda não carregado");
+    return null; // ou um cubo temporário, se quiser
+  }
+
+  const soul = scrullPrefab.clone(true); // clona o modelo completo
+  soul.traverse(child => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+      child.material = child.material.clone();
+      
+    }
+  });
+
+  soul.scale.set(2, 2, 2); // ajuste de tamanho
+  return soul;
 }
 
 export function spawnLostSouls() {
+  if (!scrullPrefab) {
+    console.warn("Modelo scrull ainda não carregado. Tente novamente depois.");
+    return;
+  }
+
   for (let i = 0; i < numSouls; i++) {
+    const mesh = createMesh();
+    if (!mesh) continue;
+
     const soul = {
-      mesh: createMesh(),
+      mesh,
       hp: 20,
       state: 'patrol',
       chargeDir: new THREE.Vector3(),
       timers: { chargeStart: 0, lastCharge: 0 }
     };
-    soul.mesh.position.set(
+
+    mesh.position.set(
       Math.random() * -80 + -120,
       10,
       Math.random() * -60 - 100
     );
-    scene.add(soul.mesh);
+
+    scene.add(mesh);
     lostSouls.push(soul);
   }
 }
+
 
 // Função para checar colisão dos Lost Souls
 export function checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes) {
@@ -89,12 +124,14 @@ for (const soul of lostSouls) {
     soul.timers.chargeStart = now;
   }
 
+  // ...existing code...
   if (soul.state === 'patrol') {
     const patrolSpeed = 0.05;
     const dx = Math.sin(now * 0.001 + soul.mesh.id) * patrolSpeed;
     const dz = Math.cos(now * 0.001 + soul.mesh.id) * patrolSpeed;
 
     newPos.copy(soul.mesh.position).add(new THREE.Vector3(dx, 0, dz));
+    newPos.y = Math.max(newPos.y, 10); // Garante que nunca vá abaixo de Y=15
 
     if (!checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
       soul.mesh.position.copy(newPos);
@@ -102,6 +139,7 @@ for (const soul of lostSouls) {
   } else if (soul.state === 'charge') {
     moveVec.copy(soul.chargeDir).multiplyScalar(1.2);
     newPos.copy(soul.mesh.position).add(moveVec);
+    newPos.y = Math.max(newPos.y, 10); // Garante que nunca vá abaixo de Y=15
 
     if (!checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
       soul.mesh.position.copy(newPos);
@@ -117,7 +155,8 @@ for (const soul of lostSouls) {
   } else if (soul.state === 'cooldown') {
     moveVec.set(0, 0, 0.05);
     newPos.copy(soul.mesh.position).add(moveVec);
-
+    newPos.y = Math.max(newPos.y, 10); // Garante que nunca vá abaixo de Y=15
+    
     if (!checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
       soul.mesh.position.copy(newPos);
     }
@@ -126,6 +165,7 @@ for (const soul of lostSouls) {
       soul.state = 'patrol';
     }
   }
+// ...existing code...
 
   soul.mesh.lookAt(player.position);
 }
