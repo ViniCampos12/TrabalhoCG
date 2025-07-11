@@ -354,18 +354,34 @@ function shoot() {
       // Pega todos os objetos da cena que podem ser atingidos
       const allObjects = [];
       scene.traverse((child) => {
-        if (child.isMesh && child !== cube && child !== cylinder && child !== shot && !activeShots.includes(child)) {
+        // Verifica se é um Mesh válido e não é um sprite ou objeto da UI
+        if (child.isMesh && 
+            child !== cube && 
+            child !== cylinder && 
+            child !== shot && 
+            child !== gunSprite &&
+            child !== sunMesh &&
+            !activeShots.includes(child) && 
+            child.parent && 
+            child.material &&
+            child.geometry) {
           allObjects.push(child);
         }
       });
 
-      const intersects = raycasterShoot.intersectObjects(allObjects, true);
+      try {
+        if (allObjects.length > 0) {
+          const intersects = raycasterShoot.intersectObjects(allObjects, false); // false para não ser recursivo
 
-      if (intersects.length > 0) {
-        const hit = intersects[0];
-        console.log("Acertou", hit.object.name || hit.object);
-        // Aqui você pode exibir um efeito de impacto, som, etc.
+          if (intersects.length > 0) {
+            const hit = intersects[0];
+            console.log("Acertou", hit.object.name || hit.object);
+            // Aqui você pode exibir um efeito de impacto, som, etc.
+          }
         }
+      } catch (error) {
+        console.warn("Erro no raycasting da metralhadora:", error);
+      }
     }
 }
 let velocidadeVertical = 0;
@@ -391,7 +407,7 @@ function render() {
 
     //PARTE DO TIRO
     activeShots.forEach((shot, index) => {
-      const speed = 50 * delta;
+      const speed = 20 * delta;
       const dir = shot.userData.direction.clone();
       shot.position.add(dir.multiplyScalar(speed));
       shot.userData.box.setFromObject(shot);
@@ -464,9 +480,15 @@ function render() {
     raycaster.ray.direction.set(0, -1, 0);
 
     const rampMeshArray = Array.isArray(rampMesh) ? rampMesh : [rampMesh];
-    const rampsFiltered = rampMeshArray.filter(r => r !== undefined && r !== null);
+    const rampsFiltered = rampMeshArray.filter(r => r !== undefined && r !== null && r.parent);
 
-    const intersects = raycaster.intersectObjects(rampsFiltered, true);
+    let intersects = [];
+    try {
+      intersects = raycaster.intersectObjects(rampsFiltered, true);
+    } catch (error) {
+      console.warn("Erro no raycasting das rampas:", error);
+      intersects = [];
+    }
 
 
     if (movimento.frente) moveDir.add(forward);
@@ -498,7 +520,16 @@ function render() {
     }
     
     //Subida da plataforma da area 2
-    const isIntersectPlataform = raycaster.intersectObject(plataform, true).length > 0;
+    let isIntersectPlataform = false;
+    try {
+      if (plataform && plataform.parent && plataform.geometry && plataform.material) {
+        const plataformIntersects = raycaster.intersectObject(plataform, true);
+        isIntersectPlataform = plataformIntersects.length > 0;
+      }
+    } catch (error) {
+      console.warn("Erro no raycasting da plataforma:", error);
+      isIntersectPlataform = false;
+    }
 
     if (isIntersectPlataform) {
       if (cube.parent !== plataform) {
