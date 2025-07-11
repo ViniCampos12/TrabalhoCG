@@ -651,11 +651,7 @@ function render() {
         }
       }
 
-      //Se estiver fora da área da escada ele atualiza a gravidade
-      const inLadderArea = laddersPosition.some(ladder => cube.position.x >= ladder.minX && cube.position.x <= ladder.maxX &&cube.position.z >= ladder.minZ && cube.position.z <= ladder.maxZ);
-
-      if(!inLadderArea && cube.position.y > 2) 
-        atualizaGravidade(cube);  
+      
 
       //Teste da plataforma
       if(cube.position.x > -9 && cube.position.x < 9 && cube.position.z < - 55 && cube.position.z > -65 && doorOpen) {
@@ -663,6 +659,11 @@ function render() {
       }
 
     }
+    //Se estiver fora da área da escada ele atualiza a gravidade
+      const inLadderArea = laddersPosition.some(ladder => cube.position.x >= ladder.minX && cube.position.x <= ladder.maxX &&cube.position.z >= ladder.minZ && cube.position.z <= ladder.maxZ);
+
+      if(!inLadderArea && cube.position.y > 2) 
+        atualizaGravidade(cube);  
       updateLostSouls(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
   }
   renderer.render(scene, camera);
