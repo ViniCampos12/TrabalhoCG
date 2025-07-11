@@ -9,7 +9,7 @@ import {
 } from "../libs/util/util.js";
 import Map from './map.js';
 import Ramp from './ramp.js';
-import { spawnLostSouls, updateLostSouls, checkCollisionForSouls } from './lostSoul.js';
+import { spawnLostSouls, updateLostSouls, checkCollisionForSouls, lostSouls } from './lostSoul.js';
 
 
 let scene = new THREE.Scene();
@@ -89,7 +89,7 @@ function alternarParaMetralhadora() {
   cylinder.visible = false;
 }
 
-
+var blocked = false;
 
 // Cria a metralhadora como um sprite
 const textureLoader = new THREE.TextureLoader();
@@ -188,7 +188,6 @@ var cubeGeometry = new THREE.BoxGeometry(2, 2, 2);
 var cube = new THREE.Mesh(cubeGeometry, material);
 cube.position.set(0.0, 2.0, 0.0);
 scene.add(cube);
-spawnLostSouls();
 
 //Cria arma como cilindro
 const geometryC = new THREE.CylinderGeometry( 0.13, 0.13, 2.5, 32 ); 
@@ -281,6 +280,7 @@ let shotInterval = null;
 let lastShotTime = 0; // armazena o momento do último disparo
 const cadenciaMin = 500; // 500 milissegundos (1/2 segundo)
 const activeShots = []; //balas atiradas em cena
+let metralhadoraDamageTimer = 0;
 
 document.addEventListener('mousedown', (event) => {
     isShooting = true;
@@ -452,7 +452,28 @@ function render() {
         }
       }
     }
- 
+
+    for (const soul of lostSouls) {
+  if (soul.hp <= 0) continue; // já morto
+
+  const soulBB = new THREE.Box3().setFromObject(soul.mesh);
+  if (shot.userData.box.intersectsBox(soulBB)) {
+    soul.hp -= 10;
+    console.log(`Soul ${soul.mesh.id} atingido. HP restante: ${soul.hp}`);
+
+    scene.remove(shot);
+    activeShots.splice(index, 1);
+
+    // caso a alma morra
+    if (soul.hp <= 0) {
+      scene.remove(soul.mesh);
+    }
+
+    atingiuAlgo = true;
+    break;
+  }
+}
+
 
     if (shot.position.length() > 500 || atingiuAlgo) {
       scene.remove(shot);
@@ -464,6 +485,40 @@ function render() {
     }
 
     });
+
+    // Dano contínuo da metralhadora
+if (armaAtual === 'metralhadora' && isShooting) {
+  metralhadoraDamageTimer += delta;
+
+  if (metralhadoraDamageTimer >= 1 / 2) { // a cada 0.5s, tirar 1hp (2hp/s)
+    metralhadoraDamageTimer = 0;
+
+    const origin = new THREE.Vector3();
+    camera.getWorldPosition(origin);
+    const direction = new THREE.Vector3();
+    camera.getWorldDirection(direction).normalize();
+
+    const raycasterShoot = new THREE.Raycaster(origin, direction);
+
+    for (const soul of lostSouls) {
+      if (soul.hp <= 0) continue;
+
+      const soulBB = new THREE.Box3().setFromObject(soul.mesh);
+      const intersects = raycasterShoot.intersectObject(soul.mesh, true);
+
+      if (intersects.length > 0) {
+        soul.hp -= 1;
+
+        if (soul.hp <= 0) {
+          scene.remove(soul.mesh);
+        }
+        break;
+      }
+    }
+  }
+} else {
+  metralhadoraDamageTimer = 0; // reset se não está atirando
+}
 
     //PARTE DO CUBO MOVIMENTAÇÃO
     // Faz o cubo girar com a rotação da câmera
@@ -557,6 +612,12 @@ function render() {
 
 
     moveDir.normalize();
+
+    if(cube.position.y== 8 && cube.position.x <-92 && cube.position.x >-218 && cube.position.z > -179 && cube.position.z < -79 && blocked==false)
+    {
+      spawnLostSouls();
+      blocked = true;
+    }
 
 
     if (moveDir.lengthSq() > 0) {

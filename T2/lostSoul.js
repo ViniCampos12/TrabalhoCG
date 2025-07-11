@@ -25,9 +25,9 @@ export function spawnLostSouls() {
       timers: { chargeStart: 0, lastCharge: 0 }
     };
     soul.mesh.position.set(
-      Math.random() * 80 - 40,
-      5,
-      Math.random() * 80 - 40
+      Math.random() * -80 + -120,
+      10,
+      Math.random() * -60 - 100
     );
     scene.add(soul.mesh);
     lostSouls.push(soul);
@@ -132,3 +132,4 @@ for (const soul of lostSouls) {
 
 }
 
+export {lostSouls};
