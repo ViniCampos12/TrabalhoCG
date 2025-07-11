@@ -11,6 +11,9 @@ import Map from './map.js';
 import Ramp from './ramp.js';
 
 let scene = new THREE.Scene();
+// Define a cor de fundo da cena para azul céu
+scene.background = new THREE.Color(0x6BB6FF); // Cor azul céu um pouco mais escura
+
 let renderer = initRenderer();
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Adiciona tipo de shadow map para sombras mais suaves
@@ -101,19 +104,20 @@ function animarMetralhadoraSprite() {
   spriteTexture.offset.x = spriteFrame / totalFrames;
 }
 
-//criando iluminação
-let ligthposition = new THREE.Vector3(30, 60, 30);
+//criando iluminação - Sol às 10-11h da manhã no verão
+let ligthposition = new THREE.Vector3(100, 150, 50); // Posição alto e ligeiramente sudeste
 let ligthColor = "rgb(255, 255, 255)";
-let directionalLight = new THREE.DirectionalLight(ligthColor, 5.0);
+let directionalLight = new THREE.DirectionalLight(ligthColor, 6.0); // Intensidade um pouco maior (sol forte do verão)
 directionalLight.position.copy(ligthposition);
 directionalLight.castShadow = true;
 directionalLight.shadow.mapSize.width = 4096; 
 directionalLight.shadow.mapSize.height = 4096;
 
-directionalLight.shadow.camera.left = -300; 
-directionalLight.shadow.camera.right = 300;
-directionalLight.shadow.camera.top = 300;
-directionalLight.shadow.camera.bottom = -300;
+// Aumenta significativamente a área de cobertura da sombra para cobrir as paredes grandes
+directionalLight.shadow.camera.left = -600; 
+directionalLight.shadow.camera.right = 600;
+directionalLight.shadow.camera.top = 600;
+directionalLight.shadow.camera.bottom = -600;
 directionalLight.shadow.camera.near = 1;
 directionalLight.shadow.camera.far = 1000;
 scene.add(directionalLight);
