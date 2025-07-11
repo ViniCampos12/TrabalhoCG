@@ -182,6 +182,7 @@ const suportTop2Box = map.suportTop2Box;
 const key = map.keyMesh;
 const key2 = map.keyMesh2;
 let hasKey1 = false;
+let contaLostSouls = 0;
 
 //Cria pessoa como um cubo
 var cubeGeometry = new THREE.BoxGeometry(2, 2, 2);
@@ -406,6 +407,13 @@ function render() {
   const delta = clock.getDelta();
   const velocidade = 20.0 * delta;
 
+
+  console.log("ContaLostSouls:")
+  console.log(contaLostSouls);
+  if(contaLostSouls == 5){
+    lerpConfigSuport.move = true;
+  }
+
   if (controls.isLocked) {
 
     //PARTE DO TIRO
@@ -438,8 +446,8 @@ function render() {
       for(const collumn of collumnsBoxes) {
         if (shot.userData.box.intersectsBox(collumn)) {
           atingiuAlgo = true;
-          lerpConfigSuport.move = true; // Para a plataforma se colidir com a parede
-          lerpConfigSuportTop2.move = true;
+          // lerpConfigSuport.move = true; // Para a plataforma se colidir com a parede
+          // lerpConfigSuportTop2.move = true;
           break;
         }
       } 
@@ -465,6 +473,7 @@ function render() {
         // caso a alma morra
         if (soul.hp <= 0) {
           scene.remove(soul.mesh);
+          contaLostSouls++;
         }
 
         atingiuAlgo = true;
@@ -485,38 +494,39 @@ function render() {
     });
 
     // Dano contínuo da metralhadora
-if (armaAtual === 'metralhadora' && isShooting) {
-  metralhadoraDamageTimer += delta;
+    if (armaAtual === 'metralhadora' && isShooting) {
+      metralhadoraDamageTimer += delta;
 
-  if (metralhadoraDamageTimer >= 1 / 2) { // a cada 0.5s, tirar 1hp (2hp/s)
-    metralhadoraDamageTimer = 0;
+      if (metralhadoraDamageTimer >= 1 / 2) { // a cada 0.5s, tirar 1hp (2hp/s)
+        metralhadoraDamageTimer = 0;
 
-    const origin = new THREE.Vector3();
-    camera.getWorldPosition(origin);
-    const direction = new THREE.Vector3();
-    camera.getWorldDirection(direction).normalize();
+        const origin = new THREE.Vector3();
+        camera.getWorldPosition(origin);
+        const direction = new THREE.Vector3();
+        camera.getWorldDirection(direction).normalize();
 
-    const raycasterShoot = new THREE.Raycaster(origin, direction);
+        const raycasterShoot = new THREE.Raycaster(origin, direction);
 
-    for (const soul of lostSouls) {
-      if (soul.hp <= 0) continue;
+        for (const soul of lostSouls) {
+          if (soul.hp <= 0) continue;
 
-      const soulBB = new THREE.Box3().setFromObject(soul.mesh);
-      const intersects = raycasterShoot.intersectObject(soul.mesh, true);
+          const soulBB = new THREE.Box3().setFromObject(soul.mesh);
+          const intersects = raycasterShoot.intersectObject(soul.mesh, true);
 
-      if (intersects.length > 0) {
-        soul.hp -= 1;
+          if (intersects.length > 0) {
+            soul.hp -= 1;
 
-        if (soul.hp <= 0) {
-          scene.remove(soul.mesh);
+            if (soul.hp <= 0) {
+              scene.remove(soul.mesh);
+              contaLostSouls++;
+            }
+            break;
+          }
         }
-        break;
       }
+    } else {
+      metralhadoraDamageTimer = 0; // reset se não está atirando
     }
-  }
-} else {
-  metralhadoraDamageTimer = 0; // reset se não está atirando
-}
 
     //PARTE DO CUBO MOVIMENTAÇÃO
     // Faz o cubo girar com a rotação da câmera
@@ -621,7 +631,7 @@ if (armaAtual === 'metralhadora' && isShooting) {
     if (moveDir.lengthSq() > 0) {
 
       moveDir.normalize();
-      console.log(pos.y);
+      // console.log(pos.y);
   
       // Tentativa completa
       let newPos = pos.clone().add(moveDir.clone().multiplyScalar(velocidade));
