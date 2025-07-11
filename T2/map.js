@@ -179,7 +179,9 @@ class Map{
     // scene.add(helperp);
 
     //Create out suport
-    this.suport2 = new THREE.Mesh(suportGeometry, setDefaultMaterial("rgb(143, 72, 38)"));
+    this.suport2 = new THREE.Mesh(suportGeometry, new THREE.MeshLambertMaterial({color: "rgb(143, 72, 38)"}));
+    this.suport2.receiveShadow = true;
+    this.suport2.castShadow = true;
     this.suport2.position.set(10, 1, -55);
     scene.add(this.suport2);
     this.suport2Box = new THREE.Box3().setFromObject(this.suport2);

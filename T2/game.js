@@ -48,7 +48,7 @@ let doorOpen = false;
 
 const lerpConfigPlataform = {
   destination: new THREE.Vector3(0, 3, 57),
-  alpha: 0.02,
+  alpha: 0.01,
   move: false
 }
 
@@ -182,7 +182,8 @@ const suportTop2 = map.suportTop2;
 const suportTop2Box = map.suportTop2Box;
 const key = map.keyMesh;
 const key2 = map.keyMesh2;
-let hasKey1 = false;
+let hasKey1 = true;
+let contaLostSouls = 0;
 
 //Cria pessoa como um cubo
 var cubeGeometry = new THREE.BoxGeometry(2, 2, 2);
@@ -407,6 +408,13 @@ function render() {
   const delta = clock.getDelta();
   const velocidade = 20.0 * delta;
 
+
+  console.log("ContaLostSouls:")
+  console.log(contaLostSouls);
+  if(contaLostSouls == 5){
+    lerpConfigSuport.move = true;
+  }
+
   if (controls.isLocked) {
 
     //PARTE DO TIRO
@@ -439,8 +447,8 @@ function render() {
       for(const collumn of collumnsBoxes) {
         if (shot.userData.box.intersectsBox(collumn)) {
           atingiuAlgo = true;
-          lerpConfigSuport.move = true; // Para a plataforma se colidir com a parede
-          lerpConfigSuportTop2.move = true;
+          // lerpConfigSuport.move = true; // Para a plataforma se colidir com a parede
+          // lerpConfigSuportTop2.move = true;
           break;
         }
       } 
@@ -455,20 +463,19 @@ function render() {
     }
 
     for (const soul of lostSouls) {
-  if (soul.hp <= 0) continue; // já morto
+      if (soul.hp <= 0) continue; // já morto
 
-  const soulBB = new THREE.Box3().setFromObject(soul.mesh);
-  if (shot.userData.box.intersectsBox(soulBB)) {
-    soul.hp -= 10;
-    console.log(`Soul ${soul.mesh.id} atingido. HP restante: ${soul.hp}`);
+      const soulBB = new THREE.Box3().setFromObject(soul.mesh);
+      if (shot.userData.box.intersectsBox(soulBB)) {
+        soul.hp -= 10;
+        console.log(`Soul ${soul.mesh.id} atingido. HP restante: ${soul.hp}`);
 
-    scene.remove(shot);
-    activeShots.splice(index, 1);
 
-    // caso a alma morra
-    if (soul.hp <= 0) {
-      scene.remove(soul.mesh);
-    }
+        // caso a alma morra
+        if (soul.hp <= 0) {
+          scene.remove(soul.mesh);
+          contaLostSouls++;
+        }
 
     atingiuAlgo = true;
     break;
@@ -510,36 +517,36 @@ for (const cacodemon of cacodemons) {
     });
 
     // Dano contínuo da metralhadora
-if (armaAtual === 'metralhadora' && isShooting) {
-  metralhadoraDamageTimer += delta;
+    if (armaAtual === 'metralhadora' && isShooting) {
+      metralhadoraDamageTimer += delta;
 
   if (metralhadoraDamageTimer >= 1 / 10) { // a cada 0.1s, tirar 1hp (10hp/s)
     metralhadoraDamageTimer = 0;
 
-    const origin = new THREE.Vector3();
-    camera.getWorldPosition(origin);
-    const direction = new THREE.Vector3();
-    camera.getWorldDirection(direction).normalize();
+        const origin = new THREE.Vector3();
+        camera.getWorldPosition(origin);
+        const direction = new THREE.Vector3();
+        camera.getWorldDirection(direction).normalize();
 
-    const raycasterShoot = new THREE.Raycaster(origin, direction);
+        const raycasterShoot = new THREE.Raycaster(origin, direction);
 
-    for (const soul of lostSouls) {
-      if (soul.hp <= 0) continue;
+        for (const soul of lostSouls) {
+          if (soul.hp <= 0) continue;
 
-      const soulBB = new THREE.Box3().setFromObject(soul.mesh);
-      const intersects = raycasterShoot.intersectObject(soul.mesh, true);
+          const soulBB = new THREE.Box3().setFromObject(soul.mesh);
+          const intersects = raycasterShoot.intersectObject(soul.mesh, true);
 
-      if (intersects.length > 0) {
-        soul.hp -= 1;
+          if (intersects.length > 0) {
+            soul.hp -= 1;
 
-        if (soul.hp <= 0) {
-          scene.remove(soul.mesh);
+            if (soul.hp <= 0) {
+              scene.remove(soul.mesh);
+              contaLostSouls++;
+            }
+            break;
+          }
         }
-        break;
-      }
-    }
-
-    for (const cacodemon of cacodemons) {
+        for (const cacodemon of cacodemons) {
   if (cacodemon.hp <= 0) continue;
 
   const intersects = raycasterShoot.intersectObject(cacodemon.mesh, true);
@@ -553,11 +560,10 @@ if (armaAtual === 'metralhadora' && isShooting) {
     break;
   }
 }
-
-  }
-} else {
-  metralhadoraDamageTimer = 0; // reset se não está atirando
-}
+      }
+    } else {
+      metralhadoraDamageTimer = 0; // reset se não está atirando
+    }
 
     //PARTE DO CUBO MOVIMENTAÇÃO
     // Faz o cubo girar com a rotação da câmera
@@ -662,7 +668,7 @@ if (armaAtual === 'metralhadora' && isShooting) {
     if (moveDir.lengthSq() > 0) {
 
       moveDir.normalize();
-      console.log(pos.y);
+      // console.log(pos.y);
   
       // Tentativa completa
       let newPos = pos.clone().add(moveDir.clone().multiplyScalar(velocidade));
@@ -682,11 +688,7 @@ if (armaAtual === 'metralhadora' && isShooting) {
         }
       }
 
-      //Se estiver fora da área da escada ele atualiza a gravidade
-      const inLadderArea = laddersPosition.some(ladder => cube.position.x >= ladder.minX && cube.position.x <= ladder.maxX &&cube.position.z >= ladder.minZ && cube.position.z <= ladder.maxZ);
-
-      if(!inLadderArea && cube.position.y > 2) 
-        atualizaGravidade(cube);  
+      
 
       //Teste da plataforma
       if(cube.position.x > -9 && cube.position.x < 9 && cube.position.z < - 55 && cube.position.z > -65 && doorOpen) {
@@ -694,6 +696,11 @@ if (armaAtual === 'metralhadora' && isShooting) {
       }
 
     }
+    //Se estiver fora da área da escada ele atualiza a gravidade
+      const inLadderArea = laddersPosition.some(ladder => cube.position.x >= ladder.minX && cube.position.x <= ladder.maxX &&cube.position.z >= ladder.minZ && cube.position.z <= ladder.maxZ);
+
+      if(!inLadderArea && cube.position.y > 2) 
+        atualizaGravidade(cube);  
       updateLostSouls(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
       updateCacodemons(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
   }
