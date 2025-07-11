@@ -14,6 +14,8 @@ class Ladder {
 
     for(let i = 1; i < 8; i++) {
       let step = new THREE.Mesh(stepGeometry, material);
+      step.receiveShadow = true;
+      step.castShadow = true; 
       this.ladder.add(step);
       step.position.set(0, -0.75 * i, 1 * i);
     }

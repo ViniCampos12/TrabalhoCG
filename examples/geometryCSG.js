@@ -95,8 +95,8 @@ function buildObjects()
    let csgObject, cubeCSG, sphereCSG, cylinderCSG, torusCSG
 
    // Object 1 - Cube SUBTRACT Sphere
-   sphereMesh.position.set(1, -0.5, 0.5)
-   updateObject(sphereMesh) // update internal coords
+   // sphereMesh.position.set(1, -0.5, 0.5)
+   // updateObject(sphereMesh) // update internal coords
    sphereCSG = CSG.fromMesh(sphereMesh)  
    cubeCSG = CSG.fromMesh(cubeMesh)   
    csgObject = cubeCSG.subtract(sphereCSG) // Execute subtraction

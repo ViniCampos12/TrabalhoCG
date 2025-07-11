@@ -13,30 +13,46 @@ import { spawnLostSouls, updateLostSouls, checkCollisionForSouls } from './lostS
 
 
 let scene = new THREE.Scene();
+// Define a cor de fundo da cena para azul céu
+scene.background = new THREE.Color(0x6BB6FF); // Cor azul céu um pouco mais escura
+
 let renderer = initRenderer();
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Adiciona tipo de shadow map para sombras mais suaves
 let material = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
 let camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 let clock = new THREE.Clock();
-// const raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, -1, 0).normalize(), 0, 2);
 const raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, -1, 0).normalize(), 0, 2);
 
-//Lerp config para mexer a plataforma no centro da area
-const lerpConfig = {
-  destination: new THREE.Vector3(0.0, 1, 0.0),
+//LERP CONFIG
+const lerpConfigSuport = {
+  destination: new THREE.Vector3(0.0, 4, 0.0),
   alpha: 0.01,
   move: false
 }
 
+const lerpConfigSuportTop2 = {
+  destination: new THREE.Vector3(0.0, 4, 30.0),
+  alpha: 0.01,
+  move: false
+}
 
+const lerpConfigDoor = {
+  destination: new THREE.Vector3(0, -8, 62),
+  alpha: 0.01,
+  move: false
+}
+
+let doorOpen = false;
+
+const lerpConfigPlataform = {
+  destination: new THREE.Vector3(0, 3, 57),
+  alpha: 0.02,
+  move: false
+}
+
+//Verificação da posição das escadas
 const laddersPosition = [
-  {
-    minX: -8,
-    maxX: 8,
-    minZ: -71,
-    maxZ: -64,
-  },
   {
     minX: -188,
     maxX: -172,
@@ -57,21 +73,64 @@ const laddersPosition = [
   },
 ]
 
+let armaAtual = 'lançador';
+
+function alternarParaLançador() {
+  armaAtual = 'lançador';
+  gunSprite.visible = false;
+  shot.visible = true;
+  cylinder.visible = true;
+}
+
+function alternarParaMetralhadora() {
+  armaAtual = 'metralhadora';
+  gunSprite.visible = true;
+  shot.visible = false;
+  cylinder.visible = false;
+}
 
 
-//criando iluminação
-let ligthposition = new THREE.Vector3(30, 60, 30);
+
+// Cria a metralhadora como um sprite
+const textureLoader = new THREE.TextureLoader();
+const spriteTexture = textureLoader.load('../assets/2025.1_T2_Assets/chaingun.png');
+spriteTexture.repeat.set(1 / 3, 1); // 3 quadros na horizontal
+spriteTexture.offset.set(0, 0); // começa do primeiro frame
+
+const spriteMaterial = new THREE.SpriteMaterial({ 
+  map: spriteTexture, 
+  transparent: true,
+  color: 0xffffff
+});
+const gunSprite = new THREE.Sprite(spriteMaterial);
+
+gunSprite.scale.set(1, 1.5, 1); // aumenta o tamanho para garantir visibilidade
+camera.add(gunSprite);
+gunSprite.position.set(0, -0.8, -2); // posição mais central e próxima
+gunSprite.visible = false; // só mostra quando metralhadora estiver ativa
+
+let spriteFrame = 0;
+const totalFrames = 3;
+
+function animarMetralhadoraSprite() {
+  spriteFrame = (spriteFrame + 1) % totalFrames;
+  spriteTexture.offset.x = spriteFrame / totalFrames;
+}
+
+//criando iluminação - Sol às 10-11h da manhã no verão
+let ligthposition = new THREE.Vector3(100, 150, 50); // Posição alto e ligeiramente sudeste
 let ligthColor = "rgb(255, 255, 255)";
-let directionalLight = new THREE.DirectionalLight(ligthColor, 5.0);
+let directionalLight = new THREE.DirectionalLight(ligthColor, 6.0); // Intensidade um pouco maior (sol forte do verão)
 directionalLight.position.copy(ligthposition);
 directionalLight.castShadow = true;
 directionalLight.shadow.mapSize.width = 4096; 
 directionalLight.shadow.mapSize.height = 4096;
 
-directionalLight.shadow.camera.left = -300; 
-directionalLight.shadow.camera.right = 300;
-directionalLight.shadow.camera.top = 300;
-directionalLight.shadow.camera.bottom = -300;
+// Aumenta significativamente a área de cobertura da sombra para cobrir as paredes grandes
+directionalLight.shadow.camera.left = -600; 
+directionalLight.shadow.camera.right = 600;
+directionalLight.shadow.camera.top = 600;
+directionalLight.shadow.camera.bottom = -600;
 directionalLight.shadow.camera.near = 1;
 directionalLight.shadow.camera.far = 1000;
 scene.add(directionalLight);
@@ -100,22 +159,34 @@ directionalLightBack.castShadow = false; // não projeta sombras
 
 scene.add(directionalLightBack);
 
+
 // Chama o mapa
 let map = new Map(scene);
+
+//Variáveis importante advindas do map
 const wallBoxes = map.getWallBoxes();
 const areaBoxes = map.getAreaBoxes();
-console.log("Area Boxes:");
-console.log(areaBoxes);
 const collumnsBoxes = map.getCollumnsBoxes();
 const blockBoxes = map.getBlocksBoxes();
 const rampMesh = map.getRamps();
-const plataforma1 = map.plataform1;
+const suport1 = map.suport1;
+const suport1Box = map.suport1Box;
+const doorArea2 = map.door;
+const doorBox = map.doorBox;
+const suport2 = map.suport2;
+const suport2Box = map.getSuport2Box();
+const plataform = map.plataform; 
+const plataformBox = map.plataformBox;
+const suportTop2 = map.suportTop2;
+const suportTop2Box = map.suportTop2Box;
+const key = map.keyMesh;
+const key2 = map.keyMesh2;
+let hasKey1 = false;
 
 //Cria pessoa como um cubo
-var cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
+var cubeGeometry = new THREE.BoxGeometry(2, 2, 2);
 var cube = new THREE.Mesh(cubeGeometry, material);
 cube.position.set(0.0, 2.0, 0.0);
-
 scene.add(cube);
 spawnLostSouls();
 
@@ -173,6 +244,14 @@ document.addEventListener('keydown', (event) => {
     case "ArrowRight": 
       movimento.direita = true; 
       break;
+    case 'Digit1':
+        alternarParaMetralhadora();
+        console.log("Troca para metralhadora");
+        break;
+    case 'Digit2':
+        alternarParaLançador();
+        console.log("Troca para lançador");
+        break;
   }
 }, false);
 
@@ -213,14 +292,27 @@ document.addEventListener('mouseup', (event) => {
     isShooting = false;
     clearInterval(shotInterval);
     shotInterval = null;
+
+    if (armaAtual === 'metralhadora') {
+        spriteTexture.offset.x = 0; // Set back to the first frame
+        spriteFrame = 0; // Reset the frame counter
+    }
+});
+
+window.addEventListener('wheel', (event) => {
+  if (event.deltaY > 0) {
+    alternarParaMetralhadora();
+  } else {
+    alternarParaLançador();
+  }
+  console.log("Arma atual:", armaAtual);
 });
 
 function shoot() {
   const now = Date.now();
-  if ((now - lastShotTime) >= cadenciaMin) {
-    console.log("Disparo iniciado"); // DEBUG
+  if ((now - lastShotTime) >= cadenciaMin && armaAtual === 'lançador') {
     lastShotTime = now;
-
+        
     // Clona o tiro
     const shotClone = shot.clone();
     
@@ -251,7 +343,49 @@ function shoot() {
 
     // Armazena a bala ativa
     activeShots.push(shotClone);
-  } 
+  }
+  else if (armaAtual === 'metralhadora') {
+    animarMetralhadoraSprite();
+    // Metralhadora: apenas raycasting
+      const origin = new THREE.Vector3();
+      camera.getWorldPosition(origin);
+      const direction = new THREE.Vector3();
+      camera.getWorldDirection(direction).normalize();
+
+      const raycasterShoot = new THREE.Raycaster(origin, direction);
+      
+      // Pega todos os objetos da cena que podem ser atingidos
+      const allObjects = [];
+      scene.traverse((child) => {
+        // Verifica se é um Mesh válido e não é um sprite ou objeto da UI
+        if (child.isMesh && 
+            child !== cube && 
+            child !== cylinder && 
+            child !== shot && 
+            child !== gunSprite &&
+            child !== sunMesh &&
+            !activeShots.includes(child) && 
+            child.parent && 
+            child.material &&
+            child.geometry) {
+          allObjects.push(child);
+        }
+      });
+
+      try {
+        if (allObjects.length > 0) {
+          const intersects = raycasterShoot.intersectObjects(allObjects, false); // false para não ser recursivo
+
+          if (intersects.length > 0) {
+            const hit = intersects[0];
+            console.log("Acertou", hit.object.name || hit.object);
+            // Aqui você pode exibir um efeito de impacto, som, etc.
+          }
+        }
+      } catch (error) {
+        console.warn("Erro no raycasting da metralhadora:", error);
+      }
+    }
 }
 let velocidadeVertical = 0;
 let amortecimento = 0.5;
@@ -264,7 +398,8 @@ window.addEventListener('resize', () => {
 });
 
 
-  render();
+  //render();
+
 // Update loop
 function render() {
   requestAnimationFrame(render);
@@ -273,7 +408,6 @@ function render() {
 
   if (controls.isLocked) {
 
-    console.log("Locked:", controls.isLocked);
     //PARTE DO TIRO
     activeShots.forEach((shot, index) => {
       const speed = 50 * delta;
@@ -304,7 +438,8 @@ function render() {
       for(const collumn of collumnsBoxes) {
         if (shot.userData.box.intersectsBox(collumn)) {
           atingiuAlgo = true;
-          lerpConfig.move = true; // Para a plataforma se colidir com a parede
+          lerpConfigSuport.move = true; // Para a plataforma se colidir com a parede
+          lerpConfigSuportTop2.move = true;
           break;
         }
       } 
@@ -317,16 +452,13 @@ function render() {
         }
       }
     }
-
-
-      
+ 
 
     if (shot.position.length() > 500 || atingiuAlgo) {
       scene.remove(shot);
-      console.log("Disparo removido");
       if (shot.userData.helper) {
-  scene.remove(shot.userData.helper);
-}
+        scene.remove(shot.userData.helper);
+      }
       // scene.remove(shot.userData.helper); // Remove helper 
       activeShots.splice(index, 1);
     }
@@ -351,15 +483,23 @@ function render() {
     raycaster.ray.direction.set(0, -1, 0);
 
     const rampMeshArray = Array.isArray(rampMesh) ? rampMesh : [rampMesh];
-    const rampsFiltered = rampMeshArray.filter(r => r !== undefined && r !== null);
+    const rampsFiltered = rampMeshArray.filter(r => r !== undefined && r !== null && r.parent);
 
-    const intersects = raycaster.intersectObjects(rampsFiltered, true);
+    let intersects = [];
+    try {
+      intersects = raycaster.intersectObjects(rampsFiltered, true);
+    } catch (error) {
+      console.warn("Erro no raycasting das rampas:", error);
+      intersects = [];
+    }
 
 
     if (movimento.frente) moveDir.add(forward);
     if (movimento.tras) moveDir.add(forward.clone().negate());
     if (movimento.direita) moveDir.add(right);
     if (movimento.esquerda) moveDir.add(right.clone().negate());
+
+    //Subida escada area 1
     if (intersects.length > 0 && intersects[0].distance < 4) {
       const yDoImpacto = intersects[0].point.y;
 
@@ -367,7 +507,53 @@ function render() {
         cube.position.y = yDoImpacto;
       }
     }
-    if(lerpConfig.move) plataforma1.position.lerp(lerpConfig.destination, lerpConfig.alpha);
+
+    //Atualizações dos lerpConfigs
+    if(lerpConfigSuport.move) {
+      suport1.position.lerp(lerpConfigSuport.destination, lerpConfigSuport.alpha);
+      suport1Box.setFromObject(suport1);
+    }
+    if(lerpConfigSuportTop2.move) {
+      map.suportTop2.position.lerp(lerpConfigSuportTop2.destination, lerpConfigSuportTop2.alpha);
+      map.suportTop2Box.setFromObject(map.suportTop2);
+    }
+    if(lerpConfigDoor.move) {
+      doorArea2.position.lerp(lerpConfigDoor.destination, lerpConfigDoor.alpha);
+      doorBox.setFromObject(doorArea2); // Atualiza a bounding box da porta
+    }
+    
+    //Subida da plataforma da area 2
+    let isIntersectPlataform = false;
+    try {
+      if (plataform && plataform.parent && plataform.geometry && plataform.material) {
+        const plataformIntersects = raycaster.intersectObject(plataform, true);
+        isIntersectPlataform = plataformIntersects.length > 0;
+      }
+    } catch (error) {
+      console.warn("Erro no raycasting da plataforma:", error);
+      isIntersectPlataform = false;
+    }
+
+    if (isIntersectPlataform) {
+      if (cube.parent !== plataform) {
+        plataform.attach(cube); // Anexa o personagem à plataforma
+      }
+
+      cube.position.y = plataform.position.y + 2; //Por conta da altura do cubo
+
+    } else {
+      if (cube.parent !== scene) {
+        scene.attach(cube); // Remove da plataforma se saiu
+      }
+    }
+
+    if(lerpConfigPlataform.move) {
+      plataform.position.lerp(lerpConfigPlataform.destination, lerpConfigPlataform.alpha);
+      plataformBox.setFromObject(plataform)
+
+      if(plataform.position.distanceTo(lerpConfigPlataform.destination) < 0.1) 
+        downPlataform();
+    }
 
 
     moveDir.normalize();
@@ -376,7 +562,7 @@ function render() {
     if (moveDir.lengthSq() > 0) {
 
       moveDir.normalize();
-      // console.log(pos);
+      console.log(pos.y);
   
       // Tentativa completa
       let newPos = pos.clone().add(moveDir.clone().multiplyScalar(velocidade));
@@ -399,10 +585,13 @@ function render() {
       //Se estiver fora da área da escada ele atualiza a gravidade
       const inLadderArea = laddersPosition.some(ladder => cube.position.x >= ladder.minX && cube.position.x <= ladder.maxX &&cube.position.z >= ladder.minZ && cube.position.z <= ladder.maxZ);
 
-        if(!inLadderArea && cube.position.y > 2) {
-          // console.log("Entrou");
-          atualizaGravidade(cube);
-        }
+      if(!inLadderArea && cube.position.y > 2) 
+        atualizaGravidade(cube);  
+
+      //Teste da plataforma
+      if(cube.position.x > -9 && cube.position.x < 9 && cube.position.z < - 55 && cube.position.z > -65 && doorOpen) {
+        downPlataform();
+      }
 
     }
       updateLostSouls(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
@@ -410,6 +599,8 @@ function render() {
   renderer.render(scene, camera);
 }
 
+
+//FUNÇÕES
 const pos = cube.position;
 const ramp = new Ramp();
 
@@ -443,19 +634,52 @@ function checkCollisions(walls, areas, newCubePos) {
 
   //Testa colunas da área 1
   if(newCubePos.z < -60 && newCubePos.z > -181 && newCubePos.x > -220 && newCubePos.x < -92){
+
+    if(futureBB.intersectsBox(suport1Box)){
+      suport1.remove(key);
+      key.visible = false;
+      hasKey1 = true;
+    }
+
     for (const collumn of collumnsBoxes) {
       if (futureBB.intersectsBox(collumn)) {
-        console.log("Colidiu com coluna");
+        // console.log("Colidiu com coluna");
         return true;
       }
     }
   }
 
+  if (Math.abs(plataform.position.y - 3) > 0.1 && Math.abs(plataform.position.y + 3) > 0.1 && newCubePos.z < -64 && newCubePos.z > -71 && newCubePos.y == 2) {
+  // Está em movimento
+  return true;
+  }
+
   //Testa blocos da área 2
-  if(newCubePos.z < -60 && newCubePos.z > -181 && newCubePos.x > -64 && newCubePos.x < 64){
+  if(newCubePos.z < -53 && newCubePos.z > -181 && newCubePos.x > -64 && newCubePos.x < 64){
+
+    if(futureBB.intersectsBox(plataformBox)){
+      upPlataform();
+      return false;
+    }
+
+    if(futureBB.intersectsBox(suport2Box)){
+      if(hasKey1){
+        suport2.add(key);
+        key.visible = true;
+        openArea2Door();
+      }
+      
+      return true;
+    }
+
+    if(futureBB.intersectsBox(suportTop2Box)){
+      suportTop2.remove(key2);
+      key2.visible = false;
+      return true;
+    }
+
     for (const block of blockBoxes) {
       if (futureBB.intersectsBox(block)) {
-        console.log("Colidiu com bloco");
         return true;
       }
     }
@@ -470,7 +694,7 @@ function checkCollisions(walls, areas, newCubePos) {
   }
 
   //Testa rampa área 2
-  if((newCubePos.z > -69   && newCubePos.z < -40) && (newCubePos.x > -6 && newCubePos.x < 6)){
+  if((newCubePos.z > -69   && newCubePos.z < -64) && (newCubePos.x > -6 && newCubePos.x < 6)){
     return false;
   }
 
@@ -492,8 +716,10 @@ function checkCollisions(walls, areas, newCubePos) {
   else if(newCubePos.z < -60 && newCubePos.z > -181){
     if(newCubePos.x > -220 && newCubePos.x < -92)
       collision = futureBB.intersectsBox(areas[1]);
-    if(newCubePos.x > -64 && newCubePos.x < 64)
+    if(newCubePos.x > -64 && newCubePos.x < 64 && newCubePos.z < -65 ){
       collision = futureBB.intersectsBox(areas[2]);
+    }
+      
     if(newCubePos.x > 92 && newCubePos.x < 220)
       collision = futureBB.intersectsBox(areas[3]);
   }
@@ -503,5 +729,21 @@ function checkCollisions(walls, areas, newCubePos) {
 }
 
 render();
+
+function openArea2Door(){
+  lerpConfigDoor.move = true;   
+  doorOpen = true;
+  
+}
+
+function upPlataform(){
+  lerpConfigPlataform.destination = new THREE.Vector3(0, 3, 57)
+  lerpConfigPlataform.move = true; 
+}
+
+function downPlataform(){
+  lerpConfigPlataform.destination = new THREE.Vector3(0,-3,57);
+  lerpConfigPlataform.move = true;
+}
 
 export {scene};
