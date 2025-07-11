@@ -47,7 +47,7 @@ let doorOpen = false;
 
 const lerpConfigPlataform = {
   destination: new THREE.Vector3(0, 3, 57),
-  alpha: 0.02,
+  alpha: 0.01,
   move: false
 }
 
@@ -181,7 +181,7 @@ const suportTop2 = map.suportTop2;
 const suportTop2Box = map.suportTop2Box;
 const key = map.keyMesh;
 const key2 = map.keyMesh2;
-let hasKey1 = false;
+let hasKey1 = true;
 let contaLostSouls = 0;
 
 //Cria pessoa como um cubo
