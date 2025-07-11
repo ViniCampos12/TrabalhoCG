@@ -401,13 +401,13 @@ window.addEventListener('resize', () => {
 function render() {
   requestAnimationFrame(render);
   const delta = clock.getDelta();
-  const velocidade = 50.0 * delta;
+  const velocidade = 20.0 * delta;
 
   if (controls.isLocked) {
 
     //PARTE DO TIRO
     activeShots.forEach((shot, index) => {
-      const speed = 20 * delta;
+      const speed = 50 * delta;
       const dir = shot.userData.direction.clone();
       shot.position.add(dir.multiplyScalar(speed));
       shot.userData.box.setFromObject(shot);
