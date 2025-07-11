@@ -26,6 +26,12 @@ const lerpConfigSuport = {
   move: false
 }
 
+const lerpConfigSuportTop2 = {
+  destination: new THREE.Vector3(0.0, 4, 30.0),
+  alpha: 0.01,
+  move: false
+}
+
 const lerpConfigDoor = {
   destination: new THREE.Vector3(0, -8, 62),
   alpha: 0.01,
@@ -126,9 +132,15 @@ const suport1 = map.suport1;
 const suport1Box = map.suport1Box;
 const doorArea2 = map.door;
 const doorBox = map.doorBox; // Bounding box da porta
+const suport2 = map.suport2;
 const suport2Box = map.getSuport2Box();
 const plataform = map.plataform; // Plataforma da área 2
 const plataformBox = map.plataformBox;
+const suportTop2 = map.suportTop2;
+const suportTop2Box = map.suportTop2Box;
+const key = map.keyMesh;
+const key2 = map.keyMesh2;
+let hasKey1 = true;
 // scene.attach(plataform);
 
 //Cria pessoa como um cubo
@@ -322,6 +334,7 @@ function render() {
         if (shot.userData.box.intersectsBox(collumn)) {
           atingiuAlgo = true;
           lerpConfigSuport.move = true; // Para a plataforma se colidir com a parede
+          lerpConfigSuportTop2.move = true;
           break;
         }
       } 
@@ -389,6 +402,10 @@ function render() {
     if(lerpConfigSuport.move) {
       suport1.position.lerp(lerpConfigSuport.destination, lerpConfigSuport.alpha);
       suport1Box.setFromObject(suport1);
+    }
+    if(lerpConfigSuportTop2.move) {
+      map.suportTop2.position.lerp(lerpConfigSuportTop2.destination, lerpConfigSuportTop2.alpha);
+      map.suportTop2Box.setFromObject(map.suportTop2);
     }
     if(lerpConfigDoor.move) {
       doorArea2.position.lerp(lerpConfigDoor.destination, lerpConfigDoor.alpha);
@@ -504,6 +521,13 @@ function checkCollisions(walls, areas, newCubePos) {
 
   //Testa colunas da área 1
   if(newCubePos.z < -60 && newCubePos.z > -181 && newCubePos.x > -220 && newCubePos.x < -92){
+
+    if(futureBB.intersectsBox(suport1Box)){
+      suport1.remove(key);
+      key.visible = false;
+      hasKey1 = true;
+    }
+
     for (const collumn of collumnsBoxes) {
       if (futureBB.intersectsBox(collumn)) {
         // console.log("Colidiu com coluna");
@@ -515,7 +539,7 @@ function checkCollisions(walls, areas, newCubePos) {
   if (Math.abs(plataform.position.y - 3) > 0.1 && Math.abs(plataform.position.y + 3) > 0.1 && newCubePos.z < -64 && newCubePos.z > -71 && newCubePos.y == 2) {
   // Está em movimento
   return true;
-}
+  }
 
   //Testa blocos da área 2
   if(newCubePos.z < -53 && newCubePos.z > -181 && newCubePos.x > -64 && newCubePos.x < 64){
@@ -526,10 +550,22 @@ function checkCollisions(walls, areas, newCubePos) {
     }
 
     if(futureBB.intersectsBox(suport2Box)){
-      // console.log("Colidiu com suporte 2");
-      openArea2Door();
+      if(hasKey1){
+        console.log("Tenho key1")
+        suport2.add(key);
+        key.visible = true;
+        openArea2Door();
+      }
+      
       return true;
     }
+
+    if(futureBB.intersectsBox(suportTop2Box)){
+      suportTop2.remove(key2);
+      key2.visible = false;
+      return true;
+    }
+
     for (const block of blockBoxes) {
       if (futureBB.intersectsBox(block)) {
         // console.log("Colidiu com bloco");

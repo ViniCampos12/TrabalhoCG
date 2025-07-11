@@ -65,8 +65,6 @@ class Map{
     area1.add(ladder);
     ladder.position.set(-24,1.6,54.5);
     this.ramps.push(l1.getRampMesh());
-    // console.log("Ladder created and added to area 1");
-    // console.log(this.ramps);  
 
     //Add collunms
     let zInicial = 56;
@@ -102,17 +100,17 @@ class Map{
     
     //Add plataform on the middle
     let suportGeometry = new THREE.BoxGeometry(2,4,2);
-    this.suport1 = new THREE.Mesh(suportGeometry, setDefaultMaterial("rgb(24, 199, 181)"));
+    this.suport1 = new THREE.Mesh(suportGeometry, new THREE.MeshLambertMaterial({ color: "rgb(24, 199, 181)" }));
     this.suport1.position.set(0, -10, 0);
     this.suport1Box = new THREE.Box3().setFromObject(this.suport1);
     // let helper3 = new THREE.Box3Helper(this.suport1Box, 'white');
     // this.scene.add(helper3); // helper deve estar na scene
     this.collumnsBox.push(this.suport1Box);
 
-    let keyMesh = this.createKey();
-    let keyBox = new THREE.Box3().setFromObject(keyMesh);
+    this.keyMesh = this.createKey("red");
+    let keyBox = new THREE.Box3().setFromObject(this.keyMesh);
     this.collumnsBox.push(keyBox);
-    this.suport1.add(keyMesh);
+    this.suport1.add(this.keyMesh);
 
     area1.add(this.suport1);
 
@@ -180,6 +178,7 @@ class Map{
     this.suport2Box = new THREE.Box3().setFromObject(this.suport2);
     
 
+
     //Create blocks
     this.createBlocks(area2,20,10,20,20);
     this.createBlocks(area2,-50,10,50,20);
@@ -191,7 +190,18 @@ class Map{
     this.createBlocks(area2,50,10,-20,20);
     this.createBlocks(area2,-40,10,-40,20);
     this.createBlocks(area2,-1,10,-40,20);
+    
+    //Add plataform on the middle
+    this.suportTop2 = new THREE.Mesh(suportGeometry, new THREE.MeshLambertMaterial({ color: "rgb(24, 199, 181)" }));
+    this.suportTop2.position.set(0, -8, 30);
+    this.suportTop2Box = new THREE.Box3().setFromObject(this.suportTop2);
+    this.blocksBox.push(this.suportTop2Box);
+    area2.add(this.suportTop2);
 
+    this.keyMesh2 = this.createKey("yellow");
+    let keyBox2 = new THREE.Box3().setFromObject(this.keyMesh2);
+    this.blocksBox.push(keyBox2);
+    this.suportTop2.add(this.keyMesh2);
     
     // let helper = new THREE.Box3Helper(wallBox2, 'white');
     // this.scene.add(helper); // helper deve estar na scene 
@@ -347,7 +357,7 @@ class Map{
     this.blocksBox.push(blockBox);
   }
 
-  createKey(){
+  createKey(color){
     let auxMat = new THREE.Matrix4();
     let cubeMesh = new THREE.Mesh(new THREE.BoxGeometry(1.4,1.4,1.4));
     let cylinderMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.4, 20));
@@ -375,7 +385,7 @@ class Map{
     let csgObject = cubeCSG.subtract(cylinderCSG).subtract(cylinderCSG2).subtract(cylinderCSG3);
     // csgObject = cubeCSG.subtract(cylinderCSG2);
     let keyMesh = CSG.toMesh(csgObject, auxMat);
-    keyMesh.material = new THREE.MeshPhongMaterial({color:"red", shininess:"200"});
+    keyMesh.material = new THREE.MeshPhongMaterial({color:color, shininess:"200"});
     keyMesh.position.set(0, 2.6 , 0);
 
     return keyMesh;
