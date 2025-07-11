@@ -488,13 +488,8 @@ for (const cacodemon of cacodemons) {
   const cacodemonBB = new THREE.Box3().setFromObject(cacodemon.mesh);
   if (shot.userData.box.intersectsBox(cacodemonBB)) {
     cacodemon.hp -= 10;
-    console.log(`Cacodemon ${cacodemon.mesh.id} atingido. HP restante: ${cacodemon.hp}`);
-
-    scene.remove(shot);
-    activeShots.splice(index, 1);
 
     if (cacodemon.hp <= 0) {
-      console.log('Cacodemon morto!');
       scene.remove(cacodemon.mesh);
       // Aqui você pode adicionar efeitos visuais ou sons de morte
     }
