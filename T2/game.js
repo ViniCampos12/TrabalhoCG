@@ -454,25 +454,23 @@ function render() {
     }
 
     for (const soul of lostSouls) {
-  if (soul.hp <= 0) continue; // já morto
+      if (soul.hp <= 0) continue; // já morto
 
-  const soulBB = new THREE.Box3().setFromObject(soul.mesh);
-  if (shot.userData.box.intersectsBox(soulBB)) {
-    soul.hp -= 10;
-    console.log(`Soul ${soul.mesh.id} atingido. HP restante: ${soul.hp}`);
+      const soulBB = new THREE.Box3().setFromObject(soul.mesh);
+      if (shot.userData.box.intersectsBox(soulBB)) {
+        soul.hp -= 10;
+        console.log(`Soul ${soul.mesh.id} atingido. HP restante: ${soul.hp}`);
 
-    scene.remove(shot);
-    activeShots.splice(index, 1);
 
-    // caso a alma morra
-    if (soul.hp <= 0) {
-      scene.remove(soul.mesh);
+        // caso a alma morra
+        if (soul.hp <= 0) {
+          scene.remove(soul.mesh);
+        }
+
+        atingiuAlgo = true;
+        break;
+      }
     }
-
-    atingiuAlgo = true;
-    break;
-  }
-}
 
 
     if (shot.position.length() > 500 || atingiuAlgo) {
