@@ -1,4 +1,3 @@
-// lostSoul.js
 import * as THREE from 'three';
 import { scene } from './game.js'; // assegure que main.js exporte scene
 

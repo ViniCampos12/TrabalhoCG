@@ -10,6 +10,7 @@ import {
 import Map from './map.js';
 import Ramp from './ramp.js';
 import { spawnLostSouls, updateLostSouls, checkCollisionForSouls, lostSouls } from './lostSoul.js';
+import { spawnCacodemons, updateCacodemons, cacodemons } from './cacoDemons.js';
 
 
 let scene = new THREE.Scene();
@@ -188,7 +189,7 @@ var cubeGeometry = new THREE.BoxGeometry(2, 2, 2);
 var cube = new THREE.Mesh(cubeGeometry, material);
 cube.position.set(0.0, 2.0, 0.0);
 scene.add(cube);
-
+spawnCacodemons(blockBoxes);
 //Cria arma como cilindro
 const geometryC = new THREE.CylinderGeometry( 0.13, 0.13, 2.5, 32 ); 
 const materialC = new THREE.MeshLambertMaterial( {color: 0x5F5F5F} ); 
@@ -474,6 +475,28 @@ function render() {
   }
 }
 
+for (const cacodemon of cacodemons) {
+  if (cacodemon.hp <= 0) continue;
+
+  const cacodemonBB = new THREE.Box3().setFromObject(cacodemon.mesh);
+  if (shot.userData.box.intersectsBox(cacodemonBB)) {
+    cacodemon.hp -= 10;
+    console.log(`Cacodemon ${cacodemon.mesh.id} atingido. HP restante: ${cacodemon.hp}`);
+
+    scene.remove(shot);
+    activeShots.splice(index, 1);
+
+    if (cacodemon.hp <= 0) {
+      console.log('Cacodemon morto!');
+      scene.remove(cacodemon.mesh);
+      // Aqui você pode adicionar efeitos visuais ou sons de morte
+    }
+
+    atingiuAlgo = true;
+    break;
+  }
+}
+
 
     if (shot.position.length() > 500 || atingiuAlgo) {
       scene.remove(shot);
@@ -490,7 +513,7 @@ function render() {
 if (armaAtual === 'metralhadora' && isShooting) {
   metralhadoraDamageTimer += delta;
 
-  if (metralhadoraDamageTimer >= 1 / 2) { // a cada 0.5s, tirar 1hp (2hp/s)
+  if (metralhadoraDamageTimer >= 1 / 10) { // a cada 0.1s, tirar 1hp (10hp/s)
     metralhadoraDamageTimer = 0;
 
     const origin = new THREE.Vector3();
@@ -515,6 +538,22 @@ if (armaAtual === 'metralhadora' && isShooting) {
         break;
       }
     }
+
+    for (const cacodemon of cacodemons) {
+  if (cacodemon.hp <= 0) continue;
+
+  const intersects = raycasterShoot.intersectObject(cacodemon.mesh, true);
+
+  if (intersects.length > 0) {
+    cacodemon.hp -= 1;
+
+    if (cacodemon.hp <= 0) {
+      scene.remove(cacodemon.mesh);
+    }
+    break;
+  }
+}
+
   }
 } else {
   metralhadoraDamageTimer = 0; // reset se não está atirando
@@ -656,6 +695,7 @@ if (armaAtual === 'metralhadora' && isShooting) {
 
     }
       updateLostSouls(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
+      updateCacodemons(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
   }
   renderer.render(scene, camera);
 }
