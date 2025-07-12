@@ -270,7 +270,7 @@ export function updateCacodemons(player, wallBoxes, areaBoxes, collumnsBoxes, bl
     const forwardDir = tmpVec.clone().normalize();
 
     // === Transições de estado ===
-    if (cacodemon.state === 'passive' && distToPlayer < 60) {
+    if (cacodemon.state === 'passive' && distToPlayer < 80) {
       cacodemon.state = 'active';
     } else if (cacodemon.state === 'active' && distToPlayer > 100) {
       cacodemon.state = 'passive';
