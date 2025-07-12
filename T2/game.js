@@ -113,10 +113,17 @@ gunSprite.visible = false; // só mostra quando metralhadora estiver ativa
 
 let spriteFrame = 0;
 const totalFrames = 3;
+let lastSpriteUpdate = 0; // Adicione esta variável
+const spriteAnimationSpeed = 100;
 
 function animarMetralhadoraSprite() {
-  spriteFrame = (spriteFrame + 1) % totalFrames;
-  spriteTexture.offset.x = spriteFrame / totalFrames;
+  const now = Date.now();
+  // Só atualiza o sprite se passou tempo suficiente
+  if (now - lastSpriteUpdate >= spriteAnimationSpeed) {
+    spriteFrame = (spriteFrame + 1) % totalFrames;
+    spriteTexture.offset.x = spriteFrame / totalFrames;
+    lastSpriteUpdate = now;
+  }
 }
 
 //criando iluminação - Sol às 10-11h da manhã no verão
