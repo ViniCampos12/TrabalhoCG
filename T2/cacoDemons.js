@@ -50,13 +50,6 @@ gltfLoader.load('../assets/cacodemon.glb', (gltf) => {
 function createCacodemonMesh() {
   if (!cacodemonPrefab) {
     console.warn("cacodemonPrefab ainda não carregado, usando esfera temporária");
-    // Fallback para esfera vermelha se o modelo não carregou
-    const geo = new THREE.SphereGeometry(3, 16, 16);
-    const mat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0x660000 });
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    return mesh;
   }
 
   // Clona o modelo GLB carregado
@@ -67,36 +60,11 @@ function createCacodemonMesh() {
     if (child.isMesh) {
       child.castShadow = true;
       child.receiveShadow = true;
-      
-      // Clona o material para cada instância
-      if (child.material) {
-        child.material = child.material.clone();
-        
-        // Garante opacidade total
-        child.material.transparent = false;
-        child.material.opacity = 1.0;
-        
-        // Define cor se necessário
-        if (!child.material.color || child.material.color.getHex() === 0x000000) {
-          child.material.color.setHex(0x990000);
-        }
-        
-        // Adiciona brilho
-        if (child.material.emissive) {
-          child.material.emissive.setHex(0x440000);
-        }
-      } else {
-        // Cria material se não existir
-        child.material = new THREE.MeshStandardMaterial({
-          color: 0x990000,
-          emissive: 0x440000
-        });
-      }
+      child.material = child.material.clone();
     }
   });
-
   // Ajusta escala se necessário
-  clone.scale.set(0.015, 0.015, 0.015);
+  clone.scale.set(0.01, 0.01, 0.01);
   return clone;
 }
 

@@ -43,7 +43,7 @@ function createMesh() {
     }
   });
 
-  soul.scale.set(2, 2, 2); // ajuste de tamanho
+  soul.scale.set(1.5, 1.5, 1.5); // ajuste de tamanho
   return soul;
 }
 

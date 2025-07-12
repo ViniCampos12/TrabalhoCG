@@ -114,7 +114,7 @@ gunSprite.visible = false; // só mostra quando metralhadora estiver ativa
 let spriteFrame = 0;
 const totalFrames = 3;
 let lastSpriteUpdate = 0; // Adicione esta variável
-const spriteAnimationSpeed = 100;
+const spriteAnimationSpeed = 70;
 
 function animarMetralhadoraSprite() {
   const now = Date.now();
@@ -409,7 +409,7 @@ window.addEventListener('resize', () => {
 
 
   //render();
-
+      spawnCacodemons(blockBoxes);
 // Update loop
 function render() {
   requestAnimationFrame(render);
@@ -669,7 +669,7 @@ for (const cacodemon of cacodemons) {
 
     if(cube.position.y== 8 && cube.position.x < 62 && cube.position.x > -62 && cube.position.z > -179 && cube.position.z < -79 && blocked2==false)
     {
-      spawnCacodemons(blockBoxes);
+
       blocked2 = true;
     }
 
