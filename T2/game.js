@@ -409,7 +409,7 @@ window.addEventListener('resize', () => {
 
 
   //render();
-      spawnCacodemons(blockBoxes);
+
 // Update loop
 function render() {
   requestAnimationFrame(render);
@@ -669,7 +669,7 @@ for (const cacodemon of cacodemons) {
 
     if(cube.position.y== 8 && cube.position.x < 62 && cube.position.x > -62 && cube.position.z > -179 && cube.position.z < -79 && blocked2==false)
     {
-
+      spawnCacodemons(blockBoxes);
       blocked2 = true;
     }
 
