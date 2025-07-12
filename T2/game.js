@@ -194,6 +194,7 @@ const key = map.keyMesh;
 const key2 = map.keyMesh2;
 let hasKey1 = true;
 let contaLostSouls = 0;
+let contaCacoDemons = 0;
 
 //Cria pessoa como um cubo
 var cubeGeometry = new THREE.BoxGeometry(2, 2, 2);
@@ -425,6 +426,10 @@ function render() {
     lerpConfigSuport.move = true;
   }
 
+  if(contaCacoDemons == 3){
+    lerpConfigSuportTop2.move = true;
+  }
+
   if (controls.isLocked) {
 
     //PARTE DO TIRO
@@ -501,7 +506,7 @@ for (const cacodemon of cacodemons) {
 
     if (cacodemon.hp <= 0) {
       scene.remove(cacodemon.mesh);
-      // Aqui você pode adicionar efeitos visuais ou sons de morte
+      contaCacoDemons++;
     }
 
     atingiuAlgo = true;
@@ -561,6 +566,7 @@ for (const cacodemon of cacodemons) {
 
     if (cacodemon.hp <= 0) {
       scene.remove(cacodemon.mesh);
+      contaCacoDemons++;
     }
     break;
   }
