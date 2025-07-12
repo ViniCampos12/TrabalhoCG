@@ -75,7 +75,6 @@ function createHealthBar() {
 
 export function spawnLostSouls() {
   if (!scrullPrefab) {
-    console.warn("Modelo scrull ainda não carregado. Tente novamente depois.");
     return;
   }
 
@@ -208,7 +207,7 @@ if (soul.state === 'dying') {
  const isCoolingDown = soul.state === 'cooldown' || now - soul.timers.lastCharge < cooldownDur;
 
     // Troca para estado "active" quando estiver longe, mas perto o suficiente
-    if (dist > safeDist && dist < 100 && soul.state !== 'active' && !isCoolingDown) {
+    if (dist > safeDist && dist < 50 && soul.state !== 'active' && !isCoolingDown) {
       soul.state = 'active';
     }
 
@@ -227,6 +226,15 @@ if (soul.state === 'dying') {
       if (!checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
         soul.mesh.position.copy(newPos);
         soul.mesh.lookAt(player.position);
+      }
+
+const chargeTimeOver = now - soul.timers.chargeStart > chargeDur;
+
+        if (!chargeTimeOver) {
+        soul.mesh.position.copy(newPos);
+      } else {
+        soul.state = 'cooldown';
+        soul.timers.lastCharge = now;
       }
     }
 
