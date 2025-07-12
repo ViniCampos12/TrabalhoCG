@@ -146,7 +146,11 @@ class Map{
 
     //Create bb
     const wallBox2 = new THREE.Box3().setFromObject(area2);
+    console.log("WallBox2");
+    console.log(wallBox2);
     this.areasBox.push(wallBox2);
+    const helperp = new THREE.Box3Helper(wallBox2, 0xffff00);
+    scene.add(helperp);
 
     // Create door
     const doorGeometry = new THREE.BoxGeometry(16, 8, 0.1);
@@ -175,8 +179,7 @@ class Map{
     this.plataform.position.set(0, 3, 57);
     area2.add(this.plataform);
     this.plataformBox = new THREE.Box3().setFromObject(this.plataform);
-    // const helperp = new THREE.Box3Helper(this.plataformBox, 0xffff00);
-    // scene.add(helperp);
+    
 
     //Create out suport
     this.suport2 = new THREE.Mesh(suportGeometry, new THREE.MeshLambertMaterial({color: "rgb(143, 72, 38)"}));

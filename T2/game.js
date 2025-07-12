@@ -420,8 +420,6 @@ function render() {
   const velocidade = 20.0 * delta;
 
 
-  console.log("ContaLostSouls:")
-  console.log(contaLostSouls);
   if(contaLostSouls == 5){
     lerpConfigSuport.move = true;
   }
@@ -641,8 +639,8 @@ for (const cacodemon of cacodemons) {
         isIntersectPlataform = plataformIntersects.length > 0;
       }
     } catch (error) {
-      console.warn("Erro no raycasting da plataforma:", error);
-      isIntersectPlataform = false;
+      // console.warn("Erro no raycasting da plataforma:", error);
+      // isIntersectPlataform = false;
     }
 
     if (isIntersectPlataform) {
@@ -818,7 +816,7 @@ function checkCollisions(walls, areas, newCubePos) {
   }
 
   //Testa rampa área 2
-  if((newCubePos.z > -69   && newCubePos.z < -64) && (newCubePos.x > -6 && newCubePos.x < 6)){
+  if((newCubePos.z > -69   && newCubePos.z < -60) && (newCubePos.x > -6 && newCubePos.x < 6)){
     return false;
   }
 
@@ -840,7 +838,7 @@ function checkCollisions(walls, areas, newCubePos) {
   else if(newCubePos.z < -60 && newCubePos.z > -181){
     if(newCubePos.x > -220 && newCubePos.x < -92)
       collision = futureBB.intersectsBox(areas[1]);
-    if(newCubePos.x > -64 && newCubePos.x < 64 && newCubePos.z < -65 ){
+    if(newCubePos.x > -64 && newCubePos.x < 64){
       collision = futureBB.intersectsBox(areas[2]);
     }
       
@@ -861,11 +859,13 @@ function openArea2Door(){
 }
 
 function upPlataform(){
+  lerpConfigPlataform.alpha = 0.01;
   lerpConfigPlataform.destination = new THREE.Vector3(0, 3, 57)
   lerpConfigPlataform.move = true; 
 }
 
 function downPlataform(){
+  lerpConfigPlataform.alpha = 0.02;
   lerpConfigPlataform.destination = new THREE.Vector3(0,-3,57);
   lerpConfigPlataform.move = true;
 }
