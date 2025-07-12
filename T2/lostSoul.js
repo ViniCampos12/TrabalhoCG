@@ -6,7 +6,7 @@ const lostSouls = [];
 const numSouls = 5;
 const safeDist = 30;
 const chargeDur = 1000;
-const cooldownDur = 2000;
+const cooldownDur = 5000;
 
 const loader = new OBJLoader();
 let scrullPrefab = null;
@@ -38,6 +38,32 @@ function createMesh() {
   return soul;
 }
 
+function createHealthBar() {
+  const maxWidth = 4;
+  const height = 0.3;
+
+  const backgroundGeo = new THREE.PlaneGeometry(maxWidth, height);
+  const backgroundMat = new THREE.MeshBasicMaterial({ color: 0x000000, depthTest: false });
+  const background = new THREE.Mesh(backgroundGeo, backgroundMat);
+
+  const foregroundGeo = new THREE.PlaneGeometry(maxWidth, height);
+  const foregroundMat = new THREE.MeshBasicMaterial({ color: 0xff0000, depthTest: false });
+  const foreground = new THREE.Mesh(foregroundGeo, foregroundMat);
+  foreground.position.z = 0.01; // evita z-fighting
+
+  const barGroup = new THREE.Group();
+  barGroup.add(background);
+  barGroup.add(foreground);
+  barGroup.position.set(0, 3.5, 0); // posição acima da cabeça
+
+  barGroup.userData = {
+    foreground,
+    maxWidth
+  };
+
+  return barGroup;
+}
+
 export function spawnLostSouls() {
   if (!scrullPrefab) {
     console.warn("Modelo scrull ainda não carregado. Tente novamente depois.");
@@ -55,6 +81,11 @@ export function spawnLostSouls() {
       chargeDir: new THREE.Vector3(),
       timers: { chargeStart: 0, lastCharge: 0 }
     };
+
+    const healthBar = createHealthBar();
+    soul.mesh.add(healthBar);
+    soul.healthBar = healthBar;
+    soul.maxHp = soul.hp;
 
     mesh.position.set(
       Math.random() * -80 + -120,
@@ -106,69 +137,149 @@ if (newPos.y < 2) {
 
 // Atualização dos Lost Souls adaptada
 export function updateLostSouls(player, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes) {
-    const now = Date.now();
-  const tmpVec = new THREE.Vector3();
+const now = Date.now();
+const tmpVec = new THREE.Vector3();
 const newPos = new THREE.Vector3();
 const moveVec = new THREE.Vector3();
 
 for (const soul of lostSouls) {
-  if (soul.hp <= 0) continue;
+
+  if (soul.hp <= 0 && soul.state !== 'dying') {
+    soul.state = 'dying';
+    soul.fade = {
+      startTime: now,
+      duration: 5000
+    };
+  }
+
+if (soul.state === 'dying') {
+  const elapsed = now - soul.fade.startTime;
+  const alpha = Math.max(1 - (elapsed / soul.fade.duration), 0);
+
+  soul.mesh.traverse((child) => {
+    if (child.isMesh && child.material) {
+      if (Array.isArray(child.material)) {
+        for (const mat of child.material) {
+          mat.transparent = true;
+          mat.opacity = alpha;
+        }
+      } else {
+        child.material.transparent = true;
+        child.material.opacity = alpha;
+      }
+    }
+  });
+
+  if (soul.healthBar) {
+    soul.healthBar.traverse((child) => {
+      if (child.material) {
+        child.material.transparent = true;
+        child.material.opacity = alpha;
+      }
+    });
+  }
+
+  if (elapsed >= soul.fade.duration) {
+    scene.remove(soul.mesh);
+    const index = lostSouls.indexOf(soul);
+    if (index !== -1) lostSouls.splice(index, 1);
+  }
+
+  continue;
+}
+
+  const percent = Math.max(soul.hp / soul.maxHp, 0);
+  const bar = soul.healthBar.userData.foreground;
+  bar.scale.x = percent;
+  bar.position.x = -(1 - percent) * soul.healthBar.userData.maxWidth / 2;
 
   tmpVec.subVectors(player.position, soul.mesh.position);
   const dist = tmpVec.length();
 
-  if (dist < safeDist && soul.state !== 'charge' && now - soul.timers.lastCharge > cooldownDur) {
-    soul.state = 'charge';
-    soul.chargeDir.copy(tmpVec.normalize());
-    soul.timers.chargeStart = now;
+ const isCoolingDown = soul.state === 'cooldown' || now - soul.timers.lastCharge < cooldownDur;
+
+    // Troca para estado "active" quando estiver longe, mas perto o suficiente
+    if (dist > safeDist && dist < 100 && soul.state !== 'active' && !isCoolingDown) {
+      soul.state = 'active';
+    }
+
+    // Inicia o charge
+    if (dist < safeDist && soul.state !== 'charge' && !isCoolingDown) {
+      soul.state = 'charge';
+      soul.chargeDir.copy(tmpVec.normalize());
+      soul.timers.chargeStart = now;
+    }
+
+    // --- STATE: ACTIVE (persegue devagar) ---
+    if (soul.state === 'active') {
+      moveVec.subVectors(player.position, soul.mesh.position).setY(0).normalize().multiplyScalar(0.1);
+      newPos.copy(soul.mesh.position).add(moveVec);
+
+      if (!checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
+        soul.mesh.position.copy(newPos);
+        soul.mesh.lookAt(player.position);
+      }
+    }
+
+    // --- STATE: PATROL (anda em padrão) ---
+    else if (soul.state === 'patrol') {
+      const patrolSpeed = 0.05;
+      const dx = Math.sin(now * 0.001 + soul.mesh.id) * patrolSpeed;
+      const dz = Math.cos(now * 0.001 + soul.mesh.id) * patrolSpeed;
+
+      newPos.copy(soul.mesh.position).add(new THREE.Vector3(dx, 0, dz));
+
+      if (!checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
+        soul.mesh.position.copy(newPos);
+      }
+
+      const targetLookPos = new THREE.Vector3(
+        soul.mesh.position.x + dx,
+        soul.mesh.position.y,
+        soul.mesh.position.z + dz
+      );
+      soul.mesh.lookAt(targetLookPos);
+    }
+
+    // --- STATE: CHARGE (avança rápido) ---
+    else if (soul.state === 'charge') {
+      moveVec.copy(soul.chargeDir).multiplyScalar(1.2);
+      newPos.copy(soul.mesh.position).add(moveVec);
+
+      const chargeTimeOver = now - soul.timers.chargeStart > chargeDur;
+      const blocked = checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
+
+      if (!blocked && !chargeTimeOver) {
+        soul.mesh.position.copy(newPos);
+      } else {
+        soul.state = 'cooldown';
+        soul.timers.lastCharge = now;
+      }
+    }
+
+    // --- STATE: COOLDOWN (persegue devagar) ---
+    else if (soul.state === 'cooldown') {
+      moveVec.subVectors(player.position, soul.mesh.position).setY(0).normalize().multiplyScalar(0.1);
+      newPos.copy(soul.mesh.position).add(moveVec);
+
+      if (!checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
+        soul.mesh.position.copy(newPos);
+        soul.mesh.lookAt(player.position);
+      }
+
+      if (now - soul.timers.lastCharge > cooldownDur) {
+        soul.state = 'patrol';
+      }
+    }
+
+    // Olhar para o player no charge
+    if (soul.state === 'charge') {
+      soul.mesh.lookAt(player.position);
+    }
+
+    // Sempre olha para o player a barra de vida
+    soul.healthBar.lookAt(player.position);
   }
-
-  // ...existing code...
-  if (soul.state === 'patrol') {
-    const patrolSpeed = 0.05;
-    const dx = Math.sin(now * 0.001 + soul.mesh.id) * patrolSpeed;
-    const dz = Math.cos(now * 0.001 + soul.mesh.id) * patrolSpeed;
-
-    newPos.copy(soul.mesh.position).add(new THREE.Vector3(dx, 0, dz));
-    newPos.y = Math.max(newPos.y, 10); // Garante que nunca vá abaixo de Y=15
-
-    if (!checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
-      soul.mesh.position.copy(newPos);
-    }
-  } else if (soul.state === 'charge') {
-    moveVec.copy(soul.chargeDir).multiplyScalar(1.2);
-    newPos.copy(soul.mesh.position).add(moveVec);
-    newPos.y = Math.max(newPos.y, 10); // Garante que nunca vá abaixo de Y=15
-
-    if (!checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
-      soul.mesh.position.copy(newPos);
-    } else {
-      soul.state = 'cooldown';
-      soul.timers.lastCharge = now;
-    }
-
-    if (now - soul.timers.chargeStart > chargeDur) {
-      soul.state = 'cooldown';
-      soul.timers.lastCharge = now;
-    }
-  } else if (soul.state === 'cooldown') {
-    moveVec.set(0, 0, 0.05);
-    newPos.copy(soul.mesh.position).add(moveVec);
-    newPos.y = Math.max(newPos.y, 10); // Garante que nunca vá abaixo de Y=15
-    
-    if (!checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
-      soul.mesh.position.copy(newPos);
-    }
-
-    if (now - soul.timers.lastCharge > cooldownDur / 2) {
-      soul.state = 'patrol';
-    }
-  }
-// ...existing code...
-
-  soul.mesh.lookAt(player.position);
-}
-
 }
 
 export {lostSouls};

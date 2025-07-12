@@ -91,6 +91,7 @@ function alternarParaMetralhadora() {
 }
 
 var blocked = false;
+var blocked2 = false;
 
 // Cria a metralhadora como um sprite
 const textureLoader = new THREE.TextureLoader();
@@ -190,7 +191,7 @@ var cubeGeometry = new THREE.BoxGeometry(2, 2, 2);
 var cube = new THREE.Mesh(cubeGeometry, material);
 cube.position.set(0.0, 2.0, 0.0);
 scene.add(cube);
-spawnCacodemons(blockBoxes);
+
 //Cria arma como cilindro
 const geometryC = new THREE.CylinderGeometry( 0.13, 0.13, 2.5, 32 ); 
 const materialC = new THREE.MeshLambertMaterial( {color: 0x5F5F5F} ); 
@@ -659,6 +660,11 @@ for (const cacodemon of cacodemons) {
       blocked = true;
     }
 
+    if(cube.position.y== 8 && cube.position.x < 62 && cube.position.x > -62 && cube.position.z > -179 && cube.position.z < -79 && blocked2==false)
+    {
+      spawnCacodemons(blockBoxes);
+      blocked2 = true;
+    }
 
     if (moveDir.lengthSq() > 0) {
 

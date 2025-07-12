@@ -157,7 +157,7 @@ class Map{
     this.door.position.set(0, 0, 62);
     area2.add(this.door);
     this.doorBox = new THREE.Box3().setFromObject(this.door);
-    this.blocksBox.push(this.doorBox);
+    
     
     //Para parecer que a porta não some para baixo
     const doorfloorGeometry = new THREE.BoxGeometry(16, 0.05, 0.1);
@@ -205,12 +205,12 @@ class Map{
     this.suportTop2.castShadow = true;
     this.suportTop2.position.set(0, -8, 30);
     this.suportTop2Box = new THREE.Box3().setFromObject(this.suportTop2);
-    this.blocksBox.push(this.suportTop2Box);
+    
     area2.add(this.suportTop2);
 
     this.keyMesh2 = this.createKey("yellow");
     let keyBox2 = new THREE.Box3().setFromObject(this.keyMesh2);
-    this.blocksBox.push(keyBox2);
+    
     this.suportTop2.add(this.keyMesh2);
     
     scene.add(area2);
