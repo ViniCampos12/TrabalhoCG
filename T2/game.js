@@ -77,6 +77,8 @@ const laddersPosition = [
 let armaAtual = 'lançador';
 
 function alternarParaLançador() {
+  spriteTexture.offset.x = 0; // Set back to the first frame
+  spriteFrame = 0; // Reset the frame counter
   armaAtual = 'lançador';
   gunSprite.visible = false;
   shot.visible = true;
