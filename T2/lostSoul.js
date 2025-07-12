@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { scene } from './game.js'; // assegure que main.js exporte scene
 import { OBJLoader } from '../build/jsm/loaders/OBJLoader.js';
+import { MTLLoader } from '../build/jsm/loaders/MTLLoader.js';
 
 const lostSouls = [];
 const numSouls = 5;
@@ -8,13 +9,21 @@ const safeDist = 30;
 const chargeDur = 1000;
 const cooldownDur = 5000;
 
-const loader = new OBJLoader();
 let scrullPrefab = null;
 
-loader.load('../assets/skull.obj', (obj) => {
-  scrullPrefab = obj;
+const mtlLoader = new MTLLoader();
+mtlLoader.setPath('../assets/skull/');
+mtlLoader.load('skull.mtl', (materials) => {
+  materials.preload();
+
+  const objLoader = new OBJLoader();
+  objLoader.setMaterials(materials);
+  objLoader.setPath('../assets/');
+  objLoader.load('skull.obj', (obj) => {
+    scrullPrefab = obj;
+  });
 }, undefined, (err) => {
-  console.error('Erro ao carregar scrull.obj:', err);
+  console.error('Erro ao carregar .mtl:', err);
 });
 
 // Cria mesh simples — substitua por asset real se preferir
