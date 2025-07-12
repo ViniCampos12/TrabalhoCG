@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { scene } from './game.js';
 import { checkCollisionForSouls } from './lostSoul.js';
+import { GLTFLoader } from '../build/jsm/loaders/GLTFLoader.js';
+
 
 const cacodemons = [];
 const projectiles = [];
@@ -8,11 +10,96 @@ const projectiles = [];
 const projectileSpeed = 0.6;
 const fireInterval = 2000;
 
+let cacodemonPrefab = null;
+
+// Carrega o modelo GLB
+const gltfLoader = new GLTFLoader();
+gltfLoader.load('../assets/cacodemon.glb', (gltf) => {
+  cacodemonPrefab = gltf.scene;
+  
+  // Configura propriedades do modelo carregado
+  cacodemonPrefab.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+      
+      // Configura material se existir
+      if (child.material) {
+        // Garante que não seja transparente
+        child.material.transparent = false;
+        child.material.opacity = 1.0;
+        
+        // Adiciona cor vermelha se não tiver cor definida
+        if (!child.material.color || child.material.color.getHex() === 0x000000) {
+          child.material.color.setHex(0x990000);
+        }
+        
+        // Adiciona brilho emissivo
+        if (child.material.emissive) {
+          child.material.emissive.setHex(0x440000);
+        }
+      }
+    }
+  });
+  
+  console.log('Modelo cacodemon.glb carregado com sucesso!');
+}, undefined, (error) => {
+  console.error('Erro ao carregar cacodemon.glb:', error);
+});
+
 function createCacodemonMesh() {
-  const geo = new THREE.SphereGeometry(3, 16, 16);
-  const mat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0x660000 });
-  return new THREE.Mesh(geo, mat);
+  if (!cacodemonPrefab) {
+    console.warn("cacodemonPrefab ainda não carregado, usando esfera temporária");
+    // Fallback para esfera vermelha se o modelo não carregou
+    const geo = new THREE.SphereGeometry(3, 16, 16);
+    const mat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0x660000 });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    return mesh;
+  }
+
+  // Clona o modelo GLB carregado
+  const clone = cacodemonPrefab.clone(true);
+  
+  // Configura cada mesh do clone
+  clone.traverse(child => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+      
+      // Clona o material para cada instância
+      if (child.material) {
+        child.material = child.material.clone();
+        
+        // Garante opacidade total
+        child.material.transparent = false;
+        child.material.opacity = 1.0;
+        
+        // Define cor se necessário
+        if (!child.material.color || child.material.color.getHex() === 0x000000) {
+          child.material.color.setHex(0x990000);
+        }
+        
+        // Adiciona brilho
+        if (child.material.emissive) {
+          child.material.emissive.setHex(0x440000);
+        }
+      } else {
+        // Cria material se não existir
+        child.material = new THREE.MeshStandardMaterial({
+          color: 0x990000,
+          emissive: 0x440000
+        });
+      }
+    }
+  });
+
+  // Ajusta escala se necessário
+  clone.scale.set(0.015, 0.015, 0.015);
+  return clone;
 }
+
 
 function createProjectile(position, direction) {
   const geo = new THREE.SphereGeometry(0.5, 8, 8);
@@ -29,22 +116,36 @@ function createProjectile(position, direction) {
 }
 
 function createHealthBar() {
-  const maxWidth = 4;
-  const height = 0.3;
+  const maxWidth = 200; // Aumenta drasticamente para compensar a escala pequena
+  const height = 20; // Aumenta a altura também
 
   const backgroundGeo = new THREE.PlaneGeometry(maxWidth, height);
-  const backgroundMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+  const backgroundMat = new THREE.MeshBasicMaterial({ 
+    color: 0x000000,
+    depthTest: false,
+    depthWrite: false,
+    side: THREE.DoubleSide
+  });
   const background = new THREE.Mesh(backgroundGeo, backgroundMat);
 
   const foregroundGeo = new THREE.PlaneGeometry(maxWidth, height);
-  const foregroundMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+  const foregroundMat = new THREE.MeshBasicMaterial({ 
+    color: 0xff0000,
+    depthTest: false,
+    depthWrite: false,
+    side: THREE.DoubleSide
+  });
   const foreground = new THREE.Mesh(foregroundGeo, foregroundMat);
-  foreground.position.z = 0.01; // evita z-fighting
+  foreground.position.z = 0.1; // Z-offset maior para a escala pequena
+
+  // Ordem de renderização alta
+  background.renderOrder = 9999;
+  foreground.renderOrder = 10000;
 
   const barGroup = new THREE.Group();
   barGroup.add(background);
   barGroup.add(foreground);
-  barGroup.position.set(0, 5, 0); // altura acima do cacodemon
+  barGroup.position.set(0, 450, 0); // Posição muito mais alta para compensar a escala
 
   barGroup.userData = {
     foreground,
@@ -69,9 +170,15 @@ function getRandomOffsetTarget(position, radius = 10) {
 }
 
 export function spawnCacodemons(blockBoxes) {
-
   const numToSpawn = 3;
   if (blockBoxes.length < numToSpawn) {
+    return;
+  }
+
+  // Se o modelo ainda não carregou, tenta novamente em 1 segundo
+  if (!cacodemonPrefab) {
+    console.warn("Modelo cacodemon ainda não carregado. Tentando novamente em 1 segundo...");
+    setTimeout(() => spawnCacodemons(blockBoxes), 1000);
     return;
   }
 
@@ -80,11 +187,17 @@ export function spawnCacodemons(blockBoxes) {
   shuffleArray(shuffledBlocks);
 
   for (let i = 0; i < numToSpawn; i++) {
-    const block = shuffledBlocks[i]; // sem reutilização
+    const block = shuffledBlocks[i];
     const center = block.getCenter(new THREE.Vector3());
     
+    const mesh = createCacodemonMesh();
+    if (!mesh) {
+      console.warn(`Não foi possível criar mesh para cacodemon ${i}`);
+      continue;
+    }
+    
     const cacodemon = {
-      mesh: createCacodemonMesh(),
+      mesh,
       hp: 50,
       timers: {
         lastFire: 0,
@@ -93,14 +206,18 @@ export function spawnCacodemons(blockBoxes) {
       patrolTarget: null,
       state: 'passive'
     };
+    
     const healthBar = createHealthBar();
     cacodemon.mesh.add(healthBar);
     cacodemon.healthBar = healthBar;
     cacodemon.maxHp = cacodemon.hp;
-    cacodemon.mesh.position.set(center.x, center.y + 20, center.z); // flutuando sobre o bloco
+    cacodemon.mesh.position.set(center.x, center.y + 20, center.z);
+    
     scene.add(cacodemon.mesh);
     cacodemons.push(cacodemon);
   }
+  
+  console.log(`${cacodemons.length} cacodemons criados com sucesso!`);
 }
 
 function checkProjectileCollision(projectile, player, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes) {
