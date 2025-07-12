@@ -114,7 +114,7 @@ gunSprite.visible = false; // só mostra quando metralhadora estiver ativa
 let spriteFrame = 0;
 const totalFrames = 3;
 let lastSpriteUpdate = 0; // Adicione esta variável
-const spriteAnimationSpeed = 100;
+const spriteAnimationSpeed = 80;
 
 function animarMetralhadoraSprite() {
   const now = Date.now();

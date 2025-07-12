@@ -43,7 +43,7 @@ function createMesh() {
     }
   });
 
-  soul.scale.set(2, 2, 2); // ajuste de tamanho
+  soul.scale.set(1.5, 1.5, 1.5); // ajuste de tamanho
   return soul;
 }
 
@@ -122,7 +122,7 @@ export function spawnLostSouls() {
 
 // Função para checar colisão dos Lost Souls
 export function checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes) {
-  const futureBB = new THREE.Box3().setFromCenterAndSize(newPos, new THREE.Vector3(5, 4, 5));
+  const futureBB = new THREE.Box3().setFromCenterAndSize(newPos, new THREE.Vector3(7, 7, 7));
 
   // Testa colunas
   for (const collumn of collumnsBoxes) {

@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { scene } from './game.js';
-import { checkCollisionForSouls } from './lostSoul.js';
 import { GLTFLoader } from '../build/jsm/loaders/GLTFLoader.js';
 
 
@@ -51,7 +50,7 @@ function createCacodemonMesh() {
   if (!cacodemonPrefab) {
     console.warn("cacodemonPrefab ainda não carregado, usando esfera temporária");
     // Fallback para esfera vermelha se o modelo não carregou
-    const geo = new THREE.SphereGeometry(3, 16, 16);
+    const geo = new THREE.SphereGeometry(6, 32, 32);
     const mat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0x660000 });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.castShadow = true;
@@ -167,6 +166,41 @@ function getRandomOffsetTarget(position, radius = 10) {
   const dx = Math.cos(angle) * radius;
   const dz = Math.sin(angle) * radius;
   return new THREE.Vector3(position.x + dx, position.y, position.z + dz);
+}
+
+export function checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes) {
+  const futureBB = new THREE.Box3().setFromCenterAndSize(newPos, new THREE.Vector3(10, 12, 10));
+
+  // Testa colunas
+  for (const collumn of collumnsBoxes) {
+    if (futureBB.intersectsBox(collumn)) {
+      return true;
+    }
+  }
+  // Testa blocos
+  for (const block of blockBoxes) {
+    if (futureBB.intersectsBox(block)) {
+      return true;
+    }
+  }
+  // Testa paredes
+  for (const wall of wallBoxes) {
+    if (futureBB.intersectsBox(wall)) {
+      return true;
+    }
+  }
+  // Testa áreas proibidas (exemplo)
+  for (const area of areaBoxes) {
+    if (futureBB.intersectsBox(area)) {
+      return true;
+    }
+  }
+
+if (newPos.y < 10) {
+  return true;
+}
+
+  return false;
 }
 
 export function spawnCacodemons(blockBoxes) {
@@ -294,11 +328,13 @@ if (now < cacodemon.timers.idleUntil) {
   moveVec.subVectors(cacodemon.patrolTarget, cacodemon.mesh.position).setY(0).normalize().multiplyScalar(0.02);
   newPos.copy(cacodemon.mesh.position).add(moveVec);
 
-  if (!checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
+  if (!checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
     cacodemon.mesh.position.copy(newPos);
     cacodemon.mesh.lookAt(cacodemon.patrolTarget);
   } else {
     // Caso colida, redefine destino
+    cacodemon.patrolTarget = getRandomOffsetTarget(cacodemon.mesh.position, 6);
+cacodemon.patrolTarget.y += 10; // sobe para se soltar do chão
     cacodemon.patrolTarget = getRandomOffsetTarget(cacodemon.mesh.position, 6);
     cacodemon.timers.idleUntil = now + 500; // pequena pausa antes de tentar de novo
   }
@@ -322,7 +358,7 @@ if (now < cacodemon.timers.idleUntil) {
   moveVec.add(sideVec);
   newPos.copy(cacodemon.mesh.position).add(moveVec);
 
-  if (!checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
+  if (!checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
     cacodemon.mesh.position.copy(newPos);
 
     // Olha na direção do movimento, não para o player
