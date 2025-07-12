@@ -149,8 +149,8 @@ class Map{
     console.log("WallBox2");
     console.log(wallBox2);
     this.areasBox.push(wallBox2);
-    const helperp = new THREE.Box3Helper(wallBox2, 0xffff00);
-    scene.add(helperp);
+    // const helperp = new THREE.Box3Helper(wallBox2, 0xffff00);
+    // scene.add(helperp);
 
     // Create door
     const doorGeometry = new THREE.BoxGeometry(16, 8, 0.1);
@@ -177,6 +177,8 @@ class Map{
     this.plataform.castShadow = true; 
     this.plataform.receiveShadow = true; 
     this.plataform.position.set(0, 3, 57);
+    console.log("Position plataform")
+    console.log(this.plataform.position);
     area2.add(this.plataform);
     this.plataformBox = new THREE.Box3().setFromObject(this.plataform);
     

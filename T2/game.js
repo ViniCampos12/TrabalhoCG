@@ -72,6 +72,12 @@ const laddersPosition = [
     minZ: 55,
     maxZ: 70,
   },
+  {
+    minX: -8,
+    maxX: 8,
+    minZ: -71,
+    maxZ: -64,
+  }
 ]
 
 let armaAtual = 'lançador';
@@ -419,6 +425,7 @@ function render() {
   const delta = clock.getDelta();
   const velocidade = 20.0 * delta;
 
+  // console.log(cube.position);
 
   if(contaLostSouls == 5){
     lerpConfigSuport.move = true;
@@ -639,21 +646,12 @@ for (const cacodemon of cacodemons) {
         isIntersectPlataform = plataformIntersects.length > 0;
       }
     } catch (error) {
-      // console.warn("Erro no raycasting da plataforma:", error);
-      // isIntersectPlataform = false;
+      console.warn("Erro no raycasting da plataforma:", error);
+      isIntersectPlataform = false;
     }
 
     if (isIntersectPlataform) {
-      if (cube.parent !== plataform) {
-        plataform.attach(cube); // Anexa o personagem à plataforma
-      }
-
-      cube.position.y = plataform.position.y + 2; //Por conta da altura do cubo
-
-    } else {
-      if (cube.parent !== scene) {
-        scene.attach(cube); // Remove da plataforma se saiu
-      }
+      cube.position.lerp(new THREE.Vector3(cube.position.x, 6, cube.position.z),0.01);
     }
 
     if(lerpConfigPlataform.move) {
@@ -711,10 +709,16 @@ for (const cacodemon of cacodemons) {
 
     }
     //Se estiver fora da área da escada ele atualiza a gravidade
-      const inLadderArea = laddersPosition.some(ladder => cube.position.x >= ladder.minX && cube.position.x <= ladder.maxX &&cube.position.z >= ladder.minZ && cube.position.z <= ladder.maxZ);
+      const inLadderArea = laddersPosition.some(ladder => cube.position.x >= ladder.minX && cube.position.x <= ladder.maxX && cube.position.z >= ladder.minZ && cube.position.z <= ladder.maxZ);
 
-      if(!inLadderArea && cube.position.y > 2) 
-        atualizaGravidade(cube);  
+      const cubeWorldPos = new THREE.Vector3();
+      cube.getWorldPosition(cubeWorldPos);
+
+      if (!inLadderArea && cubeWorldPos.y > 2) {
+        console.log("Entrou na ladder");
+        atualizaGravidade(cube);
+      }
+          
       updateLostSouls(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
       updateCacodemons(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
   }
@@ -771,10 +775,6 @@ function checkCollisions(walls, areas, newCubePos) {
     }
   }
 
-  if (Math.abs(plataform.position.y - 3) > 0.1 && Math.abs(plataform.position.y + 3) > 0.1 && newCubePos.z < -64 && newCubePos.z > -71 && newCubePos.y == 2) {
-  // Está em movimento
-  return true;
-  }
 
   //Testa blocos da área 2
   if(newCubePos.z < -53 && newCubePos.z > -181 && newCubePos.x > -64 && newCubePos.x < 64){
@@ -819,6 +819,8 @@ function checkCollisions(walls, areas, newCubePos) {
   if((newCubePos.z > -69   && newCubePos.z < -60) && (newCubePos.x > -6 && newCubePos.x < 6)){
     return false;
   }
+
+
 
   //Testa paredes
   if(Math.abs(newCubePos.x) > 248 || Math.abs(newCubePos.z) > 248){
