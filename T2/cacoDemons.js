@@ -6,8 +6,8 @@ import { GLTFLoader } from '../build/jsm/loaders/GLTFLoader.js';
 const cacodemons = [];
 const projectiles = [];
 
-const projectileSpeed = 0.6;
-const fireInterval = 2000;
+const projectileSpeed = 0.6; //Velocidade de disparo
+const fireInterval = 2000; //Cadência
 
 let cacodemonPrefab = null;
 
@@ -41,7 +41,6 @@ gltfLoader.load('../assets/cacodemon.glb', (gltf) => {
     }
   });
   
-  console.log('Modelo cacodemon.glb carregado com sucesso!');
 }, undefined, (error) => {
   console.error('Erro ao carregar cacodemon.glb:', error);
 });
@@ -75,6 +74,7 @@ function createProjectile(position, direction) {
   mesh.position.copy(position);
   scene.add(mesh);
 
+  //Retorna retorna projéteis
   return {
     mesh,
     dir: direction.clone().normalize(),
@@ -122,53 +122,58 @@ function createHealthBar() {
   return barGroup;
 }
 
-function shuffleArray(array) {
+function shuffleArray(array) //Função de embaralhamento de vetores
+{
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [array[i], array[j]] = [array[j], array[i]];
   }
 }
 
-function getRandomOffsetTarget(position, radius = 10) {
+function getRandomOffsetTarget(position, radius = 10) //Randomiza patrulha do cacodemon
+{
   const angle = Math.random() * Math.PI * 2;
   const dx = Math.cos(angle) * radius;
   const dz = Math.sin(angle) * radius;
   return new THREE.Vector3(position.x + dx, position.y, position.z + dz);
 }
 
-export function checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes) {
-  const futureBB = new THREE.Box3().setFromCenterAndSize(newPos, new THREE.Vector3(10, 12, 10));
+export function checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes) //Checa a colisão dos cacodemons
+{
+  const futureBB = new THREE.Box3().setFromCenterAndSize(newPos, new THREE.Vector3(8, 8, 8)); //Tamanho diferente do lostsoul, pois o cacodemon é maior
 
-  // Testa colunas
+  //Testa colunas
   for (const collumn of collumnsBoxes) {
     if (futureBB.intersectsBox(collumn)) {
       return true;
     }
   }
-  // Testa blocos
+  //Testa blocos
   for (const block of blockBoxes) {
     if (futureBB.intersectsBox(block)) {
       return true;
     }
   }
-  // Testa paredes
+  //Testa paredes
   for (const wall of wallBoxes) {
     if (futureBB.intersectsBox(wall)) {
       return true;
     }
   }
-  // Testa áreas proibidas (exemplo)
+  //Testa areas
   for (const area of areaBoxes) {
     if (futureBB.intersectsBox(area)) {
       return true;
     }
   }
 
-if (newPos.y < 10) {
-  return true;
-}
+  //Evita colisão com o chão
+  if (newPos.y < 8)
+    {
+    return true;
+    }
 
-  return false;
+    return false;
 }
 
 export function spawnCacodemons(blockBoxes) {
@@ -177,14 +182,12 @@ export function spawnCacodemons(blockBoxes) {
     return;
   }
 
-  // Se o modelo ainda não carregou, tenta novamente em 1 segundo
   if (!cacodemonPrefab) {
-    console.warn("Modelo cacodemon ainda não carregado. Tentando novamente em 1 segundo...");
     setTimeout(() => spawnCacodemons(blockBoxes), 1000);
     return;
   }
 
-  // Copia e embaralha blocos para garantir unicidade e aleatoriedade
+  //Randomiza blocos
   const shuffledBlocks = [...blockBoxes];
   shuffleArray(shuffledBlocks);
 
@@ -194,47 +197,46 @@ export function spawnCacodemons(blockBoxes) {
     
     const mesh = createCacodemonMesh();
     if (!mesh) {
-      console.warn(`Não foi possível criar mesh para cacodemon ${i}`);
       continue;
     }
     
+    //Objeto cacodemon
     const cacodemon = {
       mesh,
-      hp: 50,
+      hp: 50, //Vida do cacodemon
       timers: {
-        lastFire: 0,
-        idleUntil: 0
+        lastFire: 0, //Último tiro
+        idleUntil: 0 //Tempo de espera
       },
-      patrolTarget: null,
-      state: 'passive'
+      patrolTarget: null, //Alvo da patrulha começa apontando para null
+      state: 'passive' //Status começa passivo, até ser ativado pelo jogador
     };
     
-    const healthBar = createHealthBar();
+    const healthBar = createHealthBar(); //Cria barra de vida
     cacodemon.mesh.add(healthBar);
     cacodemon.healthBar = healthBar;
     cacodemon.maxHp = cacodemon.hp;
-    cacodemon.mesh.position.set(center.x, center.y + 20, center.z);
+    cacodemon.mesh.position.set(center.x, center.y + 20, center.z); //Posiciona a barra de vida acima do cacodemon
     
     scene.add(cacodemon.mesh);
     cacodemons.push(cacodemon);
   }
-  
-  console.log(`${cacodemons.length} cacodemons criados com sucesso!`);
 }
 
-function checkProjectileCollision(projectile, player, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes) {
+function checkProjectileCollision(projectile, player, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes) //Checa as colisões dos projéteis
+{
   const projectileBB = new THREE.Box3().setFromCenterAndSize(
     projectile.mesh.position,
     new THREE.Vector3(1, 1, 1) // Tamanho da colisão do projétil
   );
 
-  // Colisão com o jogador
+  //Colisão com o jogador
   const playerBB = new THREE.Box3().setFromObject(player);
   if (projectileBB.intersectsBox(playerBB)) {
     return 'player';
   }
 
-  // Colisão com ambiente
+  //Colisão com o mundo
   for (const boxList of [wallBoxes, areaBoxes, collumnsBoxes, blockBoxes]) {
     for (const box of boxList) {
       if (projectileBB.intersectsBox(box)) {
@@ -242,6 +244,8 @@ function checkProjectileCollision(projectile, player, wallBoxes, areaBoxes, coll
       }
     }
   }
+
+  //Colisão com o chão
   if (projectile.mesh.position.y < 0.1) {
     return 'ground';
   }
@@ -249,7 +253,8 @@ function checkProjectileCollision(projectile, player, wallBoxes, areaBoxes, coll
   return null;
 }
 
-export function updateCacodemons(player, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes) {
+export function updateCacodemons(player, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)
+{
   const now = Date.now();
   const tmpVec = new THREE.Vector3();
   const moveVec = new THREE.Vector3();
@@ -259,69 +264,64 @@ export function updateCacodemons(player, wallBoxes, areaBoxes, collumnsBoxes, bl
   for (const cacodemon of cacodemons) {
     if (cacodemon.hp <= 0) continue;
 
-    // Atualiza barra de vida
+    //Atualiza barra de vida
     const percent = Math.max(cacodemon.hp / cacodemon.maxHp, 0);
     const bar = cacodemon.healthBar.userData.foreground;
     bar.scale.x = percent;
     bar.position.x = -(1 - percent) * cacodemon.healthBar.userData.maxWidth / 2;
 
 
-    // Direção até o jogador
+    //Direção até o jogador
     tmpVec.subVectors(player.position, cacodemon.mesh.position);
     const distToPlayer = tmpVec.length();
     const forwardDir = tmpVec.clone().normalize();
 
-    // === Transições de estado ===
+    //Transições de estado (passivo e ativo)
     if (cacodemon.state === 'passive' && distToPlayer < 80) {
       cacodemon.state = 'active';
     } else if (cacodemon.state === 'active' && distToPlayer > 100) {
       cacodemon.state = 'passive';
     }
 
-    // === PASSIVE ===
+    //Estado passivo (patrulha)
     if (cacodemon.state === 'passive') {
-      // Movimento de patrulha leve
-if (now < cacodemon.timers.idleUntil) {
-    // Está parado esperando
-    cacodemon.mesh.lookAt(player.position); // olha ocasionalmente
-    continue;
-  }
 
-  // Define novo destino se não tem ou já chegou
+  //Determina movimento, e destino, ou pausa
   if (!cacodemon.patrolTarget || cacodemon.mesh.position.distanceTo(cacodemon.patrolTarget) < 1) {
-    cacodemon.patrolTarget = getRandomOffsetTarget(cacodemon.mesh.position, 6 + Math.random() * 6); // 6–12 unidades
+    cacodemon.patrolTarget = getRandomOffsetTarget(cacodemon.mesh.position, 6 + Math.random() * 6);
     return;
   }
 
+  //Movimento no eixo y
   moveVec.subVectors(cacodemon.patrolTarget, cacodemon.mesh.position).setY(0).normalize().multiplyScalar(0.02);
   newPos.copy(cacodemon.mesh.position).add(moveVec);
 
-  if (!checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
+  if (!checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes))
+    {
     cacodemon.mesh.position.copy(newPos);
     cacodemon.mesh.lookAt(cacodemon.patrolTarget);
   } else {
-    // Caso colida, redefine destino
+    //Em caso de colisão recalcula a rota
     cacodemon.patrolTarget = getRandomOffsetTarget(cacodemon.mesh.position, 6);
-cacodemon.patrolTarget.y += 10; // sobe para se soltar do chão
+    cacodemon.patrolTarget.y += 20; //sobe para se soltar do chão
     cacodemon.patrolTarget = getRandomOffsetTarget(cacodemon.mesh.position, 6);
-    cacodemon.timers.idleUntil = now + 500; // pequena pausa antes de tentar de novo
+    cacodemon.timers.idleUntil = now + 500; //pequena pausa antes de tentar de novo
   }
 
-    // === ACTIVE ===
+    //Estado ativo (ataque)
     } else if (cacodemon.state === 'active') {
-  // Se está parado após atirar, apenas olha o jogador
   if (cacodemon.timers.stoppedUntil && now < cacodemon.timers.stoppedUntil) {
-    cacodemon.mesh.lookAt(player.position); // Só olha quando está parado atirando
+    cacodemon.mesh.lookAt(player.position); //Olha para o jogador quando vai atirar
     continue;
   }
 
-  // Zig-zag + movimento de perseguição
+  //Movimento de perseguição e zigzag
   const forwardSpeed = 0.04;
   moveVec.copy(forwardDir).multiplyScalar(forwardSpeed);
 
-  const timeFactor = now * 0.001 + cacodemon.mesh.id;
+  const timeFactor = now * 0.001 + cacodemon.mesh.id; //Determina velocidade
   sideVec.crossVectors(forwardDir, new THREE.Vector3(0, 1, 0)).normalize();
-  sideVec.multiplyScalar(Math.sin(timeFactor) * 0.3);
+  sideVec.multiplyScalar(Math.sin(timeFactor) * 0.3); //Determina amplitude
 
   moveVec.add(sideVec);
   newPos.copy(cacodemon.mesh.position).add(moveVec);
@@ -329,18 +329,18 @@ cacodemon.patrolTarget.y += 10; // sobe para se soltar do chão
   if (!checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
     cacodemon.mesh.position.copy(newPos);
 
-    // Olha na direção do movimento, não para o player
+    //Olha na direção do movimento, não para o jogador
     const targetPos = cacodemon.mesh.position.clone().add(moveVec);
     cacodemon.mesh.lookAt(targetPos);
   }
 
-  // Ataca se estiver no intervalo de tiro
+  //Ataca se estiver no intervalo de tiro
   if (distToPlayer < 80 && now - cacodemon.timers.lastFire > fireInterval) {
     const projectile = createProjectile(cacodemon.mesh.position, forwardDir);
     projectiles.push(projectile);
     cacodemon.timers.lastFire = now;
 
-    // Para e olha para o jogador durante o disparo
+    //Para e olha para o jogador durante o disparo
     cacodemon.timers.stoppedUntil = now + 700;
     cacodemon.mesh.lookAt(player.position);
   }
@@ -348,7 +348,7 @@ cacodemon.patrolTarget.y += 10; // sobe para se soltar do chão
     cacodemon.healthBar.lookAt(player.position);
   }
 
-  // === Atualiza projéteis ===
+  //Atualiza projéteis
   for (let i = projectiles.length - 1; i >= 0; i--) {
     const p = projectiles[i];
     tmpVec.copy(p.dir).multiplyScalar(projectileSpeed);
@@ -363,6 +363,7 @@ cacodemon.patrolTarget.y += 10; // sobe para se soltar do chão
       continue;
     }
 
+    //Em caso de colisão com o mundo ou com o chão (ou ao exceder o tempo limite), remove as balas
     if (collision === 'world' || collision === 'ground' || Date.now() - p.spawnTime > 5000) {
       scene.remove(p.mesh);
       projectiles.splice(i, 1);
