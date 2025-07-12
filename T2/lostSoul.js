@@ -30,10 +30,10 @@ mtlLoader.load('skull.mtl', (materials) => {
 function createMesh() {
  if (!scrullPrefab) {
     console.warn("scrullPrefab ainda não carregado");
-    return null; // ou um cubo temporário, se quiser
+    return null; //ou um cubo temporário, se quiser
   }
 
-  const soul = scrullPrefab.clone(true); // clona o modelo completo
+  const soul = scrullPrefab.clone(true); //clona o modelo completo
   soul.traverse(child => {
     if (child.isMesh) {
       child.castShadow = true;
@@ -43,7 +43,7 @@ function createMesh() {
     }
   });
 
-  soul.scale.set(1.5, 1.5, 1.5); // ajuste de tamanho
+  soul.scale.set(1.5, 1.5, 1.5); //ajuste de tamanho
   return soul;
 }
 
@@ -65,12 +65,12 @@ function createHealthBar() {
   const foregroundGeo = new THREE.PlaneGeometry(maxWidth, height);
   const foregroundMat = new THREE.MeshBasicMaterial({ color: 0xff0000, depthTest: false });
   const foreground = new THREE.Mesh(foregroundGeo, foregroundMat);
-  foreground.position.z = 0.01; // evita z-fighting
+  foreground.position.z = 0.01; //evita z-fighting
 
   const barGroup = new THREE.Group();
   barGroup.add(background);
   barGroup.add(foreground);
-  barGroup.position.set(0, 3.5, 0); // posição acima da cabeça
+  barGroup.position.set(0, 3.5, 0); //posição acima da cabeça
 
   barGroup.userData = {
     foreground,
@@ -80,7 +80,8 @@ function createHealthBar() {
   return barGroup;
 }
 
-export function spawnLostSouls() {
+export function spawnLostSouls()
+{
   if (!scrullPrefab) {
     return;
   }
@@ -89,25 +90,27 @@ export function spawnLostSouls() {
     const mesh = createMesh();
     if (!mesh) continue;
 
+    //Objeto lostSoul
     const soul = {
       mesh,
-      hp: 20,
-      state: 'patrol',
+      hp: 20, //Vida da lostSoul
+      state: 'patrol', //Começa no estado de patrulha
       chargeDir: new THREE.Vector3(),
         timers: {
-    chargeStart: 0,
-    lastCharge: 0,
-    patrolDelay: 0
+    chargeStart: 0, //Indica começo do "charge"
+    lastCharge: 0, //Indica quando foi o último "charge"
+    patrolDelay: 0 //Delay da patrulha
     },
-    patrolTarget: null,
-    idleUntil: 0,
+    patrolTarget: null, //Alvo da patrulha começa apontando para null
+    idleUntil: 0, //Tempo de espera
     };
 
-    const healthBar = createHealthBar();
+    const healthBar = createHealthBar(); //Cria barra de vida
     soul.mesh.add(healthBar);
     soul.healthBar = healthBar;
     soul.maxHp = soul.hp;
 
+    //Posiciona as lostSouls aleatoriamente em cima da area 1
     mesh.position.set(
       Math.random() * -80 + -120,
       10,
@@ -120,35 +123,37 @@ export function spawnLostSouls() {
 }
 
 
-// Função para checar colisão dos Lost Souls
-export function checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes) {
-  const futureBB = new THREE.Box3().setFromCenterAndSize(newPos, new THREE.Vector3(7, 7, 7));
+//Checa a colisão dos Lost Souls
+export function checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)
+{
+  const futureBB = new THREE.Box3().setFromCenterAndSize(newPos, new THREE.Vector3(7, 7, 7)); //Define tamanho da hitbox das lostSouls
 
-  // Testa colunas
+  //Testa colunas
   for (const collumn of collumnsBoxes) {
     if (futureBB.intersectsBox(collumn)) {
       return true;
     }
   }
-  // Testa blocos
+  //Testa blocos
   for (const block of blockBoxes) {
     if (futureBB.intersectsBox(block)) {
       return true;
     }
   }
-  // Testa paredes
+  //Testa paredes
   for (const wall of wallBoxes) {
     if (futureBB.intersectsBox(wall)) {
       return true;
     }
   }
-  // Testa áreas proibidas (exemplo)
+  //Testa areas
   for (const area of areaBoxes) {
     if (futureBB.intersectsBox(area)) {
       return true;
     }
   }
 
+//Evita colisão com o chão
 if (newPos.y < 2) {
   return true;
 }
@@ -156,13 +161,15 @@ if (newPos.y < 2) {
   return false;
 }
 
-// Atualização dos Lost Souls adaptada
-export function updateLostSouls(player, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes) {
+//Atualização das lostSouls
+export function updateLostSouls(player, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)
+{
 const now = Date.now();
 const tmpVec = new THREE.Vector3();
 const newPos = new THREE.Vector3();
 const moveVec = new THREE.Vector3();
 
+//OPACIDADE
 for (const soul of lostSouls) {
 
   if (soul.hp <= 0 && soul.state !== 'dying') {
@@ -208,41 +215,49 @@ if (soul.state === 'dying') {
 
   continue;
 }
+//FIM DA OPACIDADE
 
+  //Atualiza barra de vida
   const percent = Math.max(soul.hp / soul.maxHp, 0);
   const bar = soul.healthBar.userData.foreground;
   bar.scale.x = percent;
   bar.position.x = -(1 - percent) * soul.healthBar.userData.maxWidth / 2;
 
+  //Direção até o jogador
   tmpVec.subVectors(player.position, soul.mesh.position);
   const dist = tmpVec.length();
 
  const isCoolingDown = soul.state === 'cooldown' || now - soul.timers.lastCharge < cooldownDur;
 
-    // Troca para estado "active" quando estiver longe, mas perto o suficiente
+    //Transição para o estado ativo quando estiver perto o suficiente, mas longe para o "charge"
     if (dist > safeDist && dist < 100 && soul.state !== 'active' && !isCoolingDown) {
       soul.state = 'active';
     }
 
-    // Inicia o charge
+    //Inicia o "charge"
     if (dist < safeDist && soul.state !== 'charge' && !isCoolingDown) {
       soul.state = 'charge';
       soul.chargeDir.copy(tmpVec.normalize());
       soul.timers.chargeStart = now;
     }
 
-    // --- STATE: ACTIVE (persegue devagar) ---
-    if (soul.state === 'active') {
+    //Estado ativo (ataque)
+    if (soul.state === 'active')
+      {
+      //Movimentação de perseguição
       moveVec.subVectors(player.position, soul.mesh.position).setY(0).normalize().multiplyScalar(0.1);
       newPos.copy(soul.mesh.position).add(moveVec);
 
+      //Checagem de colisão
       if (!checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
         soul.mesh.position.copy(newPos);
         soul.mesh.lookAt(player.position);
       }
 
-const chargeTimeOver = now - soul.timers.chargeStart > chargeDur;
+      //Determina fim do estado de "charge"
+      const chargeTimeOver = now - soul.timers.chargeStart > chargeDur;
 
+      //Inicia estado de "cooldown"
         if (!chargeTimeOver) {
         soul.mesh.position.copy(newPos);
       } else {
@@ -251,38 +266,41 @@ const chargeTimeOver = now - soul.timers.chargeStart > chargeDur;
       }
     }
 
-    // --- STATE: PATROL (anda em padrão) ---
-else if (soul.state === 'patrol') {
-  if (now < soul.idleUntil) {
-    return; // ainda esperando
-  }
+    //Estado de patrulha (passivo)
+    else if (soul.state === 'patrol') {
 
-  // Se ainda não tem destino ou chegou muito perto
-  if (!soul.patrolTarget || soul.mesh.position.distanceTo(soul.patrolTarget) < 1) {
-    soul.patrolTarget = getRandomPatrolTarget(soul.mesh.position, 10);
-    return;
-  }
+     //Se ainda não tem destino ou chegou muito perto
+    if (!soul.patrolTarget || soul.mesh.position.distanceTo(soul.patrolTarget) < 1)
+      {
+      soul.patrolTarget = getRandomPatrolTarget(soul.mesh.position, 10);
+      return;
+      }
 
-  moveVec.subVectors(soul.patrolTarget, soul.mesh.position).setY(0).normalize().multiplyScalar(0.05);
-  newPos.copy(soul.mesh.position).add(moveVec);
+      //Movimentação no eixo Y
+      moveVec.subVectors(soul.patrolTarget, soul.mesh.position).setY(0).normalize().multiplyScalar(0.05);
+      newPos.copy(soul.mesh.position).add(moveVec);
 
-  if (!checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
-    soul.mesh.position.copy(newPos);
-    soul.mesh.lookAt(soul.patrolTarget);
-  } else {
-    // Se bateu em algo, escolhe novo ponto
-    soul.patrolTarget = getRandomPatrolTarget(soul.mesh.position, 10);
+      //Checa colisão
+      if (!checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
+        soul.mesh.position.copy(newPos);
+        soul.mesh.lookAt(soul.patrolTarget);
+      } else {
+        //Escolhe novo alvo
+        soul.patrolTarget = getRandomPatrolTarget(soul.mesh.position, 10);
   }
 }
 
-    // --- STATE: CHARGE (avança rápido) ---
+    //Estado "charge" (carga/dash)
     else if (soul.state === 'charge') {
+      //Avança em alta velocidade em direção ao jogador
       moveVec.copy(soul.chargeDir).multiplyScalar(1.2);
       newPos.copy(soul.mesh.position).add(moveVec);
 
+      //Determina fim do estado de "charge"
       const chargeTimeOver = now - soul.timers.chargeStart > chargeDur;
       const blocked = checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
 
+      //Inicia estado de "cooldown"
       if (!blocked && !chargeTimeOver) {
         soul.mesh.position.copy(newPos);
       } else {
@@ -291,27 +309,31 @@ else if (soul.state === 'patrol') {
       }
     }
 
-    // --- STATE: COOLDOWN (persegue devagar) ---
-    else if (soul.state === 'cooldown') {
+    //Estado "cooldown" (recarga)
+    else if (soul.state === 'cooldown') //Não volta a entrar em "charge" enquanto não passar o tempo de cooldown
+      {
+      //Movimento de perseguição, mas sem "charge"
       moveVec.subVectors(player.position, soul.mesh.position).setY(0).normalize().multiplyScalar(0.1);
       newPos.copy(soul.mesh.position).add(moveVec);
 
+      //Checa colisão
       if (!checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
         soul.mesh.position.copy(newPos);
         soul.mesh.lookAt(player.position);
       }
 
+      //Ao fim do tempo de recarga, retorna ao estado de patrulha
       if (now - soul.timers.lastCharge > cooldownDur) {
         soul.state = 'patrol';
       }
     }
 
-    // Olhar para o player no charge
+    //Olha para o jogador no "charge"
     if (soul.state === 'charge') {
       soul.mesh.lookAt(player.position);
     }
 
-    // Sempre olha para o player a barra de vida
+    //Barra de vida sempre olha para o jogador
     soul.healthBar.lookAt(player.position);
   }
 }
