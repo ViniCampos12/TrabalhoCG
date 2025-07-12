@@ -94,7 +94,7 @@ var blocked = false;
 
 // Cria a metralhadora como um sprite
 const textureLoader = new THREE.TextureLoader();
-const spriteTexture = textureLoader.load('../assets/2025.1_T2_Assets/chaingun.png');
+const spriteTexture = textureLoader.load('../assets/chaingun.png');
 spriteTexture.repeat.set(1 / 3, 1); // 3 quadros na horizontal
 spriteTexture.offset.set(0, 0); // começa do primeiro frame
 
