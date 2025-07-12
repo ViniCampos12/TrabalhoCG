@@ -5,7 +5,7 @@ import { MTLLoader } from '../build/jsm/loaders/MTLLoader.js';
 
 const lostSouls = [];
 const numSouls = 5;
-const safeDist = 30;
+const safeDist = 50;
 const chargeDur = 1000;
 const cooldownDur = 5000;
 
@@ -45,6 +45,13 @@ function createMesh() {
 
   soul.scale.set(2, 2, 2); // ajuste de tamanho
   return soul;
+}
+
+function getRandomPatrolTarget(origin, radius = 10) {
+  const angle = Math.random() * Math.PI * 2;
+  const dx = Math.cos(angle) * radius;
+  const dz = Math.sin(angle) * radius;
+  return new THREE.Vector3(origin.x + dx, origin.y, origin.z + dz);
 }
 
 function createHealthBar() {
@@ -87,7 +94,13 @@ export function spawnLostSouls() {
       hp: 20,
       state: 'patrol',
       chargeDir: new THREE.Vector3(),
-      timers: { chargeStart: 0, lastCharge: 0 }
+        timers: {
+    chargeStart: 0,
+    lastCharge: 0,
+    patrolDelay: 0
+    },
+    patrolTarget: null,
+    idleUntil: 0,
     };
 
     const healthBar = createHealthBar();
@@ -207,7 +220,7 @@ if (soul.state === 'dying') {
  const isCoolingDown = soul.state === 'cooldown' || now - soul.timers.lastCharge < cooldownDur;
 
     // Troca para estado "active" quando estiver longe, mas perto o suficiente
-    if (dist > safeDist && dist < 50 && soul.state !== 'active' && !isCoolingDown) {
+    if (dist > safeDist && dist < 100 && soul.state !== 'active' && !isCoolingDown) {
       soul.state = 'active';
     }
 
@@ -239,24 +252,28 @@ const chargeTimeOver = now - soul.timers.chargeStart > chargeDur;
     }
 
     // --- STATE: PATROL (anda em padrão) ---
-    else if (soul.state === 'patrol') {
-      const patrolSpeed = 0.05;
-      const dx = Math.sin(now * 0.001 + soul.mesh.id) * patrolSpeed;
-      const dz = Math.cos(now * 0.001 + soul.mesh.id) * patrolSpeed;
+else if (soul.state === 'patrol') {
+  if (now < soul.idleUntil) {
+    return; // ainda esperando
+  }
 
-      newPos.copy(soul.mesh.position).add(new THREE.Vector3(dx, 0, dz));
+  // Se ainda não tem destino ou chegou muito perto
+  if (!soul.patrolTarget || soul.mesh.position.distanceTo(soul.patrolTarget) < 1) {
+    soul.patrolTarget = getRandomPatrolTarget(soul.mesh.position, 10);
+    return;
+  }
 
-      if (!checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
-        soul.mesh.position.copy(newPos);
-      }
+  moveVec.subVectors(soul.patrolTarget, soul.mesh.position).setY(0).normalize().multiplyScalar(0.05);
+  newPos.copy(soul.mesh.position).add(moveVec);
 
-      const targetLookPos = new THREE.Vector3(
-        soul.mesh.position.x + dx,
-        soul.mesh.position.y,
-        soul.mesh.position.z + dz
-      );
-      soul.mesh.lookAt(targetLookPos);
-    }
+  if (!checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
+    soul.mesh.position.copy(newPos);
+    soul.mesh.lookAt(soul.patrolTarget);
+  } else {
+    // Se bateu em algo, escolhe novo ponto
+    soul.patrolTarget = getRandomPatrolTarget(soul.mesh.position, 10);
+  }
+}
 
     // --- STATE: CHARGE (avança rápido) ---
     else if (soul.state === 'charge') {
