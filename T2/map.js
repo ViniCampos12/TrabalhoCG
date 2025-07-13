@@ -155,6 +155,7 @@ class Map{
     this.door.position.set(0, 0, 62);
     area2.add(this.door);
     this.doorBox = new THREE.Box3().setFromObject(this.door);
+    this.blocksBox.push(this.doorBox);
     
     
     //Para parecer que a porta não some para baixo
@@ -387,7 +388,11 @@ class Map{
 
     let csgObject = cubeCSG.subtract(cylinderCSG).subtract(cylinderCSG2).subtract(cylinderCSG3); //Subtrações para chegar na chave
     let keyMesh = CSG.toMesh(csgObject, auxMat);
-    keyMesh.material = new THREE.MeshPhongMaterial({color:color, shininess:"200"});
+    keyMesh.material = new THREE.MeshPhongMaterial({
+      color: color,
+      shininess: 300, 
+      specular: 0xffffff, // reflexo branco 
+    });
     keyMesh.position.set(0, 2.6 , 0);
 
     return keyMesh;
