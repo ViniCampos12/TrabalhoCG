@@ -25,19 +25,18 @@ class Map{
     this.doorBox = null; // Bounding box da porta
 
 
-    // create the ground plane
+    // PLANO
     let plane = createGroundPlaneXZ(500, 500);
     plane.receiveShadow = true; // A área também deve receber sombras
     scene.add(plane);
 
 
-    // creating bigger area
+    // ÁREA MAIOR
     let material = new THREE.MeshLambertMaterial({ color: "rgb(63,81,181)" });
-
     let area = this.createBiggerArea(material,0,3,125);
     scene.add(area);
 
-    // create area 1
+    // ÁREA 1
     let material1 = new THREE.MeshLambertMaterial({ color: "rgb(123, 117, 99)" });
     let area1 = this.createDefaultArea(material1,-156,2,-125,4);   
 
@@ -105,7 +104,6 @@ class Map{
     topCollumnBack.position.set(0, 23, -52);
     area1.add(topCollumnBack);
     
-
     //Add suport on the middle
     let suportGeometry = new THREE.BoxGeometry(2,4,2);
     this.suport1 = new THREE.Mesh(suportGeometry, new THREE.MeshLambertMaterial({ color: "rgb(143, 72, 38)" }));
@@ -126,7 +124,7 @@ class Map{
 
 
 
-    // create area 2
+    // ÁREA 2
     let material2 = new THREE.MeshLambertMaterial({ color: "rgb(14, 21, 55)" });
     let area2 = this.createDefaultArea(material2,0,3,-125,6);
     
@@ -146,18 +144,14 @@ class Map{
 
     //Create bb
     const wallBox2 = new THREE.Box3().setFromObject(area2);
-    console.log("WallBox2");
-    console.log(wallBox2);
     this.areasBox.push(wallBox2);
-    // const helperp = new THREE.Box3Helper(wallBox2, 0xffff00);
-    // scene.add(helperp);
-
+  
     // Create door
     const doorGeometry = new THREE.BoxGeometry(16, 8, 0.1);
     const doorMaterial = new THREE.MeshLambertMaterial({ color: "rgb(186, 184, 184)" });
     this.door = new THREE.Mesh(doorGeometry, doorMaterial);
-    this.door.castShadow = true; // A porta também deve projetar sombras
-    this.door.receiveShadow = true; // A porta também deve receber sombras 
+    this.door.castShadow = true; 
+    this.door.receiveShadow = true; 
     this.door.position.set(0, 0, 62);
     area2.add(this.door);
     this.doorBox = new THREE.Box3().setFromObject(this.door);
@@ -177,11 +171,8 @@ class Map{
     this.plataform.castShadow = true; 
     this.plataform.receiveShadow = true; 
     this.plataform.position.set(0, 3, 57);
-    console.log("Position plataform")
-    console.log(this.plataform.position);
     area2.add(this.plataform);
     this.plataformBox = new THREE.Box3().setFromObject(this.plataform);
-    
 
     //Create out suport
     this.suport2 = new THREE.Mesh(suportGeometry, new THREE.MeshLambertMaterial({color: "rgb(143, 72, 38)"}));
@@ -190,7 +181,6 @@ class Map{
     this.suport2.position.set(10, 1, -55);
     scene.add(this.suport2);
     this.suport2Box = new THREE.Box3().setFromObject(this.suport2);
-    
 
     //Create blocks
     this.createBlocks(area2,20,20,10);
@@ -210,17 +200,15 @@ class Map{
     this.suportTop2.castShadow = true;
     this.suportTop2.position.set(0, -8, 30);
     this.suportTop2Box = new THREE.Box3().setFromObject(this.suportTop2);
-    
     area2.add(this.suportTop2);
 
     this.keyMesh2 = this.createKey("yellow");
     let keyBox2 = new THREE.Box3().setFromObject(this.keyMesh2);
     
-    this.suportTop2.add(this.keyMesh2);
-    
+    this.suportTop2.add(this.keyMesh2);    
     scene.add(area2);
 
-    // create area 3
+    // ÁREA 3
     let material3 = new THREE.MeshLambertMaterial({ color: "rgb(139,90,43)" });
     let area3 = this.createDefaultArea(material3,156,3,-125,6);
     area3.position.set(156.0, 3.0, -125.0);
@@ -337,10 +325,9 @@ class Map{
     let collumnGeometry = new THREE.CylinderGeometry(2, 2, 20);
     let collumnMaterial = new THREE.MeshLambertMaterial({ color: "rgb(159, 146, 121)" });
     let collumn = new THREE.Mesh(collumnGeometry, collumnMaterial);
-    collumn.castShadow = true; // A coluna deve projetar sombras
-    collumn.receiveShadow = true; // A coluna deve receber sombras
+    collumn.castShadow = true; 
+    collumn.receiveShadow = true; 
     collumn.position.set(x, y, z);
-
     area.add(collumn); // Adiciona primeiro à área
 
     // Atualiza matriz mundial para que o THREE saiba a posição correta do objeto no mundo
@@ -362,10 +349,9 @@ class Map{
     block.receiveShadow = true; 
     block.position.set(x, 3+height/2, z);
 
-    area.add(block); // Adiciona à área (Group)
+    area.add(block); 
 
-    // IMPORTANTE: atualiza transformações até a cena
-    block.updateMatrixWorld(true); // <-- aqui
+    block.updateMatrixWorld(true); 
 
     // Bounding box com posição correta no mundo
     let blockBox = new THREE.Box3().setFromObject(block);
@@ -379,6 +365,7 @@ class Map{
     let cylinderMesh2 = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.4, 20));
     let cylinderMesh3 = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.4, 20));
 
+    //Rotações para fazer a chave
     cylinderMesh.position.set(0, 0, 0)
     cylinderMesh.matrixAutoUpdate = false;
     cylinderMesh.updateMatrix();
@@ -397,8 +384,8 @@ class Map{
     let cylinderCSG = CSG.fromMesh(cylinderMesh);
     let cylinderCSG2 = CSG.fromMesh(cylinderMesh2);
     let cylinderCSG3 = CSG.fromMesh(cylinderMesh3);
-    let csgObject = cubeCSG.subtract(cylinderCSG).subtract(cylinderCSG2).subtract(cylinderCSG3);
-    // csgObject = cubeCSG.subtract(cylinderCSG2);
+
+    let csgObject = cubeCSG.subtract(cylinderCSG).subtract(cylinderCSG2).subtract(cylinderCSG3); //Subtrações para chegar na chave
     let keyMesh = CSG.toMesh(csgObject, auxMat);
     keyMesh.material = new THREE.MeshPhongMaterial({color:color, shininess:"200"});
     keyMesh.position.set(0, 2.6 , 0);
@@ -430,7 +417,6 @@ class Map{
     return this.ramps;
   }
 
-
   createInfoArea(){
     // Info box
     let instrucao = new InfoBox();
@@ -443,5 +429,4 @@ class Map{
   }
   
 }
-
 export default Map;

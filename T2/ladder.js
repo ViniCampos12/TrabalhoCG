@@ -48,8 +48,6 @@ class Ladder {
   }
 
   getRampMesh() {
-    console.log("Returning ramp mesh");
-    console.log(this.ramp);
     return this.ramp;
   } 
 }

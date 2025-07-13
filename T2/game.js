@@ -15,7 +15,8 @@ import { spawnCacodemons, updateCacodemons, cacodemons } from './cacoDemons.js';
 
 let scene = new THREE.Scene();
 // Define a cor de fundo da cena para azul céu
-scene.background = new THREE.Color(0x6BB6FF); // Cor azul céu um pouco mais escura
+scene.background = new THREE.Color(0x6BB6FF); 
+
 
 let renderer = initRenderer();
 renderer.shadowMap.enabled = true;
@@ -23,9 +24,14 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Adiciona tipo de shadow map
 let material = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
 let camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 let clock = new THREE.Clock();
-const raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, -1, 0).normalize(), 0, 2);
+const raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, -1, 0).normalize(), 0, 2); //Colisão
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
 
-//LERP CONFIG
+//LERP CONFIGS
 const lerpConfigSuport = {
   destination: new THREE.Vector3(0.0, 4, 0.0),
   alpha: 0.01,
@@ -38,13 +44,12 @@ const lerpConfigSuportTop2 = {
   move: false
 }
 
+let doorOpen = false;
 const lerpConfigDoor = {
   destination: new THREE.Vector3(0, -8, 62),
   alpha: 0.01,
   move: false
 }
-
-let doorOpen = false;
 
 const lerpConfigPlataform = {
   destination: new THREE.Vector3(0, 3, 57),
@@ -59,29 +64,26 @@ const laddersPosition = [
     maxX: -172,
     minZ: -71,
     maxZ: -64,
-  },
-  {
+  },{
     minX: 180,
     maxX: 196,
     minZ: -71,
     maxZ: -64,
-  },
-  {
+  },{
     minX: -162,
     maxX: 162,
     minZ: 55,
     maxZ: 70,
-  },
-  {
+  },{
     minX: -8,
     maxX: 8,
     minZ: -71,
     maxZ: -64,
-  }
-]
+  }]
+
+//ARMAS
 
 let armaAtual = 'lançador';
-
 function alternarParaLançador() {
   spriteTexture.offset.x = 0; // Set back to the first frame
   spriteFrame = 0; // Reset the frame counter
@@ -97,9 +99,6 @@ function alternarParaMetralhadora() {
   shot.visible = false;
   cylinder.visible = false;
 }
-
-var blocked = false;
-var blocked2 = false;
 
 // Cria a metralhadora como um sprite
 const textureLoader = new THREE.TextureLoader();
@@ -134,6 +133,8 @@ function animarMetralhadoraSprite() {
   }
 }
 
+
+//ILUMINAÇÃO
 //criando iluminação - Sol às 10-11h da manhã no verão
 let ligthposition = new THREE.Vector3(100, 150, 50); // Posição alto e ligeiramente sudeste
 let ligthColor = "rgb(255, 255, 255)";
@@ -167,7 +168,6 @@ sunMesh.receiveShadow = false;
 // Adiciona na cena
 scene.add(sunMesh);
 
-
 //cria iluminação secundária sem sombras
 let lightPositionBack = new THREE.Vector3(-30, 30, -30);
 let directionalLightBack = new THREE.DirectionalLight("rgb(200, 200, 200)", 1.0); // intensidade mais baixa
@@ -177,7 +177,10 @@ directionalLightBack.castShadow = false; // não projeta sombras
 scene.add(directionalLightBack);
 
 
-// Chama o mapa
+var blocked = false;
+var blocked2 = false;
+
+//MAPA
 let map = new Map(scene);
 
 //Variáveis importante advindas do map
@@ -198,16 +201,18 @@ const suportTop2 = map.suportTop2;
 const suportTop2Box = map.suportTop2Box;
 const key = map.keyMesh;
 const key2 = map.keyMesh2;
-let hasKey1 = true;
+let hasKey1 = false;
 let contaLostSouls = 0;
 let contaCacoDemons = 0;
 
+//CUBO
 //Cria pessoa como um cubo
 var cubeGeometry = new THREE.BoxGeometry(2, 2, 2);
 var cube = new THREE.Mesh(cubeGeometry, material);
 cube.position.set(0.0, 2.0, 0.0);
 scene.add(cube);
 
+//ARMA DEFAULT
 //Cria arma como cilindro
 const geometryC = new THREE.CylinderGeometry( 0.13, 0.13, 2.5, 32 ); 
 const materialC = new THREE.MeshLambertMaterial( {color: 0x5F5F5F} ); 
@@ -234,6 +239,7 @@ cylinder.add(shot);
 
 camera.position.set(0,2,0); // posiciona a camera dentro do cubo
 cube.add(camera);           // faz a câmera seguir o cubo
+
 
 // CONTROLES
 const controls = new PointerLockControls(cube, document.body); //faz o movimento do mouse atuar direto no cubo
@@ -264,11 +270,9 @@ document.addEventListener('keydown', (event) => {
       break;
     case 'Digit1':
         alternarParaMetralhadora();
-        console.log("Troca para metralhadora");
         break;
     case 'Digit2':
         alternarParaLançador();
-        console.log("Troca para lançador");
         break;
   }
 }, false);
@@ -294,6 +298,7 @@ document.addEventListener('keyup', (event) => {
   }
 }, false);
 
+//DISPARO
 let isShooting = false;
 let shotInterval = null;
 let lastShotTime = 0; // armazena o momento do último disparo
@@ -324,7 +329,6 @@ window.addEventListener('wheel', (event) => {
   } else {
     alternarParaLançador();
   }
-  console.log("Arma atual:", armaAtual);
 });
 
 function shoot() {
@@ -398,7 +402,6 @@ function shoot() {
           if (intersects.length > 0) {
             const hit = intersects[0];
             console.log("Acertou", hit.object.name || hit.object);
-            // Aqui você pode exibir um efeito de impacto, som, etc.
           }
         }
       } catch (error) {
@@ -406,27 +409,20 @@ function shoot() {
       }
     }
 }
+
+//Variáveis de queda
 let velocidadeVertical = 0;
 let amortecimento = 0.5;
 let gravidade = -0.003;
 
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
 
 
-  //render();
-
-// Update loop
 function render() {
   requestAnimationFrame(render);
   const delta = clock.getDelta();
   const velocidade = 20.0 * delta;
 
-  // console.log(cube.position);
-
+  //Verificação de fim de ações na área
   if(contaLostSouls == 5){
     lerpConfigSuport.move = true;
   }
@@ -434,6 +430,7 @@ function render() {
   if(contaCacoDemons == 3){
     lerpConfigSuportTop2.move = true;
   }
+
 
   if (controls.isLocked) {
 
@@ -444,99 +441,98 @@ function render() {
       shot.position.add(dir.multiplyScalar(speed));
       shot.userData.box.setFromObject(shot);
 
-    let atingiuAlgo = false;
-
-    // Testa colisão com as paredes
-    for (const wall of wallBoxes) {
-      if (shot.userData.box.intersectsBox(wall)) {
-        atingiuAlgo = true;
-        break;
-      }
-    }
-
-    // Se não bateu nas paredes, testa as áreas
-    if (!atingiuAlgo) {
-      for (const area of areaBoxes) {
-        if (shot.userData.box.intersectsBox(area)) {
+      //Colisões
+      let atingiuAlgo = false;
+      // Testa colisão com as paredes
+      for (const wall of wallBoxes) {
+        if (shot.userData.box.intersectsBox(wall)) {
           atingiuAlgo = true;
           break;
         }
       }
-    }
-    if(!atingiuAlgo) {
-      for(const collumn of collumnsBoxes) {
-        if (shot.userData.box.intersectsBox(collumn)) {
-          atingiuAlgo = true;
-          // lerpConfigSuport.move = true; // Para a plataforma se colidir com a parede
-          // lerpConfigSuportTop2.move = true;
-          break;
+
+      // Se não bateu nas paredes, testa as áreas
+      if (!atingiuAlgo) {
+        for (const area of areaBoxes) {
+          if (shot.userData.box.intersectsBox(area)) {
+            atingiuAlgo = true;
+            break;
+          }
         }
-      } 
-    }
-    if(!atingiuAlgo) {
-      for(const block of blockBoxes){
-        if (shot.userData.box.intersectsBox(block)) {
+      }
+
+      if(!atingiuAlgo) {
+        for(const collumn of collumnsBoxes) {
+          if (shot.userData.box.intersectsBox(collumn)) {
+            atingiuAlgo = true;
+            // lerpConfigSuport.move = true; // Para a plataforma se colidir com a parede
+            // lerpConfigSuportTop2.move = true;
+            break;
+          }
+        } 
+      }
+
+      if(!atingiuAlgo) {
+        for(const block of blockBoxes){
+          if (shot.userData.box.intersectsBox(block)) {
+            atingiuAlgo = true;
+            break;
+          }
+        }
+      }
+
+      for (const soul of lostSouls) {
+        if (soul.hp <= 0) continue; // já morto
+
+        const soulBB = new THREE.Box3().setFromObject(soul.mesh);
+        if (shot.userData.box.intersectsBox(soulBB)) {
+          soul.hp -= 10;
+
+          // caso a alma morra
+          if (soul.hp <= 0) {
+            scene.remove(soul.mesh);
+            contaLostSouls++;
+          }
+
           atingiuAlgo = true;
           break;
         }
       }
-    }
 
-    for (const soul of lostSouls) {
-      if (soul.hp <= 0) continue; // já morto
+      for (const cacodemon of cacodemons) {
+        if (cacodemon.hp <= 0) continue;
 
-      const soulBB = new THREE.Box3().setFromObject(soul.mesh);
-      if (shot.userData.box.intersectsBox(soulBB)) {
-        soul.hp -= 10;
-        console.log(`Soul ${soul.mesh.id} atingido. HP restante: ${soul.hp}`);
+        const cacodemonBB = new THREE.Box3().setFromObject(cacodemon.mesh);
+        if (shot.userData.box.intersectsBox(cacodemonBB)) {
+          cacodemon.hp -= 10;
 
+          if (cacodemon.hp <= 0) {
+            scene.remove(cacodemon.mesh);
+            contaCacoDemons++;
+          }
 
-        // caso a alma morra
-        if (soul.hp <= 0) {
-          scene.remove(soul.mesh);
-          contaLostSouls++;
+          atingiuAlgo = true;
+          break;
         }
-
-    atingiuAlgo = true;
-    break;
-  }
-}
-
-for (const cacodemon of cacodemons) {
-  if (cacodemon.hp <= 0) continue;
-
-  const cacodemonBB = new THREE.Box3().setFromObject(cacodemon.mesh);
-  if (shot.userData.box.intersectsBox(cacodemonBB)) {
-    cacodemon.hp -= 10;
-
-    if (cacodemon.hp <= 0) {
-      scene.remove(cacodemon.mesh);
-      contaCacoDemons++;
-    }
-
-    atingiuAlgo = true;
-    break;
-  }
-}
-
-
-    if (shot.position.length() > 500 || atingiuAlgo) {
-      scene.remove(shot);
-      if (shot.userData.helper) {
-        scene.remove(shot.userData.helper);
       }
-      // scene.remove(shot.userData.helper); // Remove helper 
-      activeShots.splice(index, 1);
-    }
 
+
+      if (shot.position.length() > 500 || atingiuAlgo) {
+        scene.remove(shot);
+        if (shot.userData.helper) {
+          scene.remove(shot.userData.helper);
+        }
+        // scene.remove(shot.userData.helper); // Remove helper 
+        activeShots.splice(index, 1);
+      }
     });
 
     // Dano contínuo da metralhadora
     if (armaAtual === 'metralhadora' && isShooting) {
       metralhadoraDamageTimer += delta;
 
-  if (metralhadoraDamageTimer >= 1 / 10) { // a cada 0.1s, tirar 1hp (10hp/s)
-    metralhadoraDamageTimer = 0;
+      if (metralhadoraDamageTimer >= 1 / 10) { // a cada 0.1s, tirar 1hp (10hp/s)
+        metralhadoraDamageTimer = 0;
 
         const origin = new THREE.Vector3();
         camera.getWorldPosition(origin);
@@ -561,25 +557,28 @@ for (const cacodemon of cacodemons) {
             break;
           }
         }
+
         for (const cacodemon of cacodemons) {
-  if (cacodemon.hp <= 0) continue;
+          if (cacodemon.hp <= 0) continue;
 
-  const intersects = raycasterShoot.intersectObject(cacodemon.mesh, true);
+          const intersects = raycasterShoot.intersectObject(cacodemon.mesh, true);
 
-  if (intersects.length > 0) {
-    cacodemon.hp -= 1;
+          if (intersects.length > 0) {
+            cacodemon.hp -= 1;
 
-    if (cacodemon.hp <= 0) {
-      scene.remove(cacodemon.mesh);
-      contaCacoDemons++;
-    }
-    break;
-  }
-}
+            if (cacodemon.hp <= 0) {
+              scene.remove(cacodemon.mesh);
+              contaCacoDemons++;
+            }
+            break;
+          }
+        }
       }
-    } else {
+    } 
+    else {
       metralhadoraDamageTimer = 0; // reset se não está atirando
     }
+
 
     //PARTE DO CUBO MOVIMENTAÇÃO
     // Faz o cubo girar com a rotação da câmera
@@ -605,10 +604,8 @@ for (const cacodemon of cacodemons) {
     try {
       intersects = raycaster.intersectObjects(rampsFiltered, true);
     } catch (error) {
-      console.warn("Erro no raycasting das rampas:", error);
       intersects = [];
     }
-
 
     if (movimento.frente) moveDir.add(forward);
     if (movimento.tras) moveDir.add(forward.clone().negate());
@@ -646,11 +643,11 @@ for (const cacodemon of cacodemons) {
         isIntersectPlataform = plataformIntersects.length > 0;
       }
     } catch (error) {
-      console.warn("Erro no raycasting da plataforma:", error);
       isIntersectPlataform = false;
     }
 
     if (isIntersectPlataform) {
+      //O cubo sobe junto com a plataforma
       cube.position.lerp(new THREE.Vector3(cube.position.x, 6, cube.position.z),0.01);
     }
 
@@ -659,7 +656,7 @@ for (const cacodemon of cacodemons) {
       plataformBox.setFromObject(plataform)
 
       if(plataform.position.distanceTo(lerpConfigPlataform.destination) < 0.1) 
-        downPlataform();
+        downPlataform(); //Chegou no topo ela desce sempre
     }
 
 
@@ -680,13 +677,13 @@ for (const cacodemon of cacodemons) {
     if (moveDir.lengthSq() > 0) {
 
       moveDir.normalize();
-      // console.log(pos.y);
   
       // Tentativa completa
       let newPos = pos.clone().add(moveDir.clone().multiplyScalar(velocidade));
       if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
         cube.position.copy(newPos);
-      } else {
+      } 
+      else {
         // Testar só o eixo X
         newPos = pos.clone().add(new THREE.Vector3(moveDir.x, 0, 0).multiplyScalar(velocidade));
         if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
@@ -700,8 +697,6 @@ for (const cacodemon of cacodemons) {
         }
       }
 
-      
-
       //Teste da plataforma
       if(cube.position.x > -9 && cube.position.x < 9 && cube.position.z < - 55 && cube.position.z > -65 && doorOpen) {
         downPlataform();
@@ -709,19 +704,18 @@ for (const cacodemon of cacodemons) {
 
     }
     //Se estiver fora da área da escada ele atualiza a gravidade
-      const inLadderArea = laddersPosition.some(ladder => cube.position.x >= ladder.minX && cube.position.x <= ladder.maxX && cube.position.z >= ladder.minZ && cube.position.z <= ladder.maxZ);
+    const inLadderArea = laddersPosition.some(ladder => cube.position.x >= ladder.minX && cube.position.x <= ladder.maxX && cube.position.z >= ladder.minZ && cube.position.z <= ladder.maxZ);
 
-      const cubeWorldPos = new THREE.Vector3();
-      cube.getWorldPosition(cubeWorldPos);
+    const cubeWorldPos = new THREE.Vector3();
+    cube.getWorldPosition(cubeWorldPos);
 
-      if (!inLadderArea && cubeWorldPos.y > 2) {
-        console.log("Entrou na ladder");
-        atualizaGravidade(cube);
-      }
-          
-      updateLostSouls(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
-      updateCacodemons(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
+    if (!inLadderArea && cubeWorldPos.y > 2)
+      atualizaGravidade(cube);
+        
+    updateLostSouls(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
+    updateCacodemons(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
   }
+
   renderer.render(scene, camera);
 }
 
@@ -769,7 +763,6 @@ function checkCollisions(walls, areas, newCubePos) {
 
     for (const collumn of collumnsBoxes) {
       if (futureBB.intersectsBox(collumn)) {
-        // console.log("Colidiu com coluna");
         return true;
       }
     }
@@ -820,8 +813,6 @@ function checkCollisions(walls, areas, newCubePos) {
     return false;
   }
 
-
-
   //Testa paredes
   if(Math.abs(newCubePos.x) > 248 || Math.abs(newCubePos.z) > 248){
     for (const wall of walls) {
@@ -852,8 +843,6 @@ function checkCollisions(walls, areas, newCubePos) {
   return collision; 
 }
 
-render();
-
 function openArea2Door(){
   lerpConfigDoor.move = true;   
   doorOpen = true;
@@ -871,5 +860,7 @@ function downPlataform(){
   lerpConfigPlataform.destination = new THREE.Vector3(0,-3,57);
   lerpConfigPlataform.move = true;
 }
+
+render();
 
 export {scene};
