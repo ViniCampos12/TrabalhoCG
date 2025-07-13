@@ -13,7 +13,7 @@ let cacodemonPrefab = null;
 
 // Carrega o modelo GLB
 const gltfLoader = new GLTFLoader();
-gltfLoader.load('../assets/cacodemon.glb', (gltf) => {
+gltfLoader.load('assets/cacodemon.glb', (gltf) => {
   cacodemonPrefab = gltf.scene;
   
   // Configura propriedades do modelo carregado

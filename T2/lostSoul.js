@@ -12,13 +12,13 @@ const cooldownDur = 5000;
 let scrullPrefab = null;
 
 const mtlLoader = new MTLLoader();
-mtlLoader.setPath('../assets/skull/');
+mtlLoader.setPath('assets/skull/');
 mtlLoader.load('skull.mtl', (materials) => {
   materials.preload();
 
   const objLoader = new OBJLoader();
   objLoader.setMaterials(materials);
-  objLoader.setPath('../assets/');
+  objLoader.setPath('assets/');
   objLoader.load('skull.obj', (obj) => {
     scrullPrefab = obj;
   });

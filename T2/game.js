@@ -102,7 +102,7 @@ function alternarParaMetralhadora() {
 
 // Cria a metralhadora como um sprite
 const textureLoader = new THREE.TextureLoader();
-const spriteTexture = textureLoader.load('../assets/chaingun.png');
+const spriteTexture = textureLoader.load('assets/chaingun.png');
 spriteTexture.repeat.set(1 / 3, 1); // 3 quadros na horizontal
 spriteTexture.offset.set(0, 0); // começa do primeiro frame
 
@@ -465,8 +465,6 @@ function render() {
         for(const collumn of collumnsBoxes) {
           if (shot.userData.box.intersectsBox(collumn)) {
             atingiuAlgo = true;
-            // lerpConfigSuport.move = true; // Para a plataforma se colidir com a parede
-            // lerpConfigSuportTop2.move = true;
             break;
           }
         } 
