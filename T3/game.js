@@ -90,48 +90,16 @@ function alternarParaLançador() {
   armaAtual = 'lançador';
   gunSprite.visible = false;
   shot.visible = true;
-  cylinder.visible = true;
+  rocketLauncher.visible = true;
 }
 
 function alternarParaMetralhadora() {
   armaAtual = 'metralhadora';
   gunSprite.visible = true;
   shot.visible = false;
-  cylinder.visible = false;
+  rocketLauncher.visible = false;
 }
 
-// Cria a metralhadora como um sprite
-const textureLoader = new THREE.TextureLoader();
-const spriteTexture = textureLoader.load('assets/chaingun.png');
-spriteTexture.repeat.set(1 / 3, 1); // 3 quadros na horizontal
-spriteTexture.offset.set(0, 0); // começa do primeiro frame
-
-const spriteMaterial = new THREE.SpriteMaterial({ 
-  map: spriteTexture, 
-  transparent: true,
-  color: 0xffffff
-});
-const gunSprite = new THREE.Sprite(spriteMaterial);
-
-gunSprite.scale.set(1, 1.5, 1); // aumenta o tamanho para garantir visibilidade
-camera.add(gunSprite);
-gunSprite.position.set(0, -0.8, -2); // posição mais central e próxima
-gunSprite.visible = false; // só mostra quando metralhadora estiver ativa
-
-let spriteFrame = 0;
-const totalFrames = 3;
-let lastSpriteUpdate = 0; // Adicione esta variável
-const spriteAnimationSpeed = 70;
-
-function animarMetralhadoraSprite() {
-  const now = Date.now();
-  // Só atualiza o sprite se passou tempo suficiente
-  if (now - lastSpriteUpdate >= spriteAnimationSpeed) {
-    spriteFrame = (spriteFrame + 1) % totalFrames;
-    spriteTexture.offset.x = spriteFrame / totalFrames;
-    lastSpriteUpdate = now;
-  }
-}
 
 
 //ILUMINAÇÃO
@@ -210,35 +178,89 @@ let contaCacoDemons = 0;
 var cubeGeometry = new THREE.BoxGeometry(2, 2, 2);
 var cube = new THREE.Mesh(cubeGeometry, material);
 cube.position.set(0.0, 2.0, 0.0);
+let shiftPress = false;
 scene.add(cube);
 
-//ARMA DEFAULT
-//Cria arma como cilindro
-const geometryC = new THREE.CylinderGeometry( 0.13, 0.13, 2.5, 32 ); 
-const materialC = new THREE.MeshLambertMaterial( {color: 0x5F5F5F} ); 
-const cylinder = new THREE.Mesh( geometryC, materialC ); 
 
-// Rotaciona o cilindro para apontar para frente
-cylinder.rotation.x = Math.PI / 2;
+// Cria o Rocket Launcher como um sprite
+const textureLoaderRL = new THREE.TextureLoader();
+const spriteTextureRL = textureLoaderRL.load('assets/images/RocketLauncher.png');
+spriteTextureRL.repeat.set(1 / 3, 1); // 3 quadros na horizontal
+spriteTextureRL.offset.set(0, 0); // começa do primeiro frame
+const spriteMaterialRL = new THREE.SpriteMaterial({ 
+  map: spriteTextureRL, 
+  transparent: true,
+  color: 0xffffff
+});
+const rocketLauncher = new THREE.Sprite(spriteMaterialRL);
+rocketLauncher.scale.set(1, 1.5, 1); // aumenta o tamanho para garantir visibilidade
+
+rocketLauncher.visible = true; // só mostra quando metralhadora estiver ativa
 
 //faz o cilindro receber e transmitir sombras
-cylinder.castShadow = true;
-cylinder.receiveShadow = true;
+rocketLauncher.castShadow = true;
+rocketLauncher.receiveShadow = true;
 // Posiciona o cilindro na "frente" da câmera, ajustando para parecer uma arma
-camera.add(cylinder);
-cylinder.position.set(0, -0.5, -0.5);
+camera.add(rocketLauncher);
+rocketLauncher.position.set(0, -0.8, -2); // posição mais central e próxima
 
 //Cria disparo padrão
 let materialShot = new THREE.MeshLambertMaterial({ color: 0x708090 });
 var shotGeo = new THREE.SphereGeometry(0.15,64,16);
 var shot = new THREE.Mesh(shotGeo,materialShot);
-shot.position.set(0,-2,0.2);
+shot.position.set(0,0,0.3);
 shot.castShadow = true; // A bala também deve projetar sombras
 shot.receiveShadow = true; // A bala também deve receber sombras
-cylinder.add(shot);
+shot.visible =false;
+rocketLauncher.add(shot);
 
 camera.position.set(0,2,0); // posiciona a camera dentro do cubo
-cube.add(camera);           // faz a câmera seguir o cubo
+cube.add(camera);  
+
+// Cria a metralhadora como um sprite
+const textureLoader = new THREE.TextureLoader();
+const spriteTexture = textureLoader.load('assets/chaingun.png');
+spriteTexture.repeat.set(1 / 3, 1); // 3 quadros na horizontal
+spriteTexture.offset.set(0, 0); // começa do primeiro frame
+
+const spriteMaterial = new THREE.SpriteMaterial({ 
+  map: spriteTexture, 
+  transparent: true,
+  color: 0xffffff
+});
+const gunSprite = new THREE.Sprite(spriteMaterial);
+
+gunSprite.scale.set(1, 1.5, 1); // aumenta o tamanho para garantir visibilidade
+camera.add(gunSprite);
+gunSprite.position.set(0, -1, -2.5); // posição mais central e próxima
+gunSprite.visible = false; // só mostra quando metralhadora estiver ativa
+
+let spriteFrame = 0;
+const totalFrames = 3;
+let lastSpriteUpdate = 0; // Adicione esta variável
+const spriteAnimationSpeed = 70;
+
+function animarMetralhadoraSprite() {
+  const now = Date.now();
+  // Só atualiza o sprite se passou tempo suficiente
+  if (now - lastSpriteUpdate >= spriteAnimationSpeed) {
+    spriteFrame = (spriteFrame + 1) % totalFrames;
+    spriteTexture.offset.x = spriteFrame / totalFrames;
+    lastSpriteUpdate = now;
+  }
+}
+
+//ARMA DEFAULT
+//Cria arma como cilindro
+// const geometryC = new THREE.CylinderGeometry( 0.13, 0.13, 2.5, 32 ); 
+// const materialC = new THREE.MeshLambertMaterial( {color: 0x5F5F5F} ); 
+// const cylinder = new THREE.Mesh( geometryC, materialC ); 
+
+// Rotaciona o cilindro para apontar para frente
+// cylinder.rotation.x = Math.PI / 2;
+
+
+
 
 
 // CONTROLES
@@ -274,6 +296,10 @@ document.addEventListener('keydown', (event) => {
     case 'Digit2':
         alternarParaLançador();
         break;
+      case 'ShiftLeft':
+      case 'ShiftRight':
+        shiftPress = true;
+        break;
   }
 }, false);
 
@@ -294,6 +320,10 @@ document.addEventListener('keyup', (event) => {
     case 'KeyD':
     case "ArrowRight": 
       movimento.direita = false; 
+      break;
+    case 'ShiftLeft':
+    case 'ShiftRight':
+      shiftPress = false;
       break;
   }
 }, false);
@@ -338,12 +368,13 @@ function shoot() {
         
     // Clona o tiro
     const shotClone = shot.clone();
+    shotClone.visible = true;
     
     // Garante que as propriedades de sombra sejam mantidas
     shotClone.castShadow = true;
     shotClone.receiveShadow = true;
     
-    cylinder.add(shotClone);
+    rocketLauncher.add(shotClone);
     shotClone.updateMatrixWorld();
 
     // Captura a posição global antes de soltar da arma
@@ -383,7 +414,7 @@ function shoot() {
         // Verifica se é um Mesh válido e não é um sprite ou objeto da UI
         if (child.isMesh && 
             child !== cube && 
-            child !== cylinder && 
+            child !== rocketLauncher && 
             child !== shot && 
             child !== gunSprite &&
             child !== sunMesh &&
@@ -420,7 +451,13 @@ let gravidade = -0.003;
 function render() {
   requestAnimationFrame(render);
   const delta = clock.getDelta();
-  const velocidade = 20.0 * delta;
+  const velocidade = () => 
+    {if(shiftPress){ 
+      console.log("shift");
+      return 20.0*delta*2;
+    }
+    else
+      return 20.0*delta};
 
   //Verificação de fim de ações na área
   if(contaLostSouls == 5){
@@ -677,18 +714,18 @@ function render() {
       moveDir.normalize();
   
       // Tentativa completa
-      let newPos = pos.clone().add(moveDir.clone().multiplyScalar(velocidade));
+      let newPos = pos.clone().add(moveDir.clone().multiplyScalar(velocidade()));
       if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
         cube.position.copy(newPos);
       } 
       else {
         // Testar só o eixo X
-        newPos = pos.clone().add(new THREE.Vector3(moveDir.x, 0, 0).multiplyScalar(velocidade));
+        newPos = pos.clone().add(new THREE.Vector3(moveDir.x, 0, 0).multiplyScalar(velocidade()));
         if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
           cube.position.copy(newPos);
         } else {
           // Testar só o eixo Z
-          newPos = pos.clone().add(new THREE.Vector3(0, 0, moveDir.z).multiplyScalar(velocidade));
+          newPos = pos.clone().add(new THREE.Vector3(0, 0, moveDir.z).multiplyScalar(velocidade()));
           if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
             cube.position.copy(newPos);
           }
