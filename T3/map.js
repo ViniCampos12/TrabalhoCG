@@ -1,5 +1,5 @@
 import * as THREE from  'three';
-import { createGroundPlaneXZ, InfoBox, setDefaultMaterial } from '../libs/util/util.js';
+import { createGroundPlaneXZ, degreesToRadians, InfoBox, setDefaultMaterial } from '../libs/util/util.js';
 import Ladder from './ladder.js';
 import { CSG } from '../libs/other/CSGMesh.js';
 import { MeshLambertMaterial } from '../build/three.module.js';
@@ -23,12 +23,31 @@ class Map{
     this.suport2Box = null;
     this.door = null; // Porta da área 2
     this.doorBox = null; // Bounding box da porta
-
+    var textureLoader = new THREE.TextureLoader();
 
     // PLANO
-    let plane = createGroundPlaneXZ(500, 500);
+    let planeGeometry = new THREE.PlaneGeometry(500, 500, 100, 100);
+    let planeMaterial = new THREE.MeshLambertMaterial({ color: "rgba(251, 251, 251, 1)" });
+    let plane = new THREE.Mesh(planeGeometry, planeMaterial);
     plane.receiveShadow = true; // A área também deve receber sombras
+    let mat4 = new THREE.Matrix4(); // Aux mat4 matrix
+    // Rotate 90 in X and perform a small translation in Y
+    plane.matrixAutoUpdate = false;
+    plane.matrix.identity();    // resetting matrices
+    plane.matrix.multiply(mat4.makeTranslation(0.0, -0.1, 0.0)); // T1   
+    plane.matrix.multiply(mat4.makeRotationX(degreesToRadians(-90))); // R1 
+
+
     scene.add(plane);
+    
+
+    var floorTexture = textureLoader.load('../assets/textures/intertravado.jpg');
+    floorTexture.colorSpace = THREE.SRGBColorSpace;
+
+    plane.material.map = floorTexture;
+    plane.material.map.wrapS = THREE.RepeatWrapping;
+    plane.material.map.wrapT = THREE.RepeatWrapping;
+    plane.material.map.repeat.set(60, 60);
 
 
     // ÁREA MAIOR

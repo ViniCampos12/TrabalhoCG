@@ -14,8 +14,88 @@ import { spawnCacodemons, updateCacodemons, cacodemons } from './cacoDemons.js';
 
 
 let scene = new THREE.Scene();
-// Define a cor de fundo da cena para azul céu
-scene.background = new THREE.Color(0x6BB6FF); 
+// Cria um SkyDome com shader procedural
+// const geometry = new THREE.SphereGeometry(500, 32, 32); // esfera leve
+
+// const materialSkyBox = new THREE.ShaderMaterial({
+//     side: THREE.BackSide,
+//     uniforms: {
+//         time: { value: 0.0 }
+//     },
+//     vertexShader: `
+//         varying vec2 vUv;
+//         void main() {
+//             vUv = uv;
+//             gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+//         }
+//     `,
+//     fragmentShader: `
+//         uniform float time;
+//         varying vec2 vUv;
+
+//         // Simples noise procedural
+//         float noise(vec2 p) {
+//             return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453);
+//         }
+
+//         void main() {
+//             // Gradiente do céu (horizonte -> zênite)
+//             vec3 skyColor = mix(vec3(0.5, 0.7, 1.0), vec3(0.2, 0.5, 0.9), vUv.y);
+
+//             // Nuvens simples movendo lentamente
+//             float cloud = noise(vUv * 5.0 + vec2(time * 0.02, time * 0.01));
+//             cloud = smoothstep(0.4, 0.5, cloud);
+
+//             vec3 finalColor = mix(skyColor, vec3(1.0), cloud * 0.3); // nuvens brancas leves
+//             gl_FragColor = vec4(finalColor, 1.0);
+//         }
+//     `
+// });
+
+// const skyDome = new THREE.Mesh(geometry, materialSkyBox);
+// scene.add(skyDome);
+
+// Define o fundo como um céu claro com nuvens
+const loader = new THREE.TextureLoader();
+loader.load('assets/images/skyblue.png  ', function(texture) {
+
+    // Cria uma hemisfera (meia esfera superior)
+    const geometry = new THREE.SphereGeometry(
+        500,           // raio
+        60,            // widthSegments (horizontal subdivisions)
+        40,            // heightSegments (vertical subdivisions)
+        0,             // phiStart (horizontal start angle)
+        Math.PI * 2,   // phiLength (horizontal length)
+        0,             // thetaStart (vertical start angle)
+        Math.PI / 2    // thetaLength (vertical length -> 90 graus = só parte superior)
+    );
+
+    const material = new THREE.MeshBasicMaterial({
+        map: texture,
+        side: THREE.BackSide
+    });
+
+    const skyDome = new THREE.Mesh(geometry, material);
+    scene.add(skyDome);
+});
+
+// 'assets/skybox/px.jpg', // right
+    // 'assets/skybox/nx.jpg', // left
+    // 'assets/skybox/py.jpg', // top
+    // 'assets/skybox/ny.jpg', // bottom
+    // 'assets/skybox/pz.jpg', // front
+    // 'assets/skybox/nz.jpg'  // back
+
+// const loader = new THREE.CubeTextureLoader();
+// const skyboxTexture = loader.load([
+//     'assets/images/sky.jpg',
+//     'assets/images/sky.jpg',
+//     'assets/images/sky.jpg',
+//     'assets/images/sky.jpg',
+//     'assets/images/sky.jpg',
+//     'assets/images/sky.jpg'
+// ]);
+// scene.background = skyboxTexture;
 
 
 let renderer = initRenderer();
