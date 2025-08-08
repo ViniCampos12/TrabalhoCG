@@ -56,30 +56,86 @@ class Map{
     scene.add(area);
 
     // ÁREA 1
-    let material1 = new THREE.MeshLambertMaterial({ color: "rgb(123, 117, 99)" });
-    let area1 = this.createDefaultArea(material1,-156,2,-125,4);   
 
-    //Create Extend Area of area 1
-    let smallExtendedAreaGeometry = new THREE.BoxGeometry(30,4,16);
-    let smallExtendedArea = new THREE.Mesh(smallExtendedAreaGeometry,material1);
-    smallExtendedArea.castShadow = true; // A área pequena também deve projetar sombras
-    smallExtendedArea.receiveShadow = true; // A área pequena também deve receber sombras
+    /// 1. Carregar texturas separadas para cada parte
+    let texturaTopoPrincipal = textureLoader.load('assets/images/area1cortada.png');
+    let texturaTopoExtendida = textureLoader.load('assets/images/area1cortada.png'); // Textura diferente para a parte extendida
+    let texturaLateral = textureLoader.load('assets/images/area1clara.jpg');
+
+    // Configurar repetições
+    texturaTopoPrincipal.wrapS = THREE.RepeatWrapping;
+    texturaTopoPrincipal.wrapT = THREE.RepeatWrapping;
+    texturaTopoPrincipal.repeat.set(124/20, 116/20); // Ajuste conforme necessário
+    texturaTopoPrincipal.colorSpace = THREE.SRGBColorSpace;
+
+    texturaTopoExtendida.wrapS = THREE.RepeatWrapping;
+    texturaTopoExtendida.wrapT = THREE.RepeatWrapping;
+    texturaTopoExtendida.repeat.set(2,1); // Ou ajuste para a área extendida
+    texturaTopoExtendida.colorSpace = THREE.SRGBColorSpace; // Configurar cor para sRGB
+
+    texturaLateral.wrapS = THREE.RepeatWrapping;
+    texturaLateral.wrapT = THREE.RepeatWrapping;
+    texturaLateral.repeat.set(1, 1);
+    texturaLateral.colorSpace = THREE.SRGBColorSpace; // Configurar cor para sRGB
+
+    // 2. Criar materiais separados
+    let materiaisPrincipal = [
+      new THREE.MeshLambertMaterial({ map: texturaLateral }), // direita
+      new THREE.MeshLambertMaterial({ map: texturaLateral }), // esquerda
+      new THREE.MeshLambertMaterial({ map: texturaTopoPrincipal }), // topo principal
+      new THREE.MeshLambertMaterial({ map: texturaLateral }), // baixo
+      new THREE.MeshLambertMaterial({ map: texturaLateral }), // frente
+      new THREE.MeshLambertMaterial({ map: texturaLateral })  // trás
+    ];
+
+    let materiaisExtendida = [
+      new THREE.MeshLambertMaterial({ map: texturaLateral }), // direita
+      new THREE.MeshLambertMaterial({ map: texturaLateral }), // esquerda
+      new THREE.MeshLambertMaterial({ map: texturaTopoExtendida }), // topo extendido (diferente)
+      new THREE.MeshLambertMaterial({ map: texturaLateral }), // baixo
+      new THREE.MeshLambertMaterial({ map: texturaLateral }), // frente
+      new THREE.MeshLambertMaterial({ map: texturaLateral })  // trás
+    ];
+
+    // 3. Criar a área principal
+    let area1 = this.createDefaultArea(materiaisPrincipal, -156, 2, -125, 4);
+
+    // 4. Criar áreas extendidas com materiais independentes
+    let smallExtendedArea = new THREE.Mesh(
+      new THREE.BoxGeometry(30, 4, 16),
+      materiaisExtendida // Usa materiais com textura diferente
+    );
+    smallExtendedArea.position.set(-47, 0, 54);
     area1.add(smallExtendedArea);
-    smallExtendedArea.position.set(-47,0,54);
 
-    let bigExtendedAreaGeometry = new THREE.BoxGeometry(78,4,16);
-    let bigExtendedArea = new THREE.Mesh(bigExtendedAreaGeometry,material1);
-    bigExtendedArea.castShadow = true; // A área também deve projetar sombras
-    bigExtendedArea.receiveShadow = true; // A área também deve receber sombras
+    let bigExtendedArea = new THREE.Mesh(
+      new THREE.BoxGeometry(78, 4, 16),
+      materiaisExtendida // Usa materiais com textura diferente
+    );
+    bigExtendedArea.position.set(23, 0, 54);
     area1.add(bigExtendedArea);
-    bigExtendedArea.position.set(23,0,54);
+
+    // // 5. Criar o topo com CSG (apenas para a área principal)
+    // let auxMat = new THREE.Matrix4();
+    // let planeMeshArea1 = new THREE.Mesh(
+    //   new THREE.PlaneGeometry(124, 116),
+    //   materiaisPrincipal[2] // Usa o material do topo principal
+    // );
+    // planeMeshArea1.rotation.x = Math.PI / 2; // Rotaciona para ficar horizontal
+    // planeMeshArea1.position.set(0, 4, 0);
+
+    // // Não inclua as áreas extendidas no CSG
+    // let planeCSG = CSG.fromMesh(planeMeshArea1);
+    // let area1Mesh = CSG.toMesh(planeCSG, auxMat);
+    // area1Mesh.position.set(-156, 6, -125); // Posiciona corretamente
+    // area1.add(area1Mesh);
 
     //Create bb
     const wallBox1 = new THREE.Box3().setFromObject(area1);
     this.areasBox.push(wallBox1);
 
     //Create ladder
-    const l1 = new Ladder(material1);
+    const l1 = new Ladder(materiaisExtendida[0]);
     const ladder = l1.createLadder();
     area1.add(ladder);
     ladder.position.set(-24,1.6,54.5);
@@ -301,9 +357,9 @@ class Map{
     return area;
    }
 
-  createDefaultArea(material, x, y, z,height){
+  createDefaultArea(materials, x, y, z,height){
     let areaGeometry = new THREE.BoxGeometry(124, height, 108);
-    let area = new THREE.Mesh(areaGeometry, material);
+    let area = new THREE.Mesh(areaGeometry, materials);
     area.position.set(x, y, z);
     area.castShadow = true; // A área deve projetar sombras
     area.receiveShadow = true; // A área deve receber sombras
