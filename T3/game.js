@@ -11,7 +11,13 @@ import Map from './map.js';
 import Ramp from './ramp.js';
 import { spawnLostSouls, updateLostSouls, checkCollisionForSouls, lostSouls } from './lostSoul.js';
 import { spawnCacodemons, updateCacodemons, cacodemons } from './cacoDemons.js';
-
+import { 
+  initPlayerHP, 
+  takeDamage, 
+  checkPlayerDamage, 
+  getPlayerHP, 
+  isPlayerAlive 
+} from './player.js';
 
 let scene = new THREE.Scene();
 // Define a cor de fundo da cena para azul céu
@@ -89,8 +95,9 @@ function alternarParaLançador() {
   spriteFrame = 0; // Reset the frame counter
   armaAtual = 'lançador';
   gunSprite.visible = false;
-  shot.visible = true;
+  shot.visible = false;
   rocketLauncher.visible = true;
+  // Limpa todas as balas ativas quando muda para lançador
 }
 
 function alternarParaMetralhadora() {
@@ -202,18 +209,17 @@ rocketLauncher.castShadow = true;
 rocketLauncher.receiveShadow = true;
 // Posiciona o cilindro na "frente" da câmera, ajustando para parecer uma arma
 camera.add(rocketLauncher);
-rocketLauncher.position.set(0, -0.8, -2); // posição mais central e próxima
+rocketLauncher.position.set(0, -0.8, -2.78); // posição mais central e próxima
 
 //Cria disparo padrão
 let materialShot = new THREE.MeshLambertMaterial({ color: 0x708090 });
 var shotGeo = new THREE.SphereGeometry(0.15,64,16);
 var shot = new THREE.Mesh(shotGeo,materialShot);
-shot.position.set(0,0,0.3);
+shot.position.set(0,0,0.2);
 shot.castShadow = true; // A bala também deve projetar sombras
 shot.receiveShadow = true; // A bala também deve receber sombras
 shot.visible =false;
-rocketLauncher.add(shot);
-
+rocketLauncher.add(shot); //adiciona o tiro ao rocket launcher
 camera.position.set(0,2,0); // posiciona a camera dentro do cubo
 cube.add(camera);  
 
@@ -238,16 +244,33 @@ gunSprite.visible = false; // só mostra quando metralhadora estiver ativa
 let spriteFrame = 0;
 const totalFrames = 3;
 let lastSpriteUpdate = 0; // Adicione esta variável
-const spriteAnimationSpeed = 70;
+let isAnimatingSprite = false; // Nova variável para controlar a animação
+let animationStartTime = 0; // Para controlar quando começou a animação
 
-function animarMetralhadoraSprite() {
+function animarSprite() {
+   if (!isAnimatingSprite) return;
   const now = Date.now();
+  const spriteAnimationSpeed = armaAtual === 'metralhadora' ? 70 : 130;
   // Só atualiza o sprite se passou tempo suficiente
   if (now - lastSpriteUpdate >= spriteAnimationSpeed) {
     spriteFrame = (spriteFrame + 1) % totalFrames;
-    spriteTexture.offset.x = spriteFrame / totalFrames;
+    if(armaAtual === 'metralhadora' ) {
+      spriteTexture.offset.x = spriteFrame / totalFrames;
+    } else if (armaAtual === 'lançador') {
+      spriteTextureRL.offset.x = spriteFrame / totalFrames;
+    }
     lastSpriteUpdate = now;
+    // Para o lançador, para a animação após completar um ciclo
+    if (armaAtual === 'lançador' && spriteFrame === 0 && now - animationStartTime > spriteAnimationSpeed) {
+      isAnimatingSprite = false;
+      spriteTextureRL.offset.x = 0; // Garante que volta ao primeiro frame
+    }
   }
+}
+function startSpriteAnimation() {
+  isAnimatingSprite = true;
+  animationStartTime = Date.now();
+  spriteFrame = 0; // Começa do primeiro frame
 }
 
 //ARMA DEFAULT
@@ -265,7 +288,8 @@ function animarMetralhadoraSprite() {
 
 // CONTROLES
 const controls = new PointerLockControls(cube, document.body); //faz o movimento do mouse atuar direto no cubo
-
+// Torna os controles acessíveis globalmente para o player.js
+window.controls = controls;
 // Clicar ativa o pointer lock
 document.addEventListener('click', () => {
   controls.lock();
@@ -347,10 +371,12 @@ document.addEventListener('mouseup', (event) => {
     clearInterval(shotInterval);
     shotInterval = null;
 
-    if (armaAtual === 'metralhadora') {
-        spriteTexture.offset.x = 0; // Set back to the first frame
-        spriteFrame = 0; // Reset the frame counter
+        if (armaAtual === 'metralhadora') {
+        isAnimatingSprite = false;
+        spriteTexture.offset.x = 0;
+        spriteFrame = 0;
     }
+    // Para o lançador, a animação já para automaticamente após o ciclo
 });
 
 window.addEventListener('wheel', (event) => {
@@ -364,6 +390,7 @@ window.addEventListener('wheel', (event) => {
 function shoot() {
   const now = Date.now();
   if ((now - lastShotTime) >= cadenciaMin && armaAtual === 'lançador') {
+    startSpriteAnimation(); // Anima o sprite do lançador
     lastShotTime = now;
         
     // Clona o tiro
@@ -399,7 +426,9 @@ function shoot() {
     activeShots.push(shotClone);
   }
   else if (armaAtual === 'metralhadora') {
-    animarMetralhadoraSprite();
+    if (!isAnimatingSprite) {
+      startSpriteAnimation();
+    }
     // Metralhadora: apenas raycasting
       const origin = new THREE.Vector3();
       camera.getWorldPosition(origin);
@@ -451,6 +480,15 @@ let gravidade = -0.003;
 function render() {
   requestAnimationFrame(render);
   const delta = clock.getDelta();
+  animarSprite();
+
+  // Inicializa o HP apenas uma vez quando os controles estão ativos
+  if (controls.isLocked && !window.playerHPInitialized) {
+    initPlayerHP();
+    window.playerHPInitialized = true;
+  }
+
+
   const velocidade = () => 
     {if(shiftPress){ 
       console.log("shift");
@@ -469,7 +507,7 @@ function render() {
   }
 
 
-  if (controls.isLocked) {
+  if (controls.isLocked && isPlayerAlive()) {
 
     //PARTE DO TIRO
     activeShots.forEach((shot, index) => {
@@ -749,6 +787,12 @@ function render() {
         
     updateLostSouls(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
     updateCacodemons(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
+
+    // // Adicione esta verificação de dano no final da seção do controls.isLocked:
+    // checkPlayerDamage(cube.position, {
+    //   lostSouls: lostSouls,
+    //   cacodemons: cacodemons
+    // });
   }
 
   renderer.render(scene, camera);

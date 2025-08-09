@@ -1,0 +1,306 @@
+// HP DO JOGADOR
+let playerHP = 200;
+const maxPlayerHP = 200;
+
+// Variáveis para controle de dano
+const damageFlags = new Map(); // Para controlar cooldown de dano
+
+// Cria interface de HP
+function createPlayerHPInterface() {
+  // Container principal da UI
+  const hpContainer = document.createElement('div');
+  hpContainer.id = 'hp-container';
+  hpContainer.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 300px;
+    height: 40px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid #666;
+    border-radius: 5px;
+    padding: 5px;
+    font-family: Arial, sans-serif;
+    z-index: 1000;
+  `;
+
+  // Texto do HP
+  const hpText = document.createElement('div');
+  hpText.id = 'hp-text';
+  hpText.style.cssText = `
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 5px;
+  `;
+  hpText.textContent = `HP: ${playerHP} / ${maxPlayerHP}`;
+
+  // Barra de fundo
+  const hpBarBackground = document.createElement('div');
+  hpBarBackground.style.cssText = `
+    width: 100%;
+    height: 20px;
+    background: #444;
+    border-radius: 3px;
+    overflow: hidden;
+  `;
+
+  // Barra de HP
+  const hpBar = document.createElement('div');
+  hpBar.id = 'hp-bar';
+  hpBar.style.cssText = `
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #ff0000 0%, #ffff00 50%, #00ff00 100%);
+    transition: width 0.3s ease;
+    border-radius: 3px;
+  `;
+
+  hpBarBackground.appendChild(hpBar);
+  hpContainer.appendChild(hpText);
+  hpContainer.appendChild(hpBarBackground);
+  document.body.appendChild(hpContainer);
+}
+
+// Atualiza a interface de HP
+function updatePlayerHPInterface() {
+  const hpText = document.getElementById('hp-text');
+  const hpBar = document.getElementById('hp-bar');
+  
+  if (hpText && hpBar) {
+    hpText.textContent = `HP: ${playerHP} / ${maxPlayerHP}`;
+    const hpPercentage = (playerHP / maxPlayerHP) * 100;
+    hpBar.style.width = `${hpPercentage}%`;
+    
+    // Muda a cor baseado no HP
+    if (hpPercentage > 66) {
+      hpBar.style.background = '#00ff00'; // Verde
+    } else if (hpPercentage > 33) {
+      hpBar.style.background = '#ffff00'; // Amarelo
+    } else {
+      hpBar.style.background = '#ff0000'; // Vermelho
+    }
+  }
+}
+
+// Função para receber dano
+function takeDamage(damage) {
+  playerHP = Math.max(0, playerHP - damage);
+  updatePlayerHPInterface();
+  
+  // Efeito visual de dano (flash vermelho)
+  const damageOverlay = document.getElementById('damage-overlay') || createDamageOverlay();
+  damageOverlay.style.opacity = '0.3';
+  setTimeout(() => {
+    damageOverlay.style.opacity = '0';
+  }, 200);
+  
+  console.log(`Jogador recebeu ${damage} de dano. HP atual: ${playerHP}`);
+  
+  if (playerHP <= 0) {
+    gameOver();
+  }
+}
+
+// Cria overlay de dano
+function createDamageOverlay() {
+  const overlay = document.createElement('div');
+  overlay.id = 'damage-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: red;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+    z-index: 999;
+  `;
+  document.body.appendChild(overlay);
+  return overlay;
+}
+
+// Game Over
+function gameOver() {
+  console.log("Game Over!");
+  
+  // Para o jogo - precisa de acesso aos controles do game.js
+  if (window.controls) {
+    window.controls.unlock();
+  }
+  
+  // Cria tela de game over
+  const gameOverScreen = document.createElement('div');
+  gameOverScreen.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-family: Arial, sans-serif;
+    z-index: 2000;
+  `;
+  
+  const gameOverText = document.createElement('h1');
+  gameOverText.textContent = 'GAME OVER';
+  gameOverText.style.cssText = `
+    color: red;
+    font-size: 48px;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+  `;
+  
+  const restartButton = document.createElement('button');
+  restartButton.textContent = 'Reiniciar';
+  restartButton.style.cssText = `
+    padding: 15px 30px;
+    font-size: 20px;
+    background: #666;
+    color: white;
+    border: 2px solid #888;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  `;
+  restartButton.onmouseover = () => restartButton.style.background = '#888';
+  restartButton.onmouseout = () => restartButton.style.background = '#666';
+  restartButton.onclick = () => {
+    location.reload(); // Recarrega a página
+  };
+  
+  gameOverScreen.appendChild(gameOverText);
+  gameOverScreen.appendChild(restartButton);
+  document.body.appendChild(gameOverScreen);
+}
+
+// Verifica colisão de dano com inimigos
+function checkPlayerDamage(playerPosition, enemies) {
+  const playerBB = new THREE.Box3().setFromCenterAndSize(playerPosition, new THREE.Vector3(2, 2, 2));
+  
+  // Verifica Lost Souls
+  if (enemies.lostSouls) {
+    for (const soul of enemies.lostSouls) {
+      if (soul.hp <= 0) continue;
+      
+      const soulBB = new THREE.Box3().setFromObject(soul.mesh);
+      
+      if (playerBB.intersectsBox(soulBB)) {
+        const soulId = soul.mesh.uuid;
+        if (!damageFlags.has(soulId)) {
+          takeDamage(5); // Lost Soul causa 5 de dano
+          damageFlags.set(soulId, true);
+          
+          // Reset da flag após um tempo
+          setTimeout(() => {
+            damageFlags.delete(soulId);
+          }, 1000);
+        }
+      }
+    }
+  }
+  
+  // Verifica Cacodemons
+  if (enemies.cacodemons) {
+    for (const cacodemon of enemies.cacodemons) {
+      if (cacodemon.hp <= 0) continue;
+      
+      const cacodemonBB = new THREE.Box3().setFromObject(cacodemon.mesh);
+      
+      if (playerBB.intersectsBox(cacodemonBB)) {
+        const cacodemonId = cacodemon.mesh.uuid;
+        if (!damageFlags.has(cacodemonId)) {
+          takeDamage(8); // Cacodemon causa 8 de dano
+          damageFlags.set(cacodemonId, true);
+          
+          setTimeout(() => {
+            damageFlags.delete(cacodemonId);
+          }, 1000);
+        }
+      }
+    }
+  }
+  
+//   // Verifica Soldiers (quando implementados)
+//   if (enemies.soldiers) {
+//     for (const soldier of enemies.soldiers) {
+//       if (soldier.hp <= 0) continue;
+      
+//       const soldierBB = new THREE.Box3().setFromObject(soldier.mesh);
+      
+//       if (playerBB.intersectsBox(soldierBB)) {
+//         const soldierId = soldier.mesh.uuid;
+//         if (!damageFlags.has(soldierId)) {
+//           takeDamage(2); // Soldier causa 2 de dano
+//           damageFlags.set(soldierId, true);
+          
+//           setTimeout(() => {
+//             damageFlags.delete(soldierId);
+//           }, 1000);
+//         }
+//       }
+//     }
+//   }
+}
+
+// Função para curar o jogador (para futuros power-ups)
+function healPlayer(amount) {
+  playerHP = Math.min(maxPlayerHP, playerHP + amount);
+  updatePlayerHPInterface();
+  console.log(`Jogador curado em ${amount}. HP atual: ${playerHP}`);
+}
+
+// Função para resetar HP (para reiniciar o jogo)
+function resetPlayerHP() {
+  playerHP = maxPlayerHP;
+  updatePlayerHPInterface();
+  damageFlags.clear();
+}
+
+// Inicializa o sistema de HP
+function initPlayerHP() {
+  createPlayerHPInterface();
+  createDamageOverlay();
+  updatePlayerHPInterface();
+}
+
+// Getters para acessar valores
+function getPlayerHP() {
+  return playerHP;
+}
+
+function getMaxPlayerHP() {
+  return maxPlayerHP;
+}
+
+function isPlayerAlive() {
+  return playerHP > 0;
+}
+
+// Exporta as funções para serem usadas no game.js
+export {
+  initPlayerHP,
+  takeDamage,
+  healPlayer,
+  resetPlayerHP,
+  checkPlayerDamage,
+  getPlayerHP,
+  getMaxPlayerHP,
+  isPlayerAlive,
+  updatePlayerHPInterface
+};
+
+// Torna algumas funções globais para compatibilidade
+if (typeof window !== 'undefined') {
+  window.takeDamage = takeDamage;
+  window.healPlayer = healPlayer;
+  window.resetPlayerHP = resetPlayerHP;
+}
