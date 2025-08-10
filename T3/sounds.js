@@ -19,12 +19,48 @@ class SoundManager {
       keyPickup: '../0_assetsT3/sounds/chave.wav',
       doorOpen: '../0_assetsT3/sounds/doorOpening.wav',
       playerDamage: '../0_assetsT3/sounds/playerInjured.wav',
-      plataformMove: '../0_assetsT3/sounds/plataformaMovendo.wav'
+      plataformMove: '../0_assetsT3/sounds/plataformaMovendo.wav',
+      backgroundMusic: '../0_assetsT3/sounds/doom.mp3'
     };
 
     // Carrega todos os sons
     this.loadAllSounds();
   }
+  // FUNÇÃO SEPARADA PARA MÚSICA DE FUNDO
+  playBackgroundMusic() {
+    console.log('Tentando iniciar música de fundo...');
+    
+    if (this.sounds['backgroundMusic']) {
+      try {
+        // Para a música se já estiver tocando
+        if (this.sounds['backgroundMusic'].isPlaying) {
+          this.sounds['backgroundMusic'].stop();
+        }
+        
+        // Configura a música
+        this.sounds['backgroundMusic'].setLoop(true); // Loop infinito
+        this.sounds['backgroundMusic'].setVolume(0.15); // Volume baixo
+        
+        // Toca a música
+        this.sounds['backgroundMusic'].play();
+        console.log('Música de fundo iniciada com sucesso!');
+        
+      } catch (error) {
+        console.error('Erro ao tocar música de fundo:', error);
+      }
+    } else {
+      console.warn('Música de fundo não carregada ainda');
+    }
+  }
+
+  // FUNÇÃO PARA PARAR MÚSICA DE FUNDO
+  stopBackgroundMusic() {
+    if (this.sounds['backgroundMusic'] && this.sounds['backgroundMusic'].isPlaying) {
+      this.sounds['backgroundMusic'].stop();
+      console.log('Música de fundo parada');
+    }
+  }
+
 
   loadAllSounds() {
     Object.keys(this.soundPaths).forEach(soundName => {

@@ -300,6 +300,11 @@ document.addEventListener('click', () => {
     window.soundManager = soundManager;
     console.log("SoundManager inicializado!");
   }
+      setTimeout(() => {
+      if (soundManager) {
+        soundManager.playBackgroundMusic();
+      }
+    }, 2000);
 }, false);
  const movimento = { frente: false, tras: false, esquerda: false, direita: false };
 
