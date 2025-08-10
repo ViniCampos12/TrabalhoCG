@@ -18,6 +18,7 @@ import {
   getPlayerHP, 
   isPlayerAlive 
 } from './player.js';
+import SoundManager from './sounds.js';
 
 let scene = new THREE.Scene();
 // Define a cor de fundo da cena para azul céu
@@ -36,6 +37,7 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
+let soundManager;
 
 //LERP CONFIGS
 const lerpConfigSuport = {
@@ -176,7 +178,7 @@ const suportTop2 = map.suportTop2;
 const suportTop2Box = map.suportTop2Box;
 const key = map.keyMesh;
 const key2 = map.keyMesh2;
-let hasKey1 = false;
+let hasKey1 = true;
 let contaLostSouls = 0;
 let contaCacoDemons = 0;
 
@@ -293,6 +295,11 @@ window.controls = controls;
 // Clicar ativa o pointer lock
 document.addEventListener('click', () => {
   controls.lock();
+  if (!soundManager) {
+    soundManager = new SoundManager(camera);
+    window.soundManager = soundManager;
+    console.log("SoundManager inicializado!");
+  }
 }, false);
  const movimento = { frente: false, tras: false, esquerda: false, direita: false };
 
@@ -390,6 +397,12 @@ window.addEventListener('wheel', (event) => {
 function shoot() {
   const now = Date.now();
   if ((now - lastShotTime) >= cadenciaMin && armaAtual === 'lançador') {
+    // Toca som do rocket launcher
+    if (soundManager) {
+      
+      console.log("SoundManager existe, tocando som...");
+      soundManager.playRocketLauncher();
+    }
     startSpriteAnimation(); // Anima o sprite do lançador
     lastShotTime = now;
         
@@ -426,6 +439,11 @@ function shoot() {
     activeShots.push(shotClone);
   }
   else if (armaAtual === 'metralhadora') {
+    // Toca som do rocket launcher
+    if (soundManager) {
+      console.log("SoundManager existe, tocando som...");
+      soundManager.playChaingun();
+    }
     if (!isAnimatingSprite) {
       startSpriteAnimation();
     }
@@ -725,12 +743,36 @@ function render() {
     }
 
     if(lerpConfigPlataform.move) {
-      plataform.position.lerp(lerpConfigPlataform.destination, lerpConfigPlataform.alpha);
-      plataformBox.setFromObject(plataform)
+  plataform.position.lerp(lerpConfigPlataform.destination, lerpConfigPlataform.alpha);
+  plataformBox.setFromObject(plataform);
 
-      if(plataform.position.distanceTo(lerpConfigPlataform.destination) < 0.1) 
-        downPlataform(); //Chegou no topo ela desce sempre
+  if(plataform.position.distanceTo(lerpConfigPlataform.destination) < 0.1) {
+    // Plataforma chegou ao destino - para o movimento e som
+    lerpConfigPlataform.move = false;
+    plataformMoving = false;
+    plataformSoundPlaying = false;
+     if (soundManager) {
+      soundManager.stop('plataformMove');
     }
+    if (plataform.position.y > 0) {
+      // Chegou no TOPO (posição Y positiva)
+      console.log("Plataforma chegou no topo!");
+      setTimeout(() => {
+        if (!plataformMoving) {
+          downPlataform();
+        }
+      }, 2000); // Espera 2 segundos antes de descer
+    } else {
+      // Chegou no CHÃO (posição Y negativa ou zero)
+      plataformaNoChao = true;
+      if (soundManager) {
+        soundManager.stop('plataformMove');
+      }
+      // Não faz nada - fica esperando o jogador pisar nela novamente
+    }
+  }
+}
+
 
 
     moveDir.normalize();
@@ -772,9 +814,10 @@ function render() {
 
       //Teste da plataforma
       if(cube.position.x > -9 && cube.position.x < 9 && cube.position.z < - 55 && cube.position.z > -65 && doorOpen) {
-        downPlataform();
+        if(!plataformaNoChao) {
+          downPlataform();
       }
-
+      }
     }
     //Se estiver fora da área da escada ele atualiza a gravidade
     const inLadderArea = laddersPosition.some(ladder => cube.position.x >= ladder.minX && cube.position.x <= ladder.maxX && cube.position.z >= ladder.minZ && cube.position.z <= ladder.maxZ);
@@ -824,6 +867,10 @@ function atualizaGravidade(cube) {
   }
 }
 
+
+let plataformSoundPlaying = false;
+let plataformMoving = false;
+let plataformaNoChao = false;
 function checkCollisions(walls, areas, newCubePos) { 
 
   let collision = false;
@@ -835,6 +882,9 @@ function checkCollisions(walls, areas, newCubePos) {
   if(newCubePos.z < -60 && newCubePos.z > -181 && newCubePos.x > -220 && newCubePos.x < -92){
 
     if(futureBB.intersectsBox(suport1Box)){
+      if (soundManager && !hasKey1) {
+        soundManager.playKeyPickup();
+      }
       suport1.remove(key);
       key.visible = false;
       hasKey1 = true;
@@ -851,13 +901,16 @@ function checkCollisions(walls, areas, newCubePos) {
   //Testa blocos da área 2
   if(newCubePos.z < -53 && newCubePos.z > -181 && newCubePos.x > -64 && newCubePos.x < 64){
 
-    if(futureBB.intersectsBox(plataformBox)){
+    if(futureBB.intersectsBox(plataformBox) && !plataformMoving && plataformaNoChao){
       upPlataform();
       return false;
     }
 
     if(futureBB.intersectsBox(suport2Box)){
       if(hasKey1){
+        if (soundManager && !doorOpen) {
+          soundManager.playDoorOpen();
+        }
         suport2.add(key);
         key.visible = true;
         openArea2Door();
@@ -929,15 +982,32 @@ function openArea2Door(){
 }
 
 function upPlataform(){
+    // Só toca som se não estiver já movendo
+  if (soundManager) {
+    soundManager.playPlataformMove();
+    plataformSoundPlaying = true;
+    console.log('up');
+  }
+  
+  plataformMoving = true;
   lerpConfigPlataform.alpha = 0.01;
   lerpConfigPlataform.destination = new THREE.Vector3(0, 3, 57)
   lerpConfigPlataform.move = true; 
 }
 
 function downPlataform(){
+  if (!plataformMoving && soundManager) {
+    soundManager.playPlataformMove();
+    plataformSoundPlaying = true;
+    console.log('down');
+  }
+  
+  plataformMoving = true;
+ 
   lerpConfigPlataform.alpha = 0.02;
   lerpConfigPlataform.destination = new THREE.Vector3(0,-3,57);
   lerpConfigPlataform.move = true;
+  
 }
 
 render();
