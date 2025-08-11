@@ -357,11 +357,23 @@ export function updateCacodemons(player, wallBoxes, areaBoxes, collumnsBoxes, bl
     const collision = checkProjectileCollision(p, player, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
 
     if (collision === 'player') {
-      console.log('Jogador atingido!');
-      scene.remove(p.mesh);
-      projectiles.splice(i, 1);
-      continue;
+  console.log('Jogador atingido por projétil do Cacodemon!');
+  
+
+    if (window.takeDamage && !godModeEnabled) {
+      window.takeDamage(15); // Projétil causa 15 de dano
+      console.log('Dano aplicado ao player!');
+      if (window.soundManager) {
+      window.soundManager.playPlayerDamage();
+      }
     }
+    
+    
+    
+    scene.remove(p.mesh);
+    projectiles.splice(i, 1);
+    continue;
+  }
 
     //Em caso de colisão com o mundo ou com o chão (ou ao exceder o tempo limite), remove as balas
     if (collision === 'world' || collision === 'ground' || Date.now() - p.spawnTime > 5000) {

@@ -1,9 +1,64 @@
+import * as THREE from 'three'; // ← ADICIONE ESTA LINHA
 // HP DO JOGADOR
 let playerHP = 200;
 const maxPlayerHP = 200;
 
+let godModeEnabled = false;
+
 // Variáveis para controle de dano
 const damageFlags = new Map(); // Para controlar cooldown de dano
+
+function toggleGodMode() {
+  godModeEnabled = !godModeEnabled;
+  
+  // Mostra mensagem visual
+  showGodModeMessage(godModeEnabled);
+  
+  console.log(`God Mode ${godModeEnabled ? 'ATIVADO' : 'DESATIVADO'}`);
+  return godModeEnabled;
+}
+
+function showGodModeMessage(enabled) {
+  // Remove mensagem anterior
+  const existingMessage = document.getElementById('godmode-message');
+  if (existingMessage) {
+    existingMessage.remove();
+  }
+
+  const message = document.createElement('div');
+  message.id = 'godmode-message';
+  message.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: ${enabled ? 'rgba(0, 255, 0, 0.9)' : 'rgba(255, 0, 0, 0.9)'};
+    color: white;
+    padding: 20px 40px;
+    border-radius: 10px;
+    font-family: Arial, sans-serif;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    z-index: 9999;
+    border: 3px solid ${enabled ? '#00ff00' : '#ff0000'};
+    box-shadow: 0 0 20px ${enabled ? 'rgba(0, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)'};
+  `;
+
+  message.innerHTML = enabled ? 
+    '⚡ GOD MODE ATIVADO ⚡<br><div style="font-size: 16px; margin-top: 10px;">Você é invencível!</div>' :
+    '❌ GOD MODE DESATIVADO ❌<br><div style="font-size: 16px; margin-top: 10px;">Você pode receber dano novamente</div>';
+
+  document.body.appendChild(message);
+
+  // Remove automaticamente após 2 segundos
+  setTimeout(() => {
+    if (message && message.parentNode) {
+      message.remove();
+    }
+  }, 2000);
+}
+
 
 // Cria interface de HP
 function createPlayerHPInterface() {
@@ -86,6 +141,9 @@ function updatePlayerHPInterface() {
 
 // Função para receber dano
 function takeDamage(damage) {
+  if(godModeEnabled) {
+    return;
+  }
   playerHP = Math.max(0, playerHP - damage);
   updatePlayerHPInterface();
   
@@ -184,8 +242,11 @@ function gameOver() {
 
 // Verifica colisão de dano com inimigos
 function checkPlayerDamage(playerPosition, enemies) {
+  if (godModeEnabled){
+    return false;
+  }
   const playerBB = new THREE.Box3().setFromCenterAndSize(playerPosition, new THREE.Vector3(2, 2, 2));
-  
+  let damageReceived = false;
   // Verifica Lost Souls
   if (enemies.lostSouls) {
     for (const soul of enemies.lostSouls) {
@@ -197,6 +258,7 @@ function checkPlayerDamage(playerPosition, enemies) {
         const soulId = soul.mesh.uuid;
         if (!damageFlags.has(soulId)) {
           takeDamage(5); // Lost Soul causa 5 de dano
+          damageReceived = true;
           damageFlags.set(soulId, true);
           
           // Reset da flag após um tempo
@@ -208,25 +270,38 @@ function checkPlayerDamage(playerPosition, enemies) {
     }
   }
   
-  // Verifica Cacodemons
-  if (enemies.cacodemons) {
-    for (const cacodemon of enemies.cacodemons) {
-      if (cacodemon.hp <= 0) continue;
+  // Verifica PROJÉTEIS dos Cacodemons (importa do cacoDemons.js)
+  if (!damageReceived && enemies.projectiles) {
+    for (let i = enemies.projectiles.length - 1; i >= 0; i--) {
+      const projectile = enemies.projectiles[i];
       
-      const cacodemonBB = new THREE.Box3().setFromObject(cacodemon.mesh);
+      if (!projectile || !projectile.mesh) continue;
       
-      if (playerBB.intersectsBox(cacodemonBB)) {
-        const cacodemonId = cacodemon.mesh.uuid;
-        if (!damageFlags.has(cacodemonId)) {
-          takeDamage(8); // Cacodemon causa 8 de dano
-          damageFlags.set(cacodemonId, true);
-          
-          setTimeout(() => {
-            damageFlags.delete(cacodemonId);
-          }, 1000);
+      const projectileBB = new THREE.Box3().setFromCenterAndSize(
+        projectile.mesh.position,
+        new THREE.Vector3(1, 1, 1) // Mesmo tamanho usado no cacoDemons.js
+      );
+      
+      if (playerBB.intersectsBox(projectileBB)) {
+        // Player foi atingido pelo projétil
+        takeDamage(15); // Projétil do Cacodemon causa 15 de dano
+        damageReceived = true;
+        
+        // Remove o projétil da cena e do array (igual ao código original)
+        if (projectile.mesh.parent) {
+          projectile.mesh.parent.remove(projectile.mesh);
+        } else {
+          scene.remove(projectile.mesh); // Se não tem parent, remove direto da scene
         }
+        enemies.projectiles.splice(i, 1);
+        
+        console.log("Player atingido por projétil do Cacodemon!");
+        break; // Para no primeiro projétil que atingir
       }
     }
+    
+  }
+    return damageReceived;
   }
   
 //   // Verifica Soldiers (quando implementados)
@@ -249,14 +324,8 @@ function checkPlayerDamage(playerPosition, enemies) {
 //       }
 //     }
 //   }
-}
 
-// Função para curar o jogador (para futuros power-ups)
-function healPlayer(amount) {
-  playerHP = Math.min(maxPlayerHP, playerHP + amount);
-  updatePlayerHPInterface();
-  console.log(`Jogador curado em ${amount}. HP atual: ${playerHP}`);
-}
+
 
 // Função para resetar HP (para reiniciar o jogo)
 function resetPlayerHP() {
@@ -289,18 +358,20 @@ function isPlayerAlive() {
 export {
   initPlayerHP,
   takeDamage,
-  healPlayer,
   resetPlayerHP,
   checkPlayerDamage,
   getPlayerHP,
   getMaxPlayerHP,
   isPlayerAlive,
-  updatePlayerHPInterface
+  updatePlayerHPInterface,
+  toggleGodMode
 };
 
 // Torna algumas funções globais para compatibilidade
 if (typeof window !== 'undefined') {
   window.takeDamage = takeDamage;
-  window.healPlayer = healPlayer;
+   window.toggleGodMode = toggleGodMode;
   window.resetPlayerHP = resetPlayerHP;
+  window.getPlayerHP = getPlayerHP;
+  window.isPlayerAlive = isPlayerAlive;
 }

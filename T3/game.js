@@ -10,13 +10,14 @@ import {
 import Map from './map.js';
 import Ramp from './ramp.js';
 import { spawnLostSouls, updateLostSouls, checkCollisionForSouls, lostSouls } from './lostSoul.js';
-import { spawnCacodemons, updateCacodemons, cacodemons } from './cacoDemons.js';
+import { spawnCacodemons, updateCacodemons, cacodemons, projectiles } from './cacoDemons.js';
 import { 
   initPlayerHP, 
   takeDamage, 
   checkPlayerDamage, 
   getPlayerHP, 
-  isPlayerAlive 
+  isPlayerAlive,
+  toggleGodMode
 } from './player.js';
 import SoundManager from './sounds.js';
 
@@ -178,7 +179,8 @@ const suportTop2 = map.suportTop2;
 const suportTop2Box = map.suportTop2Box;
 const key = map.keyMesh;
 const key2 = map.keyMesh2;
-let hasKey1 = true;
+let hasKey1 = false;
+let hasKey2 = true;
 let contaLostSouls = 0;
 let contaCacoDemons = 0;
 
@@ -335,6 +337,16 @@ document.addEventListener('keydown', (event) => {
       case 'ShiftLeft':
       case 'ShiftRight':
         shiftPress = true;
+        break;
+      case 'KeyC':
+        console.log('tecla C');
+        hasKey1 = true;
+        hasKey2 = false;
+        exibirMensagem();
+        break;
+      case 'KeyG':
+        console.log('Tecla G - Toggling God Mode');
+        const godModeStatus = toggleGodMode();
         break;
   }
 }, false);
@@ -583,7 +595,9 @@ function render() {
         const soulBB = new THREE.Box3().setFromObject(soul.mesh);
         if (shot.userData.box.intersectsBox(soulBB)) {
           soul.hp -= 10;
-
+          if(soundManager) {
+            soundManager.playEnemyHit();
+          }
           // caso a alma morra
           if (soul.hp <= 0) {
             scene.remove(soul.mesh);
@@ -601,6 +615,9 @@ function render() {
         const cacodemonBB = new THREE.Box3().setFromObject(cacodemon.mesh);
         if (shot.userData.box.intersectsBox(cacodemonBB)) {
           cacodemon.hp -= 10;
+          if(soundManager) {
+            soundManager.playEnemyHit();
+          }
 
           if (cacodemon.hp <= 0) {
             scene.remove(cacodemon.mesh);
@@ -645,6 +662,9 @@ function render() {
 
           if (intersects.length > 0) {
             soul.hp -= 1;
+            if(soundManager) {
+            soundManager.playEnemyHit();
+            }
 
             if (soul.hp <= 0) {
               scene.remove(soul.mesh);
@@ -661,6 +681,9 @@ function render() {
 
           if (intersects.length > 0) {
             cacodemon.hp -= 1;
+            if(soundManager) {
+            soundManager.playEnemyHit();
+          }
 
             if (cacodemon.hp <= 0) {
               scene.remove(cacodemon.mesh);
@@ -836,11 +859,19 @@ function render() {
     updateLostSouls(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
     updateCacodemons(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
 
-    // // Adicione esta verificação de dano no final da seção do controls.isLocked:
-    // checkPlayerDamage(cube.position, {
-    //   lostSouls: lostSouls,
-    //   cacodemons: cacodemons
-    // });
+     const damageReceived = checkPlayerDamage(cube.position, {
+      lostSouls: lostSouls,
+      cacodemons: cacodemons,
+      projectiles: projectiles
+    });
+
+    if(damageReceived){
+      // Se o jogador recebeu dano, tocar som
+      if (soundManager) {
+        soundManager.play('playerDamage');
+      }
+    }
+
   }
 
   renderer.render(scene, camera);
@@ -927,6 +958,7 @@ function checkCollisions(walls, areas, newCubePos) {
     if(futureBB.intersectsBox(suportTop2Box)){
       suportTop2.remove(key2);
       key2.visible = false;
+      hasKey2 = true;
       return true;
     }
 

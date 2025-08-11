@@ -20,7 +20,8 @@ class SoundManager {
       doorOpen: '../0_assetsT3/sounds/doorOpening.wav',
       playerDamage: '../0_assetsT3/sounds/playerInjured.wav',
       plataformMove: '../0_assetsT3/sounds/plataformaMovendo.wav',
-      backgroundMusic: '../0_assetsT3/sounds/doom.mp3'
+      backgroundMusic: '../0_assetsT3/sounds/doom.mp3',
+      enemyHit: '../0_assetsT3/sounds/lostSoul/injured.wav',
     };
 
     // Carrega todos os sons
