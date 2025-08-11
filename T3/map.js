@@ -286,34 +286,67 @@ class Map{
 
     // ÁREA 3
     let material3 = new THREE.MeshLambertMaterial({ color: "rgb(139,90,43)" });
-    let area3 = this.createDefaultArea(material3,156,3,-125,6);
-    area3.position.set(156.0, 3.0, -125.0);
+    let area3 = this.createDefaultArea(material3,172,0,-125,0.1);
+    area3.position.set(156.0, 0.0, -118.0);
     scene.add(area3);
 
-    //Create Extend Area of area 3
-    let smallExtendedAreaGeometry3 = new THREE.BoxGeometry(30,6,16);
-    let smallExtendedArea3 = new THREE.Mesh(smallExtendedAreaGeometry3,material3);
-    smallExtendedArea3.castShadow = true; // A área também deve projetar sombras
-    smallExtendedArea3.receiveShadow = true; // A área também deve receber sombras
-    area3.add(smallExtendedArea3);
-    smallExtendedArea3.position.set(47,0,54);
+    let materialGray = new THREE.MeshLambertMaterial({ color: "rgb(59,59,59)" });
+    let lateraisHangar = new THREE.Mesh(new THREE.BoxGeometry(2, 20, 108), materialGray);
+    lateraisHangar.castShadow = true; // A área também deve projetar sombras
+    lateraisHangar.receiveShadow = true; // A área também deve receber sombras
+    lateraisHangar.position.set(94, 5, -118);
+    scene.add(lateraisHangar);
 
-    let bigExtendedAreaGeometry3 = new THREE.BoxGeometry(78,6,16);
-    let bigExtendedArea3= new THREE.Mesh(bigExtendedAreaGeometry3,material3);
-    bigExtendedArea3.castShadow = true; // A área também deve projetar sombras
-    bigExtendedArea3.receiveShadow = true; // A área também deve receber sombras
-    area3.add(bigExtendedArea3);
-    bigExtendedArea3.position.set(-23,0,54);
+    let laterais2Hangar = new THREE.Mesh(new THREE.BoxGeometry(2, 20, 108), materialGray);
+    laterais2Hangar.castShadow = true; // A área também deve projetar sombras
+    laterais2Hangar.receiveShadow = true; // A área também deve receber sombras
+    laterais2Hangar.position.set(218, 5, -118);
+    scene.add(laterais2Hangar);
 
-    const l3 = new Ladder(material3);
-    const ladder3 = l3.createLadder();
-    area3.add(ladder3);
-    ladder3.position.set(24,2.6,54.5);
-    this.ramps.push(l3.getRampMesh());
+    let fundoHangar = new THREE.Mesh(new THREE.BoxGeometry(124, 20, 2), materialGray);
+    fundoHangar.castShadow = true; // A área também deve projetar sombras
+    fundoHangar.receiveShadow = true; // A área também deve receber sombras
+    fundoHangar.position.set(156, 5, -171);
+    scene.add(fundoHangar);
 
-    //Create bb
-    const wallBox3 = new THREE.Box3().setFromObject(area3);
-    this.areasBox.push(wallBox3);
+    scene.add(this.createTopHangar());
+
+  
+
+
+    // //Create Extend Area of area 3
+    // let smallExtendedAreaGeometry3 = new THREE.BoxGeometry(30,6,16);
+    // let smallExtendedArea3 = new THREE.Mesh(smallExtendedAreaGeometry3,material3);
+    // smallExtendedArea3.castShadow = true; // A área também deve projetar sombras
+    // smallExtendedArea3.receiveShadow = true; // A área também deve receber sombras
+    // area3.add(smallExtendedArea3);
+    // smallExtendedArea3.position.set(47,0,54);
+
+    // let bigExtendedAreaGeometry3 = new THREE.BoxGeometry(78,6,16);
+    // let bigExtendedArea3= new THREE.Mesh(bigExtendedAreaGeometry3,material3);
+    // bigExtendedArea3.castShadow = true; // A área também deve projetar sombras
+    // bigExtendedArea3.receiveShadow = true; // A área também deve receber sombras
+    // area3.add(bigExtendedArea3);
+    // bigExtendedArea3.position.set(-23,0,54);
+
+    // const l3 = new Ladder(material3);
+    // const ladder3 = l3.createLadder();
+    // area3.add(ladder3);
+    // ladder3.position.set(24,2.6,54.5);
+    // this.ramps.push(l3.getRampMesh());
+
+    // //Create bb
+    // const wallBox3 = new THREE.Box3().setFromObject(area3);
+    // this.areasBox.push(wallBox3);
+
+
+    // let area3Floor = new THREE.BoxGeometry(124,3,116);
+    // let area3FloorMaterial = new THREE.MeshLambertMaterial({ color: "rgb(139,90,43)" });
+    // let area3FloorMesh = new THREE.Mesh(area3Floor, area3FloorMaterial);
+    // // area3FloorMesh.rotation.x = Math.PI / 2; // Rotaciona para ficar horizontal
+    // area3FloorMesh.position.set(156, 2, -125); // Posiciona corretamente
+    // area3FloorMesh.receiveShadow = true; // A área também deve receber sombras
+    // scene.add(area3FloorMesh);
 
 
     //Create side walls
@@ -472,6 +505,45 @@ class Map{
 
     return keyMesh;
   }
+
+ createTopHangar(){
+    let auxMat = new THREE.Matrix4();
+
+    // Altura menor (ficará mais baixo visualmente)
+    let alturaTopo = 116; // antes era 116
+    let bigCylinderMesh = new THREE.Mesh(new THREE.CylinderGeometry(80, 80, alturaTopo, 32));
+    let smallCylinderMesh = new THREE.Mesh(new THREE.CylinderGeometry(78, 78, alturaTopo, 32));
+    let quadradoMesh = new THREE.Mesh(new THREE.BoxGeometry(800, 800, 90 ));
+
+    bigCylinderMesh.matrixAutoUpdate = false;
+    bigCylinderMesh.updateMatrix();
+    smallCylinderMesh.matrixAutoUpdate = false;
+    smallCylinderMesh.updateMatrix();
+    quadradoMesh.matrixAutoUpdate = false;
+    quadradoMesh.updateMatrix();
+    quadradoMesh.position.set(0, 0, 0);
+    quadradoMesh.rotateX(THREE.MathUtils.degToRad(90));
+
+    let bigCylinderCSG = CSG.fromMesh(bigCylinderMesh);
+    let quadradoCSG = CSG.fromMesh(quadradoMesh);
+    let smallCylinderCSG = CSG.fromMesh(smallCylinderMesh);
+    let csgObjectPre = bigCylinderCSG.subtract(smallCylinderCSG); // Subtrai o cilindro menor do maior
+    let csgObject = csgObjectPre.subtract(quadradoCSG);
+
+    let topoHangarMesh = CSG.toMesh(csgObject, auxMat);
+    topoHangarMesh.material = new THREE.MeshLambertMaterial({ color: "rgb(59,59,59)" });
+    topoHangarMesh.castShadow = true;
+    topoHangarMesh.receiveShadow = true;
+
+    // Rotaciona para a posição horizontal
+    topoHangarMesh.rotateX(Math.PI / 2);
+
+    // Ajusta posição para compensar altura menor
+    topoHangarMesh.position.set(156, -30, -118);
+
+    return topoHangarMesh;
+}
+
 
   getWallBoxes(){
     return this.wallsBox;

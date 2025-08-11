@@ -13,6 +13,7 @@ import { spawnLostSouls, updateLostSouls, checkCollisionForSouls, lostSouls } fr
 import { spawnCacodemons, updateCacodemons, cacodemons } from './cacoDemons.js';
 
 
+
 let scene = new THREE.Scene();
 // Cria um SkyDome com textura de céu
 const loader = new THREE.CubeTextureLoader();
@@ -71,11 +72,6 @@ const laddersPosition = [
   {
     minX: -188,
     maxX: -172,
-    minZ: -71,
-    maxZ: -64,
-  },{
-    minX: 180,
-    maxX: 196,
     minZ: -71,
     maxZ: -64,
   },{
@@ -194,7 +190,7 @@ let map = new Map(scene);
 
 //Variáveis importante advindas do map
 const wallBoxes = map.getWallBoxes();
-const areaBoxes = map.getAreaBoxes();
+const areaBoxes = map.getAreaBoxes(); 
 const collumnsBoxes = map.getCollumnsBoxes();
 const blockBoxes = map.getBlocksBoxes();
 const rampMesh = map.getRamps();
@@ -213,6 +209,7 @@ const key2 = map.keyMesh2;
 let hasKey1 = false;
 let contaLostSouls = 0;
 let contaCacoDemons = 0;
+
 
 //CUBO
 //Cria pessoa como um cubo
@@ -811,7 +808,7 @@ function checkCollisions(walls, areas, newCubePos) {
   if(newCubePos.y > 3){return false} 
 
   //Testa escadas
-  if((newCubePos.z > 52 && newCubePos.x > -17 && newCubePos.x < 17 && newCubePos.z < 62) || ((newCubePos.z > -71 && newCubePos.z < -40) && ((newCubePos.x > -188 && newCubePos.x < -172) || (newCubePos.x > 172 && newCubePos.x < 188)))){
+  if((newCubePos.z > 52 && newCubePos.x > -17 && newCubePos.x < 17 && newCubePos.z < 62) || ((newCubePos.z > -71 && newCubePos.z < -40) && ((newCubePos.x > -188 && newCubePos.x < -172)))){
     return false;
   }
 
@@ -842,8 +839,8 @@ function checkCollisions(walls, areas, newCubePos) {
       collision = futureBB.intersectsBox(areas[2]);
     }
       
-    if(newCubePos.x > 92 && newCubePos.x < 220)
-      collision = futureBB.intersectsBox(areas[3]);
+    // if(newCubePos.x > 92 && newCubePos.x < 220)
+    //   collision = futureBB.intersectsBox(areas[3]);
   }
 
 
