@@ -10,8 +10,16 @@ import {
 import Map from './map.js';
 import Ramp from './ramp.js';
 import { spawnLostSouls, updateLostSouls, checkCollisionForSouls, lostSouls } from './lostSoul.js';
-import { spawnCacodemons, updateCacodemons, cacodemons } from './cacoDemons.js';
-
+import { spawnCacodemons, updateCacodemons, cacodemons, projectiles } from './cacoDemons.js';
+import { 
+  initPlayerHP, 
+  takeDamage, 
+  checkPlayerDamage, 
+  getPlayerHP, 
+  isPlayerAlive,
+  toggleGodMode
+} from './player.js';
+import SoundManager from './sounds.js';
 
 
 let scene = new THREE.Scene();
@@ -40,6 +48,7 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
+let soundManager;
 
 //LERP CONFIGS
 const lerpConfigSuport = {
@@ -107,49 +116,18 @@ function alternarParaLançador() {
   spriteFrame = 0; // Reset the frame counter
   armaAtual = 'lançador';
   gunSprite.visible = false;
-  shot.visible = true;
-  cylinder.visible = true;
+  shot.visible = false;
+  rocketLauncher.visible = true;
+  // Limpa todas as balas ativas quando muda para lançador
 }
 
 function alternarParaMetralhadora() {
   armaAtual = 'metralhadora';
   gunSprite.visible = true;
   shot.visible = false;
-  cylinder.visible = false;
+  rocketLauncher.visible = false;
 }
 
-// Cria a metralhadora como um sprite
-const textureLoader = new THREE.TextureLoader();
-const spriteTexture = textureLoader.load('assets/chaingun.png');
-spriteTexture.repeat.set(1 / 3, 1); // 3 quadros na horizontal
-spriteTexture.offset.set(0, 0); // começa do primeiro frame
-
-const spriteMaterial = new THREE.SpriteMaterial({ 
-  map: spriteTexture, 
-  transparent: true,
-  color: 0xffffff
-});
-const gunSprite = new THREE.Sprite(spriteMaterial);
-
-gunSprite.scale.set(1, 1.5, 1); // aumenta o tamanho para garantir visibilidade
-camera.add(gunSprite);
-gunSprite.position.set(0, -0.8, -2); // posição mais central e próxima
-gunSprite.visible = false; // só mostra quando metralhadora estiver ativa
-
-let spriteFrame = 0;
-const totalFrames = 3;
-let lastSpriteUpdate = 0; // Adicione esta variável
-const spriteAnimationSpeed = 70;
-
-function animarMetralhadoraSprite() {
-  const now = Date.now();
-  // Só atualiza o sprite se passou tempo suficiente
-  if (now - lastSpriteUpdate >= spriteAnimationSpeed) {
-    spriteFrame = (spriteFrame + 1) % totalFrames;
-    spriteTexture.offset.x = spriteFrame / totalFrames;
-    lastSpriteUpdate = now;
-  }
-}
 
 
 //ILUMINAÇÃO
@@ -225,6 +203,7 @@ const door2Area3 = map.portaHangar2;
 const door1Area3Box = map.door1Area3Box;
 const door2Area3Box = map.door2Area3Box;
 let hasKey1 = false;
+let hasKey2 = true;
 let contaLostSouls = 0;
 let contaCacoDemons = 0;
 
@@ -234,43 +213,124 @@ let contaCacoDemons = 0;
 var cubeGeometry = new THREE.BoxGeometry(2, 2, 2);
 var cube = new THREE.Mesh(cubeGeometry, material);
 cube.position.set(0.0, 2.0, 0.0);
+let shiftPress = false;
 scene.add(cube);
 
-//ARMA DEFAULT
-//Cria arma como cilindro
-const geometryC = new THREE.CylinderGeometry( 0.13, 0.13, 2.5, 32 ); 
-const materialC = new THREE.MeshLambertMaterial( {color: 0x5F5F5F} ); 
-const cylinder = new THREE.Mesh( geometryC, materialC ); 
 
-// Rotaciona o cilindro para apontar para frente
-cylinder.rotation.x = Math.PI / 2;
+// Cria o Rocket Launcher como um sprite
+const textureLoaderRL = new THREE.TextureLoader();
+const spriteTextureRL = textureLoaderRL.load('assets/images/RocketLauncher.png');
+spriteTextureRL.repeat.set(1 / 3, 1); // 3 quadros na horizontal
+spriteTextureRL.offset.set(0, 0); // começa do primeiro frame
+const spriteMaterialRL = new THREE.SpriteMaterial({ 
+  map: spriteTextureRL, 
+  transparent: true,
+  color: 0xffffff
+});
+const rocketLauncher = new THREE.Sprite(spriteMaterialRL);
+rocketLauncher.scale.set(1, 1.5, 1); // aumenta o tamanho para garantir visibilidade
+
+rocketLauncher.visible = true; // só mostra quando metralhadora estiver ativa
 
 //faz o cilindro receber e transmitir sombras
-cylinder.castShadow = true;
-cylinder.receiveShadow = true;
+rocketLauncher.castShadow = true;
+rocketLauncher.receiveShadow = true;
 // Posiciona o cilindro na "frente" da câmera, ajustando para parecer uma arma
-camera.add(cylinder);
-cylinder.position.set(0, -0.5, -0.5);
+camera.add(rocketLauncher);
+rocketLauncher.position.set(0, -0.8, -2.78); // posição mais central e próxima
 
 //Cria disparo padrão
 let materialShot = new THREE.MeshLambertMaterial({ color: 0x708090 });
 var shotGeo = new THREE.SphereGeometry(0.15,64,16);
 var shot = new THREE.Mesh(shotGeo,materialShot);
-shot.position.set(0,-2,0.2);
+shot.position.set(0,0,0.2);
 shot.castShadow = true; // A bala também deve projetar sombras
 shot.receiveShadow = true; // A bala também deve receber sombras
-cylinder.add(shot);
-
+shot.visible =false;
+rocketLauncher.add(shot); //adiciona o tiro ao rocket launcher
 camera.position.set(0,2,0); // posiciona a camera dentro do cubo
-cube.add(camera);           // faz a câmera seguir o cubo
+cube.add(camera);  
+
+// Cria a metralhadora como um sprite
+const textureLoader = new THREE.TextureLoader();
+const spriteTexture = textureLoader.load('assets/chaingun.png');
+spriteTexture.repeat.set(1 / 3, 1); // 3 quadros na horizontal
+spriteTexture.offset.set(0, 0); // começa do primeiro frame
+
+const spriteMaterial = new THREE.SpriteMaterial({ 
+  map: spriteTexture, 
+  transparent: true,
+  color: 0xffffff
+});
+const gunSprite = new THREE.Sprite(spriteMaterial);
+
+gunSprite.scale.set(1, 1.5, 1); // aumenta o tamanho para garantir visibilidade
+camera.add(gunSprite);
+gunSprite.position.set(0, -1, -2.5); // posição mais central e próxima
+gunSprite.visible = false; // só mostra quando metralhadora estiver ativa
+
+let spriteFrame = 0;
+const totalFrames = 3;
+let lastSpriteUpdate = 0; // Adicione esta variável
+let isAnimatingSprite = false; // Nova variável para controlar a animação
+let animationStartTime = 0; // Para controlar quando começou a animação
+
+function animarSprite() {
+   if (!isAnimatingSprite) return;
+  const now = Date.now();
+  const spriteAnimationSpeed = armaAtual === 'metralhadora' ? 70 : 130;
+  // Só atualiza o sprite se passou tempo suficiente
+  if (now - lastSpriteUpdate >= spriteAnimationSpeed) {
+    spriteFrame = (spriteFrame + 1) % totalFrames;
+    if(armaAtual === 'metralhadora' ) {
+      spriteTexture.offset.x = spriteFrame / totalFrames;
+    } else if (armaAtual === 'lançador') {
+      spriteTextureRL.offset.x = spriteFrame / totalFrames;
+    }
+    lastSpriteUpdate = now;
+    // Para o lançador, para a animação após completar um ciclo
+    if (armaAtual === 'lançador' && spriteFrame === 0 && now - animationStartTime > spriteAnimationSpeed) {
+      isAnimatingSprite = false;
+      spriteTextureRL.offset.x = 0; // Garante que volta ao primeiro frame
+    }
+  }
+}
+function startSpriteAnimation() {
+  isAnimatingSprite = true;
+  animationStartTime = Date.now();
+  spriteFrame = 0; // Começa do primeiro frame
+}
+
+//ARMA DEFAULT
+//Cria arma como cilindro
+// const geometryC = new THREE.CylinderGeometry( 0.13, 0.13, 2.5, 32 ); 
+// const materialC = new THREE.MeshLambertMaterial( {color: 0x5F5F5F} ); 
+// const cylinder = new THREE.Mesh( geometryC, materialC ); 
+
+// Rotaciona o cilindro para apontar para frente
+// cylinder.rotation.x = Math.PI / 2;
+
+
+
 
 
 // CONTROLES
 const controls = new PointerLockControls(cube, document.body); //faz o movimento do mouse atuar direto no cubo
-
+// Torna os controles acessíveis globalmente para o player.js
+window.controls = controls;
 // Clicar ativa o pointer lock
 document.addEventListener('click', () => {
   controls.lock();
+  if (!soundManager) {
+    soundManager = new SoundManager(camera);
+    window.soundManager = soundManager;
+    console.log("SoundManager inicializado!");
+  }
+      setTimeout(() => {
+      if (soundManager) {
+        soundManager.playBackgroundMusic();
+      }
+    }, 2000);
 }, false);
  const movimento = { frente: false, tras: false, esquerda: false, direita: false };
 
@@ -300,6 +360,20 @@ document.addEventListener('keydown', (event) => {
         break;
     case 'KeyO':
         openArea3Door();
+    case 'ShiftLeft':
+    case 'ShiftRight':
+      shiftPress = true;
+      break;
+    case 'KeyC':
+      console.log('tecla C');
+      hasKey1 = true;
+      hasKey2 = false;
+      exibirMensagem();
+      break;
+    case 'KeyG':
+      console.log('Tecla G - Toggling God Mode');
+      const godModeStatus = toggleGodMode();
+      break;
   }
 }, false);
 
@@ -320,6 +394,10 @@ document.addEventListener('keyup', (event) => {
     case 'KeyD':
     case "ArrowRight": 
       movimento.direita = false; 
+      break;
+    case 'ShiftLeft':
+    case 'ShiftRight':
+      shiftPress = false;
       break;
   }
 }, false);
@@ -343,10 +421,12 @@ document.addEventListener('mouseup', (event) => {
     clearInterval(shotInterval);
     shotInterval = null;
 
-    if (armaAtual === 'metralhadora') {
-        spriteTexture.offset.x = 0; // Set back to the first frame
-        spriteFrame = 0; // Reset the frame counter
+        if (armaAtual === 'metralhadora') {
+        isAnimatingSprite = false;
+        spriteTexture.offset.x = 0;
+        spriteFrame = 0;
     }
+    // Para o lançador, a animação já para automaticamente após o ciclo
 });
 
 window.addEventListener('wheel', (event) => {
@@ -360,16 +440,24 @@ window.addEventListener('wheel', (event) => {
 function shoot() {
   const now = Date.now();
   if ((now - lastShotTime) >= cadenciaMin && armaAtual === 'lançador') {
+    // Toca som do rocket launcher
+    if (soundManager) {
+      
+      console.log("SoundManager existe, tocando som...");
+      soundManager.playRocketLauncher();
+    }
+    startSpriteAnimation(); // Anima o sprite do lançador
     lastShotTime = now;
         
     // Clona o tiro
     const shotClone = shot.clone();
+    shotClone.visible = true;
     
     // Garante que as propriedades de sombra sejam mantidas
     shotClone.castShadow = true;
     shotClone.receiveShadow = true;
     
-    cylinder.add(shotClone);
+    rocketLauncher.add(shotClone);
     shotClone.updateMatrixWorld();
 
     // Captura a posição global antes de soltar da arma
@@ -394,7 +482,14 @@ function shoot() {
     activeShots.push(shotClone);
   }
   else if (armaAtual === 'metralhadora') {
-    animarMetralhadoraSprite();
+    // Toca som do rocket launcher
+    if (soundManager) {
+      console.log("SoundManager existe, tocando som...");
+      soundManager.playChaingun();
+    }
+    if (!isAnimatingSprite) {
+      startSpriteAnimation();
+    }
     // Metralhadora: apenas raycasting
       const origin = new THREE.Vector3();
       camera.getWorldPosition(origin);
@@ -409,7 +504,7 @@ function shoot() {
         // Verifica se é um Mesh válido e não é um sprite ou objeto da UI
         if (child.isMesh && 
             child !== cube && 
-            child !== cylinder && 
+            child !== rocketLauncher && 
             child !== shot && 
             child !== gunSprite &&
             child !== sunMesh &&
@@ -446,7 +541,22 @@ let gravidade = -0.003;
 function render() {
   requestAnimationFrame(render);
   const delta = clock.getDelta();
-  const velocidade = 20.0 * delta;
+  animarSprite();
+
+  // Inicializa o HP apenas uma vez quando os controles estão ativos
+  if (controls.isLocked && !window.playerHPInitialized) {
+    initPlayerHP();
+    window.playerHPInitialized = true;
+  }
+
+
+  const velocidade = () => 
+    {if(shiftPress){ 
+      console.log("shift");
+      return 20.0*delta*2;
+    }
+    else
+      return 20.0*delta};
 
   //Verificação de fim de ações na área
   if(contaLostSouls == 5){
@@ -458,7 +568,7 @@ function render() {
   }
 
 
-  if (controls.isLocked) {
+  if (controls.isLocked && isPlayerAlive()) {
 
     //PARTE DO TIRO
     activeShots.forEach((shot, index) => {
@@ -520,7 +630,9 @@ function render() {
         const soulBB = new THREE.Box3().setFromObject(soul.mesh);
         if (shot.userData.box.intersectsBox(soulBB)) {
           soul.hp -= 10;
-
+          if(soundManager) {
+            soundManager.playEnemyHit();
+          }
           // caso a alma morra
           if (soul.hp <= 0) {
             scene.remove(soul.mesh);
@@ -538,6 +650,9 @@ function render() {
         const cacodemonBB = new THREE.Box3().setFromObject(cacodemon.mesh);
         if (shot.userData.box.intersectsBox(cacodemonBB)) {
           cacodemon.hp -= 10;
+          if(soundManager) {
+            soundManager.playEnemyHit();
+          }
 
           if (cacodemon.hp <= 0) {
             scene.remove(cacodemon.mesh);
@@ -582,6 +697,9 @@ function render() {
 
           if (intersects.length > 0) {
             soul.hp -= 1;
+            if(soundManager) {
+            soundManager.playEnemyHit();
+            }
 
             if (soul.hp <= 0) {
               scene.remove(soul.mesh);
@@ -598,6 +716,9 @@ function render() {
 
           if (intersects.length > 0) {
             cacodemon.hp -= 1;
+            if(soundManager) {
+            soundManager.playEnemyHit();
+          }
 
             if (cacodemon.hp <= 0) {
               scene.remove(cacodemon.mesh);
@@ -691,12 +812,36 @@ function render() {
     }
 
     if(lerpConfigPlataform.move) {
-      plataform.position.lerp(lerpConfigPlataform.destination, lerpConfigPlataform.alpha);
-      plataformBox.setFromObject(plataform)
+  plataform.position.lerp(lerpConfigPlataform.destination, lerpConfigPlataform.alpha);
+  plataformBox.setFromObject(plataform);
 
-      if(plataform.position.distanceTo(lerpConfigPlataform.destination) < 0.1) 
-        downPlataform(); //Chegou no topo ela desce sempre
+  if(plataform.position.distanceTo(lerpConfigPlataform.destination) < 0.1) {
+    // Plataforma chegou ao destino - para o movimento e som
+    lerpConfigPlataform.move = false;
+    plataformMoving = false;
+    plataformSoundPlaying = false;
+     if (soundManager) {
+      soundManager.stop('plataformMove');
     }
+    if (plataform.position.y > 0) {
+      // Chegou no TOPO (posição Y positiva)
+      console.log("Plataforma chegou no topo!");
+      setTimeout(() => {
+        if (!plataformMoving) {
+          downPlataform();
+        }
+      }, 2000); // Espera 2 segundos antes de descer
+    } else {
+      // Chegou no CHÃO (posição Y negativa ou zero)
+      plataformaNoChao = true;
+      if (soundManager) {
+        soundManager.stop('plataformMove');
+      }
+      // Não faz nada - fica esperando o jogador pisar nela novamente
+    }
+  }
+}
+
 
 
     moveDir.normalize();
@@ -718,18 +863,18 @@ function render() {
       moveDir.normalize();
   
       // Tentativa completa
-      let newPos = pos.clone().add(moveDir.clone().multiplyScalar(velocidade));
+      let newPos = pos.clone().add(moveDir.clone().multiplyScalar(velocidade()));
       if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
         cube.position.copy(newPos);
       } 
       else {
         // Testar só o eixo X
-        newPos = pos.clone().add(new THREE.Vector3(moveDir.x, 0, 0).multiplyScalar(velocidade));
+        newPos = pos.clone().add(new THREE.Vector3(moveDir.x, 0, 0).multiplyScalar(velocidade()));
         if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
           cube.position.copy(newPos);
         } else {
           // Testar só o eixo Z
-          newPos = pos.clone().add(new THREE.Vector3(0, 0, moveDir.z).multiplyScalar(velocidade));
+          newPos = pos.clone().add(new THREE.Vector3(0, 0, moveDir.z).multiplyScalar(velocidade()));
           if (!checkCollisions(wallBoxes, areaBoxes, newPos)) {
             cube.position.copy(newPos);
           }
@@ -738,9 +883,10 @@ function render() {
 
       //Teste da plataforma
       if(cube.position.x > -9 && cube.position.x < 9 && cube.position.z < - 55 && cube.position.z > -65 && doorOpen) {
-        downPlataform();
+        if(!plataformaNoChao) {
+          downPlataform();
       }
-
+      }
     }
     //Se estiver fora da área da escada ele atualiza a gravidade
     const inLadderArea = laddersPosition.some(ladder => cube.position.x >= ladder.minX && cube.position.x <= ladder.maxX && cube.position.z >= ladder.minZ && cube.position.z <= ladder.maxZ);
@@ -753,6 +899,20 @@ function render() {
         
     updateLostSouls(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
     updateCacodemons(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
+
+     const damageReceived = checkPlayerDamage(cube.position, {
+      lostSouls: lostSouls,
+      cacodemons: cacodemons,
+      projectiles: projectiles
+    });
+
+    if(damageReceived){
+      // Se o jogador recebeu dano, tocar som
+      if (soundManager) {
+        soundManager.play('playerDamage');
+      }
+    }
+
   }
 
   renderer.render(scene, camera);
@@ -784,6 +944,10 @@ function atualizaGravidade(cube) {
   }
 }
 
+
+let plataformSoundPlaying = false;
+let plataformMoving = false;
+let plataformaNoChao = false;
 function checkCollisions(walls, areas, newCubePos) { 
 
   let collision = false;
@@ -795,6 +959,9 @@ function checkCollisions(walls, areas, newCubePos) {
   if(newCubePos.z < -60 && newCubePos.z > -181 && newCubePos.x > -220 && newCubePos.x < -92){
 
     if(futureBB.intersectsBox(suport1Box)){
+      if (soundManager && !hasKey1) {
+        soundManager.playKeyPickup();
+      }
       suport1.remove(key);
       key.visible = false;
       hasKey1 = true;
@@ -811,13 +978,16 @@ function checkCollisions(walls, areas, newCubePos) {
   //Testa blocos da área 2
   if(newCubePos.z < -53 && newCubePos.z > -181 && newCubePos.x > -64 && newCubePos.x < 64){
 
-    if(futureBB.intersectsBox(plataformBox)){
+    if(futureBB.intersectsBox(plataformBox) && !plataformMoving && plataformaNoChao){
       upPlataform();
       return false;
     }
 
     if(futureBB.intersectsBox(suport2Box)){
       if(hasKey1){
+        if (soundManager && !doorOpen) {
+          soundManager.playDoorOpen();
+        }
         suport2.add(key);
         key.visible = true;
         openArea2Door();
@@ -829,6 +999,7 @@ function checkCollisions(walls, areas, newCubePos) {
     if(futureBB.intersectsBox(suportTop2Box)){
       suportTop2.remove(key2);
       key2.visible = false;
+      hasKey2 = true;
       return true;
     }
 
@@ -897,15 +1068,32 @@ function openArea2Door(){
 }
 
 function upPlataform(){
+    // Só toca som se não estiver já movendo
+  if (soundManager) {
+    soundManager.playPlataformMove();
+    plataformSoundPlaying = true;
+    console.log('up');
+  }
+  
+  plataformMoving = true;
   lerpConfigPlataform.alpha = 0.01;
   lerpConfigPlataform.destination = new THREE.Vector3(0, 3, 57)
   lerpConfigPlataform.move = true; 
 }
 
 function downPlataform(){
+  if (!plataformMoving && soundManager) {
+    soundManager.playPlataformMove();
+    plataformSoundPlaying = true;
+    console.log('down');
+  }
+  
+  plataformMoving = true;
+ 
   lerpConfigPlataform.alpha = 0.02;
   lerpConfigPlataform.destination = new THREE.Vector3(0,-3,57);
   lerpConfigPlataform.move = true;
+  
 }
 
 function openArea3Door(){

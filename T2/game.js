@@ -91,6 +91,7 @@ function alternarParaLançador() {
   gunSprite.visible = false;
   shot.visible = true;
   cylinder.visible = true;
+  
 }
 
 function alternarParaMetralhadora() {
@@ -235,7 +236,7 @@ var shot = new THREE.Mesh(shotGeo,materialShot);
 shot.position.set(0,-2,0.2);
 shot.castShadow = true; // A bala também deve projetar sombras
 shot.receiveShadow = true; // A bala também deve receber sombras
-cylinder.add(shot);
+rocketLauncher.add(shot);
 
 camera.position.set(0,2,0); // posiciona a camera dentro do cubo
 cube.add(camera);           // faz a câmera seguir o cubo
@@ -343,7 +344,7 @@ function shoot() {
     shotClone.castShadow = true;
     shotClone.receiveShadow = true;
     
-    cylinder.add(shotClone);
+    rocketLauncher.add(shotClone);
     shotClone.updateMatrixWorld();
 
     // Captura a posição global antes de soltar da arma
