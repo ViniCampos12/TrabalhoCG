@@ -67,6 +67,19 @@ const lerpConfigPlataform = {
   move: false
 }
 
+const doorArea3Open = false;
+const lerpConfigDoor1Area3 = {
+  destination: new THREE.Vector3(111.8, 5, -66),
+  alpha: 0.015,
+  move: false
+}
+
+const lerpConfigDoor2Area3 = {
+  destination: new THREE.Vector3(203, 5, -66),
+  alpha: 0.01,
+  move: false
+}
+
 //Verificação da posição das escadas
 const laddersPosition = [
   {
@@ -192,6 +205,7 @@ let map = new Map(scene);
 const wallBoxes = map.getWallBoxes();
 const areaBoxes = map.getAreaBoxes(); 
 const collumnsBoxes = map.getCollumnsBoxes();
+const area3Boxes = map.getBBBlocksArea3();
 const blockBoxes = map.getBlocksBoxes();
 const rampMesh = map.getRamps();
 const suport1 = map.suport1;
@@ -206,6 +220,10 @@ const suportTop2 = map.suportTop2;
 const suportTop2Box = map.suportTop2Box;
 const key = map.keyMesh;
 const key2 = map.keyMesh2;
+const door1Area3 = map.portaHangar1;
+const door2Area3 = map.portaHangar2;
+const door1Area3Box = map.door1Area3Box;
+const door2Area3Box = map.door2Area3Box;
 let hasKey1 = false;
 let contaLostSouls = 0;
 let contaCacoDemons = 0;
@@ -280,6 +298,8 @@ document.addEventListener('keydown', (event) => {
     case 'Digit2':
         alternarParaLançador();
         break;
+    case 'KeyO':
+        openArea3Door();
   }
 }, false);
 
@@ -485,6 +505,15 @@ function render() {
         }
       }
 
+      if(!atingiuAlgo) {
+        for(const block of area3Boxes){
+          if (shot.userData.box.intersectsBox(block)) {
+            atingiuAlgo = true;
+            break;
+          }
+        }
+      }
+
       for (const soul of lostSouls) {
         if (soul.hp <= 0) continue; // já morto
 
@@ -637,6 +666,12 @@ function render() {
     if(lerpConfigDoor.move) {
       doorArea2.position.lerp(lerpConfigDoor.destination, lerpConfigDoor.alpha);
       doorBox.setFromObject(doorArea2); // Atualiza a bounding box da porta
+    }
+     if(lerpConfigDoor1Area3.move) {
+      door1Area3.position.lerp(lerpConfigDoor1Area3.destination, lerpConfigDoor1Area3.alpha);
+      door2Area3.position.lerp(lerpConfigDoor2Area3.destination, lerpConfigDoor2Area3.alpha);
+      door1Area3Box.setFromObject(door1Area3); // Atualiza a bounding box da porta
+      door2Area3Box.setFromObject(door2Area3); // Atualiza a bounding box da porta
     }
     
     //Subida da plataforma da area 2
@@ -804,6 +839,14 @@ function checkCollisions(walls, areas, newCubePos) {
     }
   } 
 
+  if(newCubePos.z < -53 && newCubePos.z > -182 && newCubePos.x > 90 && newCubePos.x < 230){
+    for(const block of area3Boxes){
+      if(futureBB.intersectsBox(block)){
+        return true;
+      }
+    }
+  }
+
   //No alto não ter colisão
   if(newCubePos.y > 3){return false} 
 
@@ -863,6 +906,12 @@ function downPlataform(){
   lerpConfigPlataform.alpha = 0.02;
   lerpConfigPlataform.destination = new THREE.Vector3(0,-3,57);
   lerpConfigPlataform.move = true;
+}
+
+function openArea3Door(){
+  lerpConfigDoor1Area3.move = true;
+  lerpConfigDoor2Area3.move = true;
+  doorArea3Open = true;
 }
 
 render();
