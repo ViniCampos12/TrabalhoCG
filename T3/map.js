@@ -24,7 +24,7 @@ class Map{
     this.suport2Box = null;
     this.door = null; // Porta da área 2
     this.doorBox = null; // Bounding box da porta
-    var textureLoader = new THREE.TextureLoader();
+    this.textureLoader = new THREE.TextureLoader();
 
     // PLANO
     let planeGeometry = new THREE.PlaneGeometry(500, 500, 100, 100);
@@ -42,7 +42,7 @@ class Map{
     scene.add(plane);
     
 
-    var floorTexture = textureLoader.load('../assets/textures/intertravado.jpg');
+    var floorTexture = this.textureLoader.load('../assets/textures/intertravado.jpg');
     floorTexture.colorSpace = THREE.SRGBColorSpace;
 
     plane.material.map = floorTexture;
@@ -59,14 +59,14 @@ class Map{
     // ÁREA 1
 
     /// 1. Carregar texturas separadas para cada parte
-    let texturaTopoPrincipal = textureLoader.load('assets/images/area1cortada.png');
-    let texturaTopoExtendida = textureLoader.load('assets/images/area1cortada.png'); // Textura diferente para a parte extendida
-    let texturaLateral = textureLoader.load('assets/images/area1clara.jpg');
+    let texturaTopoPrincipal = this.textureLoader.load('assets/images/chaoArea1.png');
+    let texturaTopoExtendida = this.textureLoader.load('assets/images/chaoArea1.png'); // Textura diferente para a parte extendida
+    let texturaLateral = this.textureLoader.load('assets/images/area1clara.jpg');
 
     // Configurar repetições
     texturaTopoPrincipal.wrapS = THREE.RepeatWrapping;
     texturaTopoPrincipal.wrapT = THREE.RepeatWrapping;
-    texturaTopoPrincipal.repeat.set(124/20, 116/20); // Ajuste conforme necessário
+    texturaTopoPrincipal.repeat.set(8, 8); // Ajuste conforme necessário
     texturaTopoPrincipal.colorSpace = THREE.SRGBColorSpace;
 
     texturaTopoExtendida.wrapS = THREE.RepeatWrapping;
@@ -76,7 +76,7 @@ class Map{
 
     texturaLateral.wrapS = THREE.RepeatWrapping;
     texturaLateral.wrapT = THREE.RepeatWrapping;
-    texturaLateral.repeat.set(1, 1);
+    texturaLateral.repeat.set(8, 1);
     texturaLateral.colorSpace = THREE.SRGBColorSpace; // Configurar cor para sRGB
 
     // 2. Criar materiais separados
@@ -143,25 +143,55 @@ class Map{
       xInicial -= 18;
     }
 
+
+    let topTexture = this.textureLoader.load('assets/images/area1clara.jpg');
+    topTexture.colorSpace = THREE.SRGBColorSpace;
+    topTexture.wrapS = THREE.RepeatWrapping;
+    topTexture.wrapT = THREE.RepeatWrapping;
+    topTexture.repeat.set(6,0.5);
+
+    let frenteTopTexture = this.textureLoader.load('assets/images/area1clara.jpg');
+    frenteTopTexture.colorSpace = THREE.SRGBColorSpace;
+    frenteTopTexture.wrapS = THREE.RepeatWrapping;
+    frenteTopTexture.wrapT = THREE.RepeatWrapping;
+    frenteTopTexture.repeat.set(1,0.5);
+
+    let backTopTexture = this.textureLoader.load('assets/images/area1clara.jpg');
+    backTopTexture.colorSpace = THREE.SRGBColorSpace;
+    backTopTexture.wrapS = THREE.RepeatWrapping;
+    backTopTexture.wrapT = THREE.RepeatWrapping;
+    backTopTexture.repeat.set(8,0.5);
     
-    //Add collumns on the top
-    let topCollumnGeometry = new THREE.BoxGeometry(5,2,80);
-    let topCollumn = new THREE.Mesh(topCollumnGeometry, new THREE.MeshLambertMaterial({color: "rgb(159, 146, 121)"}));
+    let materialArray = [
+        new THREE.MeshLambertMaterial({ map: topTexture }), // direita
+        new THREE.MeshLambertMaterial({ map: topTexture }), // esquerda
+        new THREE.MeshLambertMaterial({ map: topTexture }), // topo
+        new THREE.MeshLambertMaterial({ map: frenteTopTexture }), // fundo
+        new THREE.MeshLambertMaterial({ map: frenteTopTexture }), // frente
+        new THREE.MeshLambertMaterial({ map: topTexture })  // trás
+    ];
+
+    
+
+    let topCollumnGeometry = new THREE.BoxGeometry(5, 2, 80);
+    let topCollumn = new THREE.Mesh(topCollumnGeometry, materialArray);
     topCollumn.castShadow = true;
     topCollumn.receiveShadow = true;
+
     topCollumn.position.set(59, 23, -13);
     area1.add(topCollumn);
 
-    let topCollumn2 = new THREE.Mesh(topCollumnGeometry, new THREE.MeshLambertMaterial({color: "rgb(159, 146, 121)"}));
+    let topCollumn2 = new THREE.Mesh(topCollumnGeometry, materialArray);
     topCollumn2.castShadow = true;
     topCollumn2.receiveShadow = true;
     topCollumn2.position.set(-59, 23, -13);
     area1.add(topCollumn2);
     
     let topCollumnGeometryBack = new THREE.BoxGeometry(123,2,5);
-    let topCollumnBack = new THREE.Mesh(topCollumnGeometryBack, new THREE.MeshLambertMaterial({color: "rgb(159, 146, 121)"}));
+    let topCollumnBack = new THREE.Mesh(topCollumnGeometryBack, new THREE.MeshLambertMaterial());
     topCollumnBack.castShadow = true;
     topCollumnBack.receiveShadow = true;
+    topCollumnBack.material.map = backTopTexture;
     topCollumnBack.position.set(0, 23, -52);
     area1.add(topCollumnBack);
     
@@ -420,12 +450,19 @@ class Map{
   }
 
   createColluns(area, x, y, z, rotacionaFundo){
+    const colunaTexture = this.textureLoader.load('assets/images/coluna.png ');
+    colunaTexture.wrapS = THREE.RepeatWrapping;
+    colunaTexture.wrapT = THREE.RepeatWrapping;
+    colunaTexture.repeat.set(1, 1); 
+
     let collumnGeometry = new THREE.CylinderGeometry(2, 2, 20);
-    let collumnMaterial = new THREE.MeshLambertMaterial({ color: "rgb(159, 146, 121)" });
+    let collumnMaterial = new THREE.MeshLambertMaterial();
     let collumn = new THREE.Mesh(collumnGeometry, collumnMaterial);
     collumn.castShadow = true; 
     collumn.receiveShadow = true; 
     collumn.position.set(x, y, z);
+    collumn.material.map = colunaTexture;
+    collumn.material.color.multiplyScalar(0.9);
     area.add(collumn); // Adiciona primeiro à área
 
     // Atualiza matriz mundial para que o THREE saiba a posição correta do objeto no mundo
