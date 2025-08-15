@@ -300,7 +300,7 @@ class Map{
     scene.add(fundoHangar);
     this.blocksArea3.push(new THREE.Box3().setFromObject(fundoHangar));
 
-    scene.add(this.createTopHangar());
+    //scene.add(this.createTopHangar());
 
     //Cria frente hangar
     let frenteHangar1 = new THREE.Mesh(new THREE.BoxGeometry(33, 30, 2), materialGray);

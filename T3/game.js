@@ -20,6 +20,7 @@ import {
   toggleGodMode
 } from './player.js';
 import SoundManager from './sounds.js';
+import { soldiers, spawnSoldiers, updateSoldiers } from './soldier.js';
 
 
 let scene = new THREE.Scene();
@@ -175,6 +176,7 @@ scene.add(directionalLightBack);
 
 var blocked = false;
 var blocked2 = false;
+var blocked3 = false;
 
 //MAPA
 let map = new Map(scene);
@@ -664,6 +666,27 @@ function render() {
         }
       }
 
+      for (const soldier of soldiers) {
+  if (soldier.hp <= 0) continue;
+  const soldierBB = new THREE.Box3().setFromObject(soldier.mesh);
+  if (shot.userData.box.intersectsBox(soldierBB)) {
+    soldier.hp -= 10;
+    if (soundManager) soundManager.playEnemyHit();
+
+    if (soldier.hp <= 0) {
+      scene.remove(soldier.mesh);
+      // Remova a barra de vida também, se necessário:
+      if (soldier.healthBar) soldier.mesh.remove(soldier.healthBar);
+
+      // Remover da lista
+      const idx = soldiers.indexOf(soldier);
+      if (idx !== -1) soldiers.splice(idx, 1);
+    }
+    atingiuAlgo = true;
+    break;
+  }
+}
+
 
       if (shot.position.length() > 500 || atingiuAlgo) {
         scene.remove(shot);
@@ -727,6 +750,26 @@ function render() {
             break;
           }
         }
+
+        for (const soldier of soldiers) {
+  if (soldier.hp <= 0) continue;
+
+  const intersects = raycasterShoot.intersectObject(soldier.mesh, true);
+
+  if (intersects.length > 0) {
+    soldier.hp -= 1;
+    if (soundManager) soundManager.playEnemyHit();
+
+    if (soldier.hp <= 0) {
+      scene.remove(soldier.mesh);
+      if (soldier.healthBar) soldier.mesh.remove(soldier.healthBar);
+      const idx = soldiers.indexOf(soldier);
+      if (idx !== -1) soldiers.splice(idx, 1);
+    }
+    break;
+  }
+}
+
       }
     } 
     else {
@@ -858,6 +901,13 @@ function render() {
       blocked2 = true;
     }
 
+    if(cube.position.x < 218 && cube.position.x > 94 && cube.position.z > -179 && cube.position.z < -79 && blocked3==false)
+    {
+      spawnSoldiers();
+      blocked3 = true;
+    }
+
+
     if (moveDir.lengthSq() > 0) {
 
       moveDir.normalize();
@@ -898,11 +948,13 @@ function render() {
       atualizaGravidade(cube);
         
     updateLostSouls(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
-    updateCacodemons(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
+    updateCacodemons(cube, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes);
+    updateSoldiers(cube, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes);
 
      const damageReceived = checkPlayerDamage(cube.position, {
       lostSouls: lostSouls,
       cacodemons: cacodemons,
+      soldiers: soldiers,
       projectiles: projectiles
     });
 

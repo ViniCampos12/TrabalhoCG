@@ -138,7 +138,7 @@ function getRandomOffsetTarget(position, radius = 10) //Randomiza patrulha do ca
   return new THREE.Vector3(position.x + dx, position.y, position.z + dz);
 }
 
-export function checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes) //Checa a colisão dos cacodemons
+export function checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes) //Checa a colisão dos cacodemons
 {
   const futureBB = new THREE.Box3().setFromCenterAndSize(newPos, new THREE.Vector3(8, 8, 8)); //Tamanho diferente do lostsoul, pois o cacodemon é maior
 
@@ -162,6 +162,12 @@ export function checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, collum
   }
   //Testa areas
   for (const area of areaBoxes) {
+    if (futureBB.intersectsBox(area)) {
+      return true;
+    }
+  }
+
+  for (const area of area3Boxes) {
     if (futureBB.intersectsBox(area)) {
       return true;
     }
@@ -296,7 +302,7 @@ export function updateCacodemons(player, wallBoxes, areaBoxes, collumnsBoxes, bl
   moveVec.subVectors(cacodemon.patrolTarget, cacodemon.mesh.position).setY(0).normalize().multiplyScalar(0.02);
   newPos.copy(cacodemon.mesh.position).add(moveVec);
 
-  if (!checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes))
+  if (!checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes))
     {
     cacodemon.mesh.position.copy(newPos);
     cacodemon.mesh.lookAt(cacodemon.patrolTarget);
@@ -326,7 +332,7 @@ export function updateCacodemons(player, wallBoxes, areaBoxes, collumnsBoxes, bl
   moveVec.add(sideVec);
   newPos.copy(cacodemon.mesh.position).add(moveVec);
 
-  if (!checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
+  if (!checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes)) {
     cacodemon.mesh.position.copy(newPos);
 
     //Olha na direção do movimento, não para o jogador
