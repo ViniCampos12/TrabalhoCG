@@ -360,7 +360,7 @@ export function updateCacodemons(player, wallBoxes, areaBoxes, collumnsBoxes, bl
   console.log('Jogador atingido por projétil do Cacodemon!');
   
 
-    if (window.takeDamage && !godModeEnabled) {
+    if (window.takeDamage && !window.godModeEnabled) {
       window.takeDamage(15); // Projétil causa 15 de dano
       console.log('Dano aplicado ao player!');
       if (window.soundManager) {

@@ -20,7 +20,7 @@ import {
   toggleGodMode
 } from './player.js';
 import SoundManager from './sounds.js';
-
+import Airplane from "./airplane.js";
 
 let scene = new THREE.Scene();
 // Cria um SkyDome com textura de céu
@@ -172,12 +172,101 @@ directionalLightBack.castShadow = false; // não projeta sombras
 
 scene.add(directionalLightBack);
 
+// LUZ DO HANGAR (interna) - posicionada na entrada virada para o fundo
+const hangarLight = new THREE.DirectionalLight("rgb(200, 180, 120)", 0); 
+hangarLight.position.set(156, 30, -65); // Posição na entrada (z = -65)
+hangarLight.target.position.set(110, 100, -171); // Target para iluminar melhor a area
+scene.add(hangarLight.target); 
+hangarLight.castShadow = false; 
+hangarLight.visible = true; 
+scene.add(hangarLight);
+
+// VARIÁVEIS DE CONTROLE DA ILUMINAÇÃO DO HANGAR
+let isPlayerInHangar = false;
+let lastHangarCheck = 0;
+const HANGAR_CHECK_INTERVAL = 100; // Verifica a cada 100ms
+
+function checkPlayerInHangar(playerPosition) {
+  // Coordenadas da Área 3 (hangar) baseadas no map.js
+  const hangarBounds = {
+    minX: 94,   // Limite esquerdo
+    maxX: 218,  // Limite direito
+    minZ: -171, // Limite do fundo
+    maxZ: -65,  // Limite da frente
+    minY: 0,    // Chão
+    maxY: 30    // Teto
+  };
+
+  const x = playerPosition.x;
+  const y = playerPosition.y;
+  const z = playerPosition.z;
+
+  return (x >= hangarBounds.minX && x <= hangarBounds.maxX &&
+          z >= hangarBounds.minZ && z <= hangarBounds.maxZ &&
+          y >= hangarBounds.minY && y <= hangarBounds.maxY);
+}
+
+// Função para alternar a iluminação com transição suave
+let lightTransitionProgress = 0;
+let isTransitioning = false;
+const TRANSITION_SPEED = 3.0; // Velocidade da transição
+
+function smoothToggleHangarLighting(inHangar) {
+  if (isTransitioning) return; // Evita múltiplas transições
+  
+  isTransitioning = true;
+  lightTransitionProgress = 0;
+  
+  // Intensidades iniciais e finais
+  const startMainIntensity = directionalLight.intensity;
+  const startBackIntensity = directionalLightBack.intensity;
+  const startHangarIntensity = hangarLight.intensity;
+  
+  // AJUSTE AS INTENSIDADES AQUI:
+  const targetMainIntensity = inHangar ? 0 : 6.0; // Reduz para 50% em vez de 0
+  const targetBackIntensity = inHangar ? 4 : 1.0; // Mantém um pouco da luz traseira
+  const targetHangarIntensity = inHangar ? 4 : 0; // Aumenta a luz do hangar
+  
+  // Garante que todas as luzes estejam visíveis durante a transição
+  directionalLight.visible = true;
+  directionalLightBack.visible = true;
+  hangarLight.visible = true;
+  
+  const transition = () => {
+    lightTransitionProgress += TRANSITION_SPEED * 0.016; // ~16ms por frame
+    
+    if (lightTransitionProgress >= 1) {
+      lightTransitionProgress = 1;
+      isTransitioning = false;
+      
+      // NÃO DESLIGA MAIS AS LUZES - apenas reduz intensidade
+      console.log(inHangar ? '🏢 Iluminação do hangar ativa' : '🌞 Iluminação externa restaurada');
+    }
+    
+    // Interpola a intensidade das luzes
+    const t = lightTransitionProgress;
+    directionalLight.intensity = startMainIntensity + (targetMainIntensity - startMainIntensity) * t;
+    directionalLightBack.intensity = startBackIntensity + (targetBackIntensity - startBackIntensity) * t;
+    hangarLight.intensity = startHangarIntensity + (targetHangarIntensity - startHangarIntensity) * t;
+    
+    if (isTransitioning) {
+      requestAnimationFrame(transition);
+    }
+  };
+  
+  transition();
+}
 
 var blocked = false;
 var blocked2 = false;
 
 //MAPA
 let map = new Map(scene);
+
+// CRIA O AVIÃO:
+let airplane = new Airplane(scene);
+
+ 
 
 //Variáveis importante advindas do map
 const wallBoxes = map.getWallBoxes();
@@ -900,6 +989,20 @@ function render() {
     updateLostSouls(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
     updateCacodemons(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
 
+      // VERIFICAÇÃO DE ILUMINAÇÃO DO HANGAR (com throttling)
+    lastHangarCheck += delta * 1000; // Converte para ms
+    if (lastHangarCheck >= HANGAR_CHECK_INTERVAL) {
+      lastHangarCheck = 0;
+      
+      const playerInHangar = checkPlayerInHangar(cube.position);
+      
+      // Só alterna se o estado mudou
+      if (playerInHangar !== isPlayerInHangar) {
+        isPlayerInHangar = playerInHangar;
+        smoothToggleHangarLighting(isPlayerInHangar);
+      }
+    }
+    
      const damageReceived = checkPlayerDamage(cube.position, {
       lostSouls: lostSouls,
       cacodemons: cacodemons,
@@ -1097,6 +1200,9 @@ function downPlataform(){
 }
 
 function openArea3Door(){
+  if(soundManager) {
+    soundManager.playDoorOpen();
+  }
   lerpConfigDoor1Area3.move = true;
   lerpConfigDoor2Area3.move = true;
   doorArea3Open = true;
