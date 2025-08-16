@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { scene } from './game.js';
 import { GLTFLoader } from '../build/jsm/loaders/GLTFLoader.js';
-
+import { soundManager } from './game.js';
 
 const cacodemons = [];
 const projectiles = [];
@@ -177,6 +177,9 @@ export function checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, collum
 }
 
 export function spawnCacodemons(blockBoxes) {
+  if(soundManager){
+    soundManager.playCacodemonSpawn();
+  }
   const numToSpawn = 3;
   if (blockBoxes.length < numToSpawn) {
     return;
@@ -279,6 +282,9 @@ export function updateCacodemons(player, wallBoxes, areaBoxes, collumnsBoxes, bl
     //Transições de estado (passivo e ativo)
     if (cacodemon.state === 'passive' && distToPlayer < 80) {
       cacodemon.state = 'active';
+      if(soundManager){
+        soundManager.playCacodemonNearby();
+      }
     } else if (cacodemon.state === 'active' && distToPlayer > 100) {
       cacodemon.state = 'passive';
     }
@@ -336,6 +342,9 @@ export function updateCacodemons(player, wallBoxes, areaBoxes, collumnsBoxes, bl
 
   //Ataca se estiver no intervalo de tiro
   if (distToPlayer < 80 && now - cacodemon.timers.lastFire > fireInterval) {
+    if(soundManager){
+      soundManager.playCacodemonAttack();
+    }
     const projectile = createProjectile(cacodemon.mesh.position, forwardDir);
     projectiles.push(projectile);
     cacodemon.timers.lastFire = now;

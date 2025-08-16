@@ -22,6 +22,12 @@ class SoundManager {
       plataformMove: '../0_assetsT3/sounds/plataformaMovendo.wav',
       backgroundMusic: '../0_assetsT3/sounds/doom.mp3',
       enemyHit: '../0_assetsT3/sounds/lostSoul/injured.wav',
+      lostSoulAttack: '../0_assetsT3/sounds/lostSoul/lost_soul_attack.wav',
+      enemyAttack: '../0_assetsT3/sounds/cacodemons/cacodemonAttack.wav',
+      cacodemonAttack: '../0_assetsT3/sounds/cacoDemon/cacodemonAttack.wav',
+      cacodemonDeath: '../0_assetsT3/sounds/cacoDemon/cacodemonDeath.wav',
+      cacodemonSpawn: '../0_assetsT3/sounds/cacoDemon/cacodemonSight.wav',
+      cacodemonNearby: '../0_assetsT3/sounds/cacoDemon/cacodemonNearby.wav'
     };
 
     // Carrega todos os sons
@@ -141,6 +147,21 @@ class SoundManager {
   isPlaying(soundName) {
     const sound = this.sounds[soundName];
     return sound ? sound.isPlaying : false;
+  }
+  playLostSoulAttack(){
+    this.play('enemyAttack', 0.7);
+  }
+  playCacodemonAttack(){
+    this.play('cacodemonAttack', 0.7);
+  }
+  playCacodemonDeath() {
+    this.play('cacodemonDeath', 0.7);
+  }
+  playCacodemonSpawn() {
+    this.play('cacodemonSpawn', 0.7);
+  }
+  playCacodemonNearby() {
+    this.play('cacodemonNearby', 0.7);
   }
 
   // Sons específicos do jogo

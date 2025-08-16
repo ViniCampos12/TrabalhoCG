@@ -744,6 +744,9 @@ function render() {
           }
 
           if (cacodemon.hp <= 0) {
+            if(soundManager){
+              soundManager.playCacodemonDeath();
+            }
             scene.remove(cacodemon.mesh);
             contaCacoDemons++;
           }
@@ -1210,4 +1213,7 @@ function openArea3Door(){
 
 render();
 
-export {scene};
+export {
+  scene,
+  soundManager
+};
