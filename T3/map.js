@@ -25,6 +25,8 @@ class Map{
     this.door = null; // Porta da área 2
     this.doorBox = null; // Bounding box da porta
     this.textureLoader = new THREE.TextureLoader();
+    this.auxMat = new THREE.Matrix4();
+
 
     // PLANO
     let planeGeometry = new THREE.PlaneGeometry(500, 500, 100, 100);
@@ -53,8 +55,9 @@ class Map{
 
     // ÁREA MAIOR
     let material = new THREE.MeshLambertMaterial({ color: "rgb(63,81,181)" });
-    let area = this.createBiggerArea(material,0,3,125);
-    scene.add(area);
+    // let area = this.createBiggerArea(material,0,3,125);
+    // scene.add(area);
+    this.createBiggerArea(material,0,3,125);
 
     // ÁREA 1
 
@@ -330,7 +333,7 @@ class Map{
     scene.add(fundoHangar);
     this.blocksArea3.push(new THREE.Box3().setFromObject(fundoHangar));
 
-    //scene.add(this.createTopHangar());
+    scene.add(this.createTopHangar());
 
     //Cria frente hangar
     let frenteHangar1 = new THREE.Mesh(new THREE.BoxGeometry(33, 30, 2), materialGray);
@@ -374,39 +377,102 @@ class Map{
   }
 
   createBiggerArea(material, x, y, z){
-    let areaGeometry = new THREE.BoxGeometry(312, 6, 124);
-    let area = new THREE.Mesh(areaGeometry, material);
-    area.position.set(x, y, z);
-    area.castShadow = true; // A área principal deve projetar sombras
-    area.receiveShadow = true; // A área principal deve receber sombras
 
-    let extendedAreaGeometry = new THREE.BoxGeometry(140,6,8);
-    for(let i=-1;i<2;i=i+2){
-        let extendedArea = new THREE.Mesh(extendedAreaGeometry,material);
-        extendedArea.castShadow = true; // As extensões também devem projetar sombras
-        extendedArea.receiveShadow = true; // As extensões também devem receber sombras
-        area.add(extendedArea);
-        extendedArea.position.set(i*86,0,-66);
+    let floorArea4 = new THREE.Mesh(new THREE.BoxGeometry(287,0.2,102),new THREE.MeshLambertMaterial({color: "rgba(103, 105, 107, 1)"}));
+    floorArea4.receiveShadow = true;
+    floorArea4.position.set(0,0.1,121);
+    this.scene.add(floorArea4);
+
+    this.createTowers(-146,20,70);
+    this.createTowers(-146,20,177);
+    this.createTowers(146,20,70);
+    this.createTowers(146,20,177);
+
+    let fortressWallCSGFront = this.createCSGFortressWall(282,5);
+    let fortressWallFront = CSG.toMesh(fortressWallCSGFront,this.auxMat,new THREE.MeshLambertMaterial({ color: "rgba(52, 68, 67, 1)" }));
+    fortressWallFront.castShadow = true;
+    fortressWallFront.receiveShadow = true;
+
+    fortressWallFront.position.set(0, 10, 70);
+
+    this.scene.add(fortressWallFront);
+
+     let fortressWallCSGBack = this.createCSGFortressWall(282,5);
+    let fortressWallBack = CSG.toMesh(fortressWallCSGBack,this.auxMat,new THREE.MeshLambertMaterial({ color: "rgba(52, 68, 67, 1)" }));
+    fortressWallBack.castShadow = true;
+    fortressWallBack.receiveShadow = true;
+
+    fortressWallBack.position.set(0, 10, 177);
+
+    this.scene.add(fortressWallBack);
+
+     let fortressWallCSGLeft = this.createCSGFortressWall(5,97);
+    let fortressWallLeft = CSG.toMesh(fortressWallCSGLeft,this.auxMat,new THREE.MeshLambertMaterial({ color: "rgba(52, 68, 67, 1)" }));
+    fortressWallLeft.castShadow = true;
+    fortressWallLeft.receiveShadow = true;
+
+    fortressWallLeft.position.set(-146, 10, 118.5);
+
+    this.scene.add(fortressWallLeft);
+
+
+     let fortressWallCSGRight = this.createCSGFortressWall(5,97);
+    let fortressWallRight = CSG.toMesh(fortressWallCSGRight,this.auxMat,new THREE.MeshLambertMaterial({ color: "rgba(52, 68, 67, 1)" }));
+    fortressWallRight.castShadow = true;
+    fortressWallRight.receiveShadow = true;
+
+    fortressWallRight.position.set(146, 10, 118.5);
+
+    this.scene.add(fortressWallRight);
+
+    for(let x = -134.25; x<146; x=x+23.5){
+      this.createTopFortressBlock(x,70,false);
+      this.createTopFortressBlock(x,177,false);
+    }
+
+    for(let z = 86.75; z<177;z=z+23.5){
+      this.createTopFortressBlock(146,z,true);
+      this.createTopFortressBlock(-146,z,true);
     }
 
 
-    let angleLadder = THREE.MathUtils.degToRad(180);
 
-    for(let i =-1;i<2;i++){
-      this.ladder = new Ladder(material);
-      let ladderCreated = this.ladder.createLadder();
-      area.add(ladderCreated);
-      ladderCreated.position.set(8.2*i,2.6,-62.5);
-      ladderCreated.rotateY(angleLadder);
-      const b = new THREE.Box3().setFromObject(ladderCreated);
-      this.ramps.push(this.ladder.getRampMesh());
-    }
 
-    //Create bb
-    const wallBox = new THREE.Box3().setFromObject(area);
-    this.areasBox.push(wallBox);
 
-    return area;
+
+    //  let profundidadeTopo = 108; 
+    // let bigCylinderMesh = new THREE.Mesh(new THREE.CylinderGeometry(80, 80, profundidadeTopo, 32));
+    // let smallCylinderMesh = new THREE.Mesh(new THREE.CylinderGeometry(78, 78, profundidadeTopo-2, 32));
+    // let quadradoMesh = new THREE.Mesh(new THREE.BoxGeometry(800, 800, 100 ));
+
+    // bigCylinderMesh.matrixAutoUpdate = false;
+    // bigCylinderMesh.updateMatrix();
+    // smallCylinderMesh.matrixAutoUpdate = false;
+    // smallCylinderMesh.updateMatrix();
+    // quadradoMesh.matrixAutoUpdate = false;
+    // quadradoMesh.updateMatrix();
+    // quadradoMesh.position.set(0, 0, 0);
+    // quadradoMesh.rotateX(THREE.MathUtils.degToRad(90));
+
+    // let bigCylinderCSG = CSG.fromMesh(bigCylinderMesh);
+    // let quadradoCSG = CSG.fromMesh(quadradoMesh);
+    // let smallCylinderCSG = CSG.fromMesh(smallCylinderMesh);
+    // let csgObjectPre = bigCylinderCSG.subtract(smallCylinderCSG); // Subtrai o cilindro menor do maior
+    // let csgObject = csgObjectPre.subtract(quadradoCSG);
+
+    // let topoHangarMesh = CSG.toMesh(csgObject, this.auxMat);
+    // topoHangarMesh.material = new THREE.MeshLambertMaterial({ color: "rgba(52, 68, 67, 1)" });
+    // topoHangarMesh.castShadow = true;
+    // topoHangarMesh.receiveShadow = true;
+
+    // // Rotaciona para a posição horizontal
+    // topoHangarMesh.rotateX(Math.PI / 2);
+
+    // // Ajusta posição para compensar altura menor
+    // topoHangarMesh.position.set(156, -30, -118);
+
+    // return topoHangarMesh;
+
    }
 
   createDefaultArea(materials, x, y, z,height){
@@ -494,7 +560,6 @@ class Map{
   }
 
   createKey(color){
-    let auxMat = new THREE.Matrix4();
     let cubeMesh = new THREE.Mesh(new THREE.BoxGeometry(1.4,1.4,1.4));
     let cylinderMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.4, 20));
     let cylinderMesh2 = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.4, 20));
@@ -521,7 +586,7 @@ class Map{
     let cylinderCSG3 = CSG.fromMesh(cylinderMesh3);
 
     let csgObject = cubeCSG.subtract(cylinderCSG).subtract(cylinderCSG2).subtract(cylinderCSG3); //Subtrações para chegar na chave
-    let keyMesh = CSG.toMesh(csgObject, auxMat);
+    let keyMesh = CSG.toMesh(csgObject, this.auxMat);
     keyMesh.material = new THREE.MeshPhongMaterial({
       color: color,
       shininess: 300, 
@@ -533,8 +598,6 @@ class Map{
   }
 
  createTopHangar(){
-    let auxMat = new THREE.Matrix4();
-
     let profundidadeTopo = 108; 
     let bigCylinderMesh = new THREE.Mesh(new THREE.CylinderGeometry(80, 80, profundidadeTopo, 32));
     let smallCylinderMesh = new THREE.Mesh(new THREE.CylinderGeometry(78, 78, profundidadeTopo-2, 32));
@@ -555,7 +618,7 @@ class Map{
     let csgObjectPre = bigCylinderCSG.subtract(smallCylinderCSG); // Subtrai o cilindro menor do maior
     let csgObject = csgObjectPre.subtract(quadradoCSG);
 
-    let topoHangarMesh = CSG.toMesh(csgObject, auxMat);
+    let topoHangarMesh = CSG.toMesh(csgObject, this.auxMat);
     topoHangarMesh.material = new THREE.MeshLambertMaterial({ color: "rgba(52, 68, 67, 1)" });
     topoHangarMesh.castShadow = true;
     topoHangarMesh.receiveShadow = true;
@@ -568,6 +631,47 @@ class Map{
 
     return topoHangarMesh;
 }
+
+  createTowers(x,y,z){
+    let cylinderMesh = new THREE.Mesh(new THREE.CylinderGeometry(10,10,40));
+    cylinderMesh.matrixAutoUpdate = false;
+    cylinderMesh.updateMatrix();
+
+    let cylinderCSG = CSG.fromMesh(cylinderMesh);
+
+    let tower = CSG.toMesh(cylinderCSG, this.auxMat);
+    tower.material = new THREE.MeshLambertMaterial({color: "rgba(103, 105, 107, 1)"});
+    tower.receiveShadow = true;
+    tower.castShadow = true;
+
+    tower.position.set(x,y,z);
+
+    this.scene.add(tower);
+  }
+
+  createCSGFortressWall(largura, profundidade){
+    let fortressWallMesh = new THREE.Mesh(new THREE.BoxGeometry(largura,20,profundidade));
+    fortressWallMesh.matrixAutoUpdate = false;
+    fortressWallMesh.updateMatrix();
+
+    let fortressWallCSG = CSG.fromMesh(fortressWallMesh);
+
+    return fortressWallCSG;
+  }
+
+  createTopFortressBlock(posx,posz,isTurned){
+    let topFortressBlockMesh;
+    if(isTurned){
+      topFortressBlockMesh = new THREE.Mesh(new THREE.BoxGeometry(5,3,13.5),new THREE.MeshLambertMaterial({color: "rgba(103, 105, 107, 1)"}));
+    }
+    else{
+      topFortressBlockMesh = new THREE.Mesh(new THREE.BoxGeometry(13.5,3,5),new THREE.MeshLambertMaterial({color: "rgba(103, 105, 107, 1)"}));
+    }
+    topFortressBlockMesh.castShadow = true;
+    topFortressBlockMesh.receiveShadow = true;
+    topFortressBlockMesh.position.set(posx,21.5,posz);
+    this.scene.add(topFortressBlockMesh);
+  }
 
 
   getWallBoxes(){
