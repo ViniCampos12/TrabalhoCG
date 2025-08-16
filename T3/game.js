@@ -756,11 +756,48 @@ function render() {
           }
 
           if (cacodemon.hp <= 0) {
-            if(soundManager){
-              soundManager.playCacodemonDeath();
-            }
             scene.remove(cacodemon.mesh);
             contaCacoDemons++;
+          }
+
+          atingiuAlgo = true;
+          break;
+        }
+      }
+
+      for (const soldier of soldiers) {
+  if (soldier.hp <= 0) continue;
+  const soldierBB = new THREE.Box3().setFromObject(soldier.mesh);
+  if (shot.userData.box.intersectsBox(soldierBB)) {
+    soldier.hp -= 10;
+    if (soundManager) soundManager.playEnemyHit();
+
+    if (soldier.hp <= 0) {
+      scene.remove(soldier.mesh);
+      // Remova a barra de vida também, se necessário:
+      if (soldier.healthBar) soldier.mesh.remove(soldier.healthBar);
+
+      // Remover da lista
+      const idx = soldiers.indexOf(soldier);
+      if (idx !== -1) soldiers.splice(idx, 1);
+    }
+    atingiuAlgo = true;
+    break;
+  }
+}
+
+        for (const pain of painElementals) {
+        if (pain.hp <= 0) continue;
+
+        const painElementalBB = new THREE.Box3().setFromObject(pain.mesh);
+        if (shot.userData.box.intersectsBox(painElementalBB)) {
+          pain.hp -= 10;
+          if(soundManager) {
+            soundManager.playEnemyHit();
+          }
+
+          if (pain.hp <= 0) {
+            scene.remove(pain.mesh);
           }
 
           atingiuAlgo = true;
@@ -831,6 +868,42 @@ function render() {
             break;
           }
         }
+
+        for (const soldier of soldiers) {
+  if (soldier.hp <= 0) continue;
+
+  const intersects = raycasterShoot.intersectObject(soldier.mesh, true);
+
+  if (intersects.length > 0) {
+    soldier.hp -= 1;
+    if (soundManager) soundManager.playEnemyHit();
+
+    if (soldier.hp <= 0) {
+      scene.remove(soldier.mesh);
+      if (soldier.healthBar) soldier.mesh.remove(soldier.healthBar);
+      const idx = soldiers.indexOf(soldier);
+      if (idx !== -1) soldiers.splice(idx, 1);
+    }
+    break;
+  }
+}
+
+  for (const pain of painElementals) {
+  if (pain.hp <= 0) continue;
+
+  const intersects = raycasterShoot.intersectObject(pain.mesh, true);
+
+  if (intersects.length > 0) {
+    pain.hp -= 1;
+    if (soundManager) soundManager.playEnemyHit();
+
+    if (pain.hp <= 0) {
+      scene.remove(pain.mesh);
+    }
+    break;
+  }
+}
+
       }
     } 
     else {
