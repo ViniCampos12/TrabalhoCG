@@ -21,6 +21,7 @@ import {
 } from './player.js';
 import SoundManager from './sounds.js';
 import Airplane from "./airplane.js";
+import { soldiers, spawnSoldiers } from './soldier.js';
 
 let scene = new THREE.Scene();
 // Cria um SkyDome com textura de céu
@@ -1072,6 +1073,20 @@ function render() {
       blocked2 = true;
     }
 
+    if(cube.position.x < 218 && cube.position.x > 94 && cube.position.z > -179 && cube.position.z < -79 && blocked3==false)
+    {
+      spawnSoldiers();
+      blocked3 = true;
+    }
+
+    if(cube.position.y== 8 && cube.position.x < 62 && cube.position.x > -62 && cube.position.z > 79 && cube.position.z < 179 && blocked4==false)
+    {
+      spawnPainElemental();
+      spawnCacodemonsArea4();
+      blocked4 = true;
+    }
+
+
     if (moveDir.lengthSq() > 0) {
 
       moveDir.normalize();
@@ -1112,7 +1127,9 @@ function render() {
       atualizaGravidade(cube);
         
     updateLostSouls(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
-    updateCacodemons(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
+    updateCacodemons(cube, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes);
+    updateSoldiers(cube, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes);
+    updatePainElementals(cube, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes);
 
       // VERIFICAÇÃO DE ILUMINAÇÃO DO HANGAR (com throttling)
     lastHangarCheck += delta * 1000; // Converte para ms
@@ -1131,6 +1148,8 @@ function render() {
      const damageReceived = checkPlayerDamage(cube.position, {
       lostSouls: lostSouls,
       cacodemons: cacodemons,
+      soldiers: soldiers,
+      painElementals: painElementals,
       projectiles: projectiles
     });
 
