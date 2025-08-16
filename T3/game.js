@@ -91,6 +91,12 @@ const lerpConfigDoor2Area3 = {
   move: false
 }
 
+const lerpConfigWall = {
+  destinationY: -25,
+  alpha: 0.01,
+  move: false
+}
+
 //Verificação da posição das escadas
 const laddersPosition = [
   {
@@ -881,6 +887,38 @@ function render() {
       door2Area3Box.setFromObject(door2Area3); // Atualiza a bounding box da porta
     }
 
+    if(lerpConfigWall.move){
+      map.wallFront.position.y = THREE.MathUtils.lerp(
+      map.wallFront.position.y, 
+      lerpConfigWall.destinationY, 
+      lerpConfigWall.alpha
+    );
+    
+    map.wallBack.position.y = THREE.MathUtils.lerp(
+      map.wallBack.position.y, 
+      lerpConfigWall.destinationY, 
+      lerpConfigWall.alpha
+    );
+    
+    map.wallLeft.position.y = THREE.MathUtils.lerp(
+      map.wallLeft.position.y, 
+      lerpConfigWall.destinationY, 
+      lerpConfigWall.alpha
+    );
+    
+    map.wallRight.position.y = THREE.MathUtils.lerp(
+      map.wallRight.position.y, 
+      lerpConfigWall.destinationY, 
+      lerpConfigWall.alpha
+    );
+
+    map.wallFrontBox.setFromObject(map.wallFront);
+    map.wallBackBox.setFromObject(map.wallBack);
+    map.wallLeftBox.setFromObject(map.wallLeft);
+    map.wallRightBox.setFromObject(map.wallRight);
+
+    }
+
     if (movedoor4Pivot) {
       updateDoor();
       door4Box.setFromObject(map.doorPivot);
@@ -1130,7 +1168,15 @@ function checkCollisions(walls, areas, newCubePos) {
 
 
   //Testa blocos da área 4
-  if(newCubePos.z >50 && newCubePos.z < 190 && newCubePos.x > -160 && newCubePos.x < 160){
+  if(newCubePos.z >30 && newCubePos.z < 199 && newCubePos.x > -170 && newCubePos.x < 170){
+    if(futureBB.intersectsBox(map.suport4Box)){
+      downWall();
+    }
+
+    if(newCubePos.z > 55 && newCubePos.x > -20 && newCubePos.x < 20){
+      toggleDoor();
+    }
+
     if(newCubePos.z > 55 && newCubePos.z < 79 && newCubePos.x < 6 && newCubePos.x > -6){
       if(futureBB.intersectsBox(map.door4Box)){
         return true;
@@ -1229,12 +1275,16 @@ function openArea3Door(){
   doorArea3Open = true;
 }
 
+function downWall(){
+  lerpConfigWall.move = true;
+}
 
-let door4Open = false;
+
+let door4Open = true;
 
 function toggleDoor() {
   movedoor4Pivot = true;
-  door4Open = !door4Open;
+  // door4Open = !door4Open;
 }
 
 function updateDoor() {

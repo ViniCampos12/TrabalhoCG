@@ -56,9 +56,17 @@ class Map{
 
     // ÁREA MAIOR
     let material = new THREE.MeshLambertMaterial({ color: "rgb(63,81,181)" });
-    // let area = this.createBiggerArea(material,0,3,125);
-    // scene.add(area);
     this.createBiggerArea(material,0,3,125);
+    this.createBlockWall();
+
+    let suportArea4Geometry = new THREE.BoxGeometry(2,4,2);
+    this.suport4 = new THREE.Mesh(suportArea4Geometry, new THREE.MeshLambertMaterial({ color: "rgb(143, 72, 38)" }));
+    this.suport4.castShadow = true;
+    this.suport4.receiveShadow = true;
+    this.suport4.position.set(-20, 2,40);
+    this.suport4Box = new THREE.Box3().setFromObject(this.suport4);
+    this.blocksArea4.push(this.suport4Box);
+    this.scene.add(this.suport4);
 
     // ÁREA 1
 
@@ -592,11 +600,16 @@ class Map{
 
   createBorder(scene){
     //Creates the border´s wall
-    let materialWall = new THREE.MeshLambertMaterial({ color: "rgb(59,59,59)" });
+    let materialWall = new THREE.MeshLambertMaterial();
     let wallGeometry = new THREE.BoxGeometry(499,10,1);
 
     for(let i = -1;i<2;i=i+2){
-       wall = new THREE.Mesh(wallGeometry,materialWall);
+      wall = new THREE.Mesh(wallGeometry,materialWall);
+      let borderTexture = this.textureLoader.load('assets/images/brickwall.jpg ');
+      borderTexture.wrapS = THREE.RepeatWrapping;
+      borderTexture.wrapT = THREE.RepeatWrapping;
+      borderTexture.repeat.set(30, 1); 
+      wall.material.map = borderTexture;
       wall.castShadow = true; // A parede também deve projetar sombras
       wall.receiveShadow = true; // A parede também deve receber sombras
       wall.position.set(0,5,249*i);
@@ -610,6 +623,11 @@ class Map{
 
     for(let i=-1;i<2;i=i+2){
       wall = new THREE.Mesh(wallGeometry,materialWall);
+      let borderTexture = this.textureLoader.load('assets/images/brickwall.jpg ');
+      borderTexture.wrapS = THREE.RepeatWrapping;
+      borderTexture.wrapT = THREE.RepeatWrapping;
+      borderTexture.repeat.set(30, 1); 
+      wall.material.map = borderTexture;
       wall.castShadow = true; // A parede também deve projetar sombras
       wall.receiveShadow = true; // A parede também deve receber sombras  
       wall.position.set(250*i,5,0);
@@ -858,6 +876,51 @@ class Map{
     this.scene.add(altarBase);
   }
 
+
+  createBlockWall(){
+    this.wallFront = new THREE.Mesh(new THREE.BoxGeometry(320,40,3), new THREE.MeshLambertMaterial());
+    const wallTexture = this.textureLoader.load("assets/images/cement.jpg");
+    wallTexture.wrapS = wallTexture.wrapT = THREE.RepeatWrapping;
+    wallTexture.repeat.set(2, 0.5);
+    this.wallFront.material.map = wallTexture;
+    this.wallFront.castShadow = true;
+    this.wallFront.receiveShadow = true;
+    this.wallFront.position.set(0,20,55);
+    this.scene.add(this.wallFront);
+    this.wallFrontBox = new THREE.Box3().setFromObject(this.wallFront)
+    this.blocksArea4.push(this.wallFrontBox);
+
+    this.wallBack = new THREE.Mesh(new THREE.BoxGeometry(320,40,3), new THREE.MeshLambertMaterial());
+    this.wallBack.material.map = wallTexture;
+    this.wallBack.castShadow = true;
+    this.wallBack.receiveShadow = true;
+    this.wallBack.position.set(0,20,55);
+    this.wallBack.position.set(0,20,190);
+    this.scene.add(this.wallBack);
+    this.wallBackBox = new THREE.Box3().setFromObject(this.wallBack)
+    this.blocksArea4.push(this.wallBackBox);
+
+    this.wallLeft = new THREE.Mesh(new THREE.BoxGeometry(3,40,132), new THREE.MeshLambertMaterial());
+    this.wallLeft.material.map = wallTexture;
+    this.wallLeft.castShadow = true;
+    this.wallLeft.receiveShadow = true;
+    this.wallLeft.position.set(0,20,55);
+    this.wallLeft.position.set(-160,20,122);
+    this.scene.add(this.wallLeft);
+    this.wallLeftBox = new THREE.Box3().setFromObject(this.wallLeft)
+    this.blocksArea4.push(this.wallLeftBox);
+
+    this.wallRight = new THREE.Mesh(new THREE.BoxGeometry(3,40,132), new THREE.MeshLambertMaterial());
+    this.wallRight.material.map = wallTexture;
+    this.wallRight.castShadow = true;
+    this.wallRight.receiveShadow = true;
+    this.wallRight.position.set(0,20,55);
+    this.wallRight.position.set(160,20,122);
+    this.scene.add(this.wallRight);
+    this.wallRightBox = new THREE.Box3().setFromObject(this.wallRight)
+    this.blocksArea4.push(this.wallRightBox);
+
+  }
 
   getWallBoxes(){
     return this.wallsBox;
