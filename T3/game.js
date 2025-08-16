@@ -10,7 +10,7 @@ import {
 import Map from './map.js';
 import Ramp from './ramp.js';
 import { spawnLostSouls, updateLostSouls, checkCollisionForSouls, lostSouls } from './lostSoul.js';
-import { spawnCacodemons, updateCacodemons, cacodemons, projectiles } from './cacoDemons.js';
+import { spawnCacodemons, updateCacodemons, cacodemons, projectiles, spawnCacodemonsArea4 } from './cacoDemons.js';
 import { 
   initPlayerHP, 
   takeDamage, 
@@ -21,6 +21,7 @@ import {
 } from './player.js';
 import SoundManager from './sounds.js';
 import { soldiers, spawnSoldiers, updateSoldiers } from './soldier.js';
+import { spawnPainElemental, updatePainElementals, painElementals } from './painElemental.js';
 
 
 let scene = new THREE.Scene();
@@ -177,6 +178,7 @@ scene.add(directionalLightBack);
 var blocked = false;
 var blocked2 = false;
 var blocked3 = false;
+var blocked4 = false;
 
 //MAPA
 let map = new Map(scene);
@@ -687,6 +689,25 @@ function render() {
   }
 }
 
+        for (const pain of painElementals) {
+        if (pain.hp <= 0) continue;
+
+        const painElementalBB = new THREE.Box3().setFromObject(pain.mesh);
+        if (shot.userData.box.intersectsBox(painElementalBB)) {
+          pain.hp -= 10;
+          if(soundManager) {
+            soundManager.playEnemyHit();
+          }
+
+          if (pain.hp <= 0) {
+            scene.remove(pain.mesh);
+          }
+
+          atingiuAlgo = true;
+          break;
+        }
+      }
+
 
       if (shot.position.length() > 500 || atingiuAlgo) {
         scene.remove(shot);
@@ -765,6 +786,22 @@ function render() {
       if (soldier.healthBar) soldier.mesh.remove(soldier.healthBar);
       const idx = soldiers.indexOf(soldier);
       if (idx !== -1) soldiers.splice(idx, 1);
+    }
+    break;
+  }
+}
+
+  for (const pain of painElementals) {
+  if (pain.hp <= 0) continue;
+
+  const intersects = raycasterShoot.intersectObject(pain.mesh, true);
+
+  if (intersects.length > 0) {
+    pain.hp -= 1;
+    if (soundManager) soundManager.playEnemyHit();
+
+    if (pain.hp <= 0) {
+      scene.remove(pain.mesh);
     }
     break;
   }
@@ -907,6 +944,13 @@ function render() {
       blocked3 = true;
     }
 
+    if(cube.position.y== 8 && cube.position.x < 62 && cube.position.x > -62 && cube.position.z > 79 && cube.position.z < 179 && blocked4==false)
+    {
+      spawnPainElemental();
+      spawnCacodemonsArea4();
+      blocked4 = true;
+    }
+
 
     if (moveDir.lengthSq() > 0) {
 
@@ -950,11 +994,13 @@ function render() {
     updateLostSouls(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
     updateCacodemons(cube, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes);
     updateSoldiers(cube, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes);
+    updatePainElementals(cube, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes);
 
      const damageReceived = checkPlayerDamage(cube.position, {
       lostSouls: lostSouls,
       cacodemons: cacodemons,
       soldiers: soldiers,
+      painElementals: painElementals,
       projectiles: projectiles
     });
 

@@ -53,7 +53,7 @@ export function spawnSoldiers() {
     const x = 100 + Math.random() * (210 - 100);
     const z = -150 + Math.random() * (-80 + 150);
 
-    mesh.position.set(x, 1, z); // ajustar Y para 1
+    mesh.position.set(x, 1, z);
 
     const healthBar = createHealthBar();
     mesh.add(healthBar);

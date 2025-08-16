@@ -122,6 +122,39 @@ export function spawnLostSouls()
   }
 }
 
+export function spawnLostSoulsFromPainElemental(origin, dir) {
+  if (!scrullPrefab) return;
+
+  const mesh = createMesh();
+  if (!mesh) return;
+
+  const soul = {
+    mesh,
+    hp: 20,
+    state: 'charge',
+    chargeDir: dir.clone(),
+    timers: {
+      chargeStart: Date.now(),
+      lastCharge: 0,
+      patrolDelay: 0
+    },
+    patrolTarget: null,
+    idleUntil: 0,
+  };
+
+  const healthBar = createHealthBar();
+  soul.mesh.add(healthBar);
+  soul.healthBar = healthBar;
+  soul.maxHp = soul.hp;
+
+  // nasce um pouco à frente do Pain Elemental
+  mesh.position.copy(origin).add(dir.clone().multiplyScalar(15));
+
+  scene.add(mesh);
+  lostSouls.push(soul);
+}
+
+
 
 //Checa a colisão dos Lost Souls
 export function checkCollisionForSouls(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)
