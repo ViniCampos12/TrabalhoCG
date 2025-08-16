@@ -2,10 +2,9 @@ import * as THREE from 'three';
 import { scene } from './game.js';
 
 const soldiers = [];
-const projectiles = [];
 
 const projectileSpeed = 0.6; // Velocidade do disparo
-const fireInterval = 10000; // Intervalo entre tiros (ms)
+const fireInterval = 5000; // Intervalo entre tiros (ms)
 
 function createSoldierMesh() {
   // Modelo simples: caixa vermelha para teste (substitua por GLTF se quiser)
@@ -18,19 +17,6 @@ function createSoldierMesh() {
   return mesh;
 }
 
-function createProjectile(position, direction) {
-  const geo = new THREE.SphereGeometry(0.2, 8, 8);
-  const mat = new THREE.MeshStandardMaterial({ color: 0xffff00, emissive: 0xcccc00 });
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.position.copy(position);
-  scene.add(mesh);
-
-  return {
-    mesh,
-    dir: direction.clone().normalize(),
-    spawnTime: Date.now()
-  };
-}
 
 function createHealthBar() {
   const maxWidth = 4;
@@ -133,36 +119,6 @@ export function checkCollisionForSoldiers(newPos, wallBoxes, areaBoxes, area3Box
     return false;
 }
 
-
-function checkProjectileCollision(projectile, player, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes) {
-  const projectileBB = new THREE.Box3().setFromCenterAndSize(
-    projectile.mesh.position,
-    new THREE.Vector3(0.5, 0.5, 0.5)
-  );
-
-  // Colisão com o jogador
-  const playerBB = new THREE.Box3().setFromObject(player);
-  if (projectileBB.intersectsBox(playerBB)) {
-    return 'player';
-  }
-
-  // Colisão com o mundo
-  for (const boxList of [wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes]) {
-    for (const box of boxList) {
-      if (projectileBB.intersectsBox(box)) {
-        return 'world';
-      }
-    }
-  }
-
-  // Colisão com o chão
-  if (projectile.mesh.position.y < 0.1) {
-    return 'ground';
-  }
-
-  return null;
-}
-
 export function updateSoldiers(player, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes) {
   const now = Date.now();
   const tmpVec = new THREE.Vector3();
@@ -190,68 +146,59 @@ export function updateSoldiers(player, wallBoxes, areaBoxes, area3Boxes, collumn
       continue;
     }
 
-    // Movimento com zig-zag lateral
-    const forwardSpeed = 0.002;
-    moveVec.copy(forwardDir).multiplyScalar(forwardSpeed);
+const forwardSpeed = 0.02;
+moveVec.copy(forwardDir).multiplyScalar(forwardSpeed);
 
-    const timeFactor = now * 0.001 + soldier.mesh.id;
-    sideVec.crossVectors(forwardDir, new THREE.Vector3(0, 1, 0)).normalize();
-    sideVec.multiplyScalar(Math.sin(timeFactor * 0.03) * 0.3); // zig-zag mais rápido e amplitude 0.3
+// Zig-zag controlado
+const zigzagFrequency = 0.0005; // aumenta a frequência do "zig"
+const zigzagAmplitude = 0.1;   // ajusta a largura do "zag"
 
-    moveVec.add(sideVec);
+const timeFactor = now * zigzagFrequency + soldier.mesh.id;
+sideVec.crossVectors(forwardDir, new THREE.Vector3(0, 1, 0)).normalize();
+sideVec.multiplyScalar(Math.sin(timeFactor) * zigzagAmplitude);
+
+moveVec.add(sideVec);
+
 
     newPos.copy(soldier.mesh.position).add(moveVec);
 
-    // Checar colisão (reaproveite a função do cacodemon ou adapte)
-    // Se não colidir, move o soldado
     if (!checkCollisionForSoldiers(newPos, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes)) {
       soldier.mesh.position.copy(newPos);
-
-      // Olha na direção do movimento
       const lookTarget = soldier.mesh.position.clone().add(moveVec);
       soldier.mesh.lookAt(lookTarget);
     }
 
-    // Atira se perto o suficiente e cooldown liberado
+    // Tiro tipo "scan" com Raycasting
     if (distToPlayer < 80 && now - soldier.timers.lastFire > fireInterval) {
-      const projectile = createProjectile(soldier.mesh.position, forwardDir);
-      projectiles.push(projectile);
-      soldier.timers.lastFire = now;
+  const origin = soldier.mesh.position.clone();
+  origin.y += 1.5;
 
-      // Para e olha para o jogador
-      soldier.timers.stoppedUntil = now + 700;
-      soldier.mesh.lookAt(player.position);
+  const direction = forwardDir.clone().normalize();
+  const raycaster = new THREE.Raycaster(origin, direction);
+
+  const intersects = raycaster.intersectObject(player, false);
+
+  if (intersects.length > 0 && !window.godModeEnabled) {
+    if (window.takeDamage) {
+      window.takeDamage(15);
     }
+
+    if (window.soundManager) {
+      window.soundManager.play('playerDamage');
+    }
+
+    console.log('Soldado acertou o jogador com tiro scan!');
+  }
+
+  soldier.timers.lastFire = now;
+  soldier.timers.stoppedUntil = now + 700;
+  soldier.mesh.lookAt(player.position);
+}
+
 
     soldier.healthBar.lookAt(player.position);
   }
-
-  // Atualiza projéteis
-  for (let i = projectiles.length - 1; i >= 0; i--) {
-    const p = projectiles[i];
-    tmpVec.copy(p.dir).multiplyScalar(projectileSpeed);
-    p.mesh.position.add(tmpVec);
-
-    const collision = checkProjectileCollision(p, player, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes);
-
-    if (collision === 'player') {
-      console.log('Jogador atingido por projétil do Soldado!');
-
-      if (window.takeDamage && !window.godModeEnabled) {
-        window.takeDamage(15);
-        if (window.soundManager) window.soundManager.playPlayerDamage();
-      }
-
-      scene.remove(p.mesh);
-      projectiles.splice(i, 1);
-      continue;
-    }
-
-    if (collision === 'world' || collision === 'ground' || Date.now() - p.spawnTime > 5000) {
-      scene.remove(p.mesh);
-      projectiles.splice(i, 1);
-    }
-  }
 }
 
-export { soldiers, projectiles };
+
+export { soldiers };
