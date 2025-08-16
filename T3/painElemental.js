@@ -13,7 +13,7 @@ let painElementalPrefab = null;
 
 // Carrega modelo do Pain Elemental
 const gltfLoader = new GLTFLoader();
-gltfLoader.load('assets/painelemental.glb', (gltf) => {
+gltfLoader.load('assets/pain/painelemental.glb', (gltf) => {
   painElementalPrefab = gltf.scene;
 
   painElementalPrefab.traverse((child) => {
