@@ -2,6 +2,16 @@ import * as THREE from 'three';
 import { scene } from './game.js';
 import { GLTFLoader } from '../build/jsm/loaders/GLTFLoader.js';
 
+// God Mode (imortalidade)
+window.godModeEnabled = false;
+
+// Atalho de teclado para ativar/desativar
+window.addEventListener("keydown", (e) => {
+  if (e.code === "KeyG") { 
+    window.godModeEnabled = !window.godModeEnabled;
+    console.log("God Mode:", window.godModeEnabled ? "ATIVADO" : "DESATIVADO");
+  }
+});
 
 const cacodemons = [];
 const projectiles = [];
@@ -403,8 +413,9 @@ export function updateCacodemons(player, wallBoxes, areaBoxes, area3Boxes, collu
   console.log('Jogador atingido por projétil do Cacodemon!');
   
 
-    if (window.takeDamage && !godModeEnabled) {
-      window.takeDamage(15); // Projétil causa 15 de dano
+    if (window.takeDamage && !window.godModeEnabled) {
+    window.takeDamage(15);
+
       console.log('Dano aplicado ao player!');
       if (window.soundManager) {
       window.soundManager.playPlayerDamage();

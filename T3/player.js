@@ -255,15 +255,24 @@ function rayHitsBoxBetween(origin, target, box) {
   return distToHit < distToTarget - 1e-3; // margem pequena
 }
 
+// Ativa/Desativa God Mode com a tecla G
+window.addEventListener("keydown", (e) => {
+  if (e.code === "KeyG") {
+    godModeEnabled = !godModeEnabled;
+    console.log("God Mode:", godModeEnabled ? "ON" : "OFF");
+  }
+});
+
 // Verifica colisão de dano com inimigos
 function checkPlayerDamage(playerPosition, enemies, playerMesh, area3Boxes) {
   if (godModeEnabled) {
     return false;
   }
 
-  const playerBB = new THREE.Box3().setFromCenterAndSize(playerPosition, new THREE.Vector3(2, 2, 2));
+  const playerBB = new THREE.Box3().setFromObject(playerMesh).expandByScalar(0.5);
   let damageReceived = false;
 
+  // ---------------- Lost Souls ----------------
   if (enemies.lostSouls) {
     for (const soul of enemies.lostSouls) {
       if (soul.hp <= 0) continue;
@@ -275,23 +284,35 @@ function checkPlayerDamage(playerPosition, enemies, playerMesh, area3Boxes) {
           takeDamage(5);
           damageReceived = true;
           damageFlags.set(soulId, true);
-          setTimeout(() => damageFlags.delete(soulId), 1000);
+
+          setTimeout(() => {
+            damageFlags.delete(soulId);
+          }, 1000);
         }
       }
     }
   }
 
+  // ---------------- Projéteis Cacodemon ----------------
   if (!damageReceived && enemies.projectiles) {
     for (let i = enemies.projectiles.length - 1; i >= 0; i--) {
       const projectile = enemies.projectiles[i];
       if (!projectile || !projectile.mesh) continue;
 
-      const projectileBB = new THREE.Box3().setFromCenterAndSize(
-        projectile.mesh.position,
-        new THREE.Vector3(1, 1, 1)
-      );
+      const origin = projectile.prevPos ? projectile.prevPos.clone() : projectile.mesh.position.clone();
+      const target = projectile.mesh.position.clone();
 
-      if (playerBB.intersectsBox(projectileBB)) {
+      const dir = new THREE.Vector3().subVectors(target, origin);
+      const distance = dir.length();
+      if (distance === 0) continue;
+      dir.normalize();
+
+      const ray = new THREE.Ray(origin, dir);
+      const tmp = new THREE.Vector3();
+      const hit = ray.intersectBox(playerBB, tmp);
+
+      if (hit && origin.distanceTo(tmp) <= distance + 1e-3) {
+        console.log("Player atingido por projétil do Cacodemon!", tmp);
         takeDamage(15);
         damageReceived = true;
 
@@ -301,66 +322,40 @@ function checkPlayerDamage(playerPosition, enemies, playerMesh, area3Boxes) {
           scene.remove(projectile.mesh);
         }
         enemies.projectiles.splice(i, 1);
-        console.log("Player atingido por projétil do Cacodemon!");
-        break;
+        continue;
       }
+
+      projectile.prevPos = projectile.mesh.position.clone();
     }
   }
 
-  // 🔥 Tiros dos soldados (ray + bloqueio por colisão)
-if (enemies.soldiers) {
-  const now = Date.now();
+  // ---------------- Soldados (Raycaster) ----------------
+  if (!damageReceived && enemies.soldiers) {
+    for (const soldier of enemies.soldiers) {
+      if (!soldier.lastShotTime) continue;
+      if (Date.now() - soldier.lastShotTime < 200) continue;
 
-  for (const soldier of enemies.soldiers) {
-    if (!soldier || soldier.hp <= 0) continue;
+      const origin = soldier.mesh.position.clone();
+      origin.y += 5;
 
-    // Dispara SOMENTE durante a "janela" de tiro aberta no updateSoldiers
-    const firingWindow = soldier.timers && soldier.timers.stoppedUntil && now < soldier.timers.stoppedUntil;
-    if (!firingWindow) continue;
+      const direction = new THREE.Vector3().subVectors(playerMesh.position, origin).normalize();
+      const raycaster = new THREE.Raycaster(origin, direction);
 
-    // Garante dano uma única vez por disparo
-    const key = 'soldierShot-' + soldier.mesh.uuid;
-    if (!window.damageFlags) window.damageFlags = new Map();
-    if (window.damageFlags.has(key)) continue;
+      const intersects = raycaster.intersectObjects(area3Boxes, true);
+      const distanceToPlayer = origin.distanceTo(playerMesh.position);
 
-    // Origem do disparo (um pouco acima do chão)
-    const origin = soldier.mesh.position.clone();
-    origin.y += 1.5;
-
-    const distToPlayer = origin.distanceTo(playerPosition);
-
-    // 1) Checa bloqueio por obstáculos (area3Boxes recebidos por parâmetro)
-    let blocked = false;
-    if (Array.isArray(area3Boxes)) {
-      for (const box of area3Boxes) {
-        if (rayHitsBoxBetween(origin, playerPosition, box)) {
-          blocked = true;
-          break;
-        }
-      }
-    }
-
-    if (!blocked) {
-      // 2) Checa se o raio atinge a AABB do player (apenas dentro do segmento origem->player)
-      const playerBBNow = new THREE.Box3().setFromObject(playerMesh);
-      const ray = new THREE.Ray(origin, new THREE.Vector3().subVectors(playerPosition, origin).normalize());
-      const tmp = new THREE.Vector3();
-      const hit = ray.intersectBox(playerBBNow, tmp);
-
-      if (hit && origin.distanceTo(tmp) <= distToPlayer + 1e-3) {
-        takeDamage(2);            // dano do soldado
+      if (intersects.length === 0 || intersects[0].distance > distanceToPlayer) {
+        takeDamage(2);
         damageReceived = true;
-        window.damageFlags.set(key, true);
-        setTimeout(() => window.damageFlags.delete(key), 800); // um pouco menos que a janela de tiro
-        // opcional: som de dano já é tocado fora quando damageReceived = true
+        console.log("Player atingido por tiro de soldado!");
+        soldier.lastShotTime = Date.now();
       }
     }
   }
-}
-
 
   return damageReceived;
 }
+
   
 //   // Verifica Soldiers (quando implementados)
 //   if (enemies.soldiers) {

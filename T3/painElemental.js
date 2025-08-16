@@ -55,13 +55,13 @@ function createPainElementalMesh() {
       child.material = child.material.clone();
     }
   });
-  clone.scale.set(0.02, 0.02, 0.02);
+  clone.scale.set(1, 1, 1);
   return clone;
 }
 
 function createHealthBar() {
-  const maxWidth = 4;
-  const height = 0.3;
+  const maxWidth = 10;
+  const height = 1;
 
   const backgroundGeo = new THREE.PlaneGeometry(maxWidth, height);
   const backgroundMat = new THREE.MeshBasicMaterial({ color: 0x000000, depthTest: false });
@@ -75,7 +75,7 @@ function createHealthBar() {
   const barGroup = new THREE.Group();
   barGroup.add(background);
   barGroup.add(foreground);
-  barGroup.position.set(0, 8, 0); //posição acima da cabeça
+  barGroup.position.set(0, 25, 0); //posição acima da cabeça
 
   barGroup.userData = {
     foreground,
