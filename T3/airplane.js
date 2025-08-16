@@ -70,11 +70,12 @@ class Airplane {
     // Rotaciona o avião para ficar voltado para a entrada
     this.airplaneMesh.rotation.y = Math.PI + Math.PI/2;  // 180 graus
 
-    // Ajusta a escala se necessário (teste diferentes valores)
-    this.airplaneMesh.scale.set(0.6, 0.6, 0.6);
+    // Ajusta a escala 
+    this.airplaneMesh.scale.set(0.5, 0.5, 0.5);
     
     console.log('Avião posicionado em:', this.airplaneMesh.position);
   }
+  
 
   // Predefinições de posicionamento
   setPresetPosition(preset) {

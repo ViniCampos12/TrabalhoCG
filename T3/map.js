@@ -186,22 +186,92 @@ class Map{
 
 
     // ÁREA 2
-    let material2 = new THREE.MeshLambertMaterial({ color: "rgb(14, 21, 55)" });
-    let area2 = this.createDefaultArea(material2,0,3,-125,6);
-    
-    //Create Extend Area of area 2
-    let extendedAreaGeometry2 = new THREE.BoxGeometry(54,6,16);
-    let extendedArea = new THREE.Mesh(extendedAreaGeometry2,material2);
-    extendedArea.castShadow = true; // A área também deve projetar sombras
-    extendedArea.receiveShadow = true; // A área também deve receber sombras
+    // Carregar texturas separadas para cada parte da Área 2
+    let texturaTopoPrincipalArea2 = textureLoader.load('assets/images/area2chao.png'); // textura para área 2
+    let texturaTopoExtendidaArea2 = textureLoader.load('assets/images/area2chao.png'); // Textura para extensões
+    let texturaLateralArea2 = textureLoader.load('assets/images/area2lateral.png'); // Textura para laterais
+
+    // Configurar repetições para Área 2
+    texturaTopoPrincipalArea2.wrapS = THREE.RepeatWrapping;
+    texturaTopoPrincipalArea2.wrapT = THREE.RepeatWrapping;
+    texturaTopoPrincipalArea2.repeat.set(150/20, 130/20); // Ajuste conforme necessário
+    texturaTopoPrincipalArea2.colorSpace = THREE.SRGBColorSpace;
+
+    texturaTopoExtendidaArea2.wrapS = THREE.RepeatWrapping;
+    texturaTopoExtendidaArea2.wrapT = THREE.RepeatWrapping;
+    texturaTopoExtendidaArea2.repeat.set(2, 1); // Para as áreas extendidas
+    texturaTopoExtendidaArea2.colorSpace = THREE.SRGBColorSpace;
+
+    texturaLateralArea2.wrapS = THREE.RepeatWrapping;
+    texturaLateralArea2.wrapT = THREE.RepeatWrapping;
+    texturaLateralArea2.repeat.set(7, 1);
+    texturaLateralArea2.colorSpace = THREE.SRGBColorSpace;
+
+    // Criar materiais separados para Área 2
+    let materiaisPrincipalArea2 = [
+      new THREE.MeshLambertMaterial({ map: texturaLateralArea2 }), // direita
+      new THREE.MeshLambertMaterial({ map: texturaLateralArea2 }), // esquerda
+      new THREE.MeshLambertMaterial({ map: texturaTopoPrincipalArea2 }), // topo principal
+      new THREE.MeshLambertMaterial({ map: texturaLateralArea2 }), // baixo
+      new THREE.MeshLambertMaterial({ map: texturaLateralArea2 }), // frente
+      new THREE.MeshLambertMaterial({ map: texturaLateralArea2 })  // trás
+    ];
+
+    let materiaisExtendidaArea2 = [
+      new THREE.MeshLambertMaterial({ map: texturaLateralArea2 }), // direita
+      new THREE.MeshLambertMaterial({ map: texturaLateralArea2 }), // esquerda
+      new THREE.MeshLambertMaterial({ map: texturaTopoExtendidaArea2 }), // topo extendido
+      new THREE.MeshLambertMaterial({ map: texturaLateralArea2 }), // baixo
+      new THREE.MeshLambertMaterial({ map: texturaLateralArea2 }), // frente
+      new THREE.MeshLambertMaterial({ map: texturaLateralArea2 })  // trás
+    ];
+
+    // Criar a área principal da Área 2 com texturas
+    let area2 = this.createDefaultArea(materiaisPrincipalArea2, 0, 3, -125, 6);
+
+    // Criar áreas extendidas da Área 2 com materiais texturizados
+    let extendedAreaGeometry2 = new THREE.BoxGeometry(54, 6, 16);
+    let extendedArea = new THREE.Mesh(extendedAreaGeometry2, materiaisExtendidaArea2);
+    extendedArea.castShadow = true;
+    extendedArea.receiveShadow = true;
     area2.add(extendedArea);
-    extendedArea.position.set(35,0,54);
-    
-    let extendedArea2 = new THREE.Mesh(extendedAreaGeometry2,material2);
-    extendedArea2.castShadow = true; // A área também deve projetar sombras
-    extendedArea2.receiveShadow = true; // A área também deve receber sombras
+    extendedArea.position.set(35, 0, 54);
+
+    let extendedArea2 = new THREE.Mesh(extendedAreaGeometry2, materiaisExtendidaArea2);
+    extendedArea2.castShadow = true;
+    extendedArea2.receiveShadow = true;
     area2.add(extendedArea2);
-    extendedArea2.position.set(-35,0,54);
+    extendedArea2.position.set(-35, 0, 54);
+
+    // MATERIAL PARA O PORTÃO DA ÁREA 2
+    let texturaPortao = textureLoader.load('assets/images/area2portao.png'); // Reutiliza textura existente
+    texturaPortao.wrapS = THREE.RepeatWrapping;
+    texturaPortao.wrapT = THREE.RepeatWrapping;
+    texturaPortao.repeat.set(1, 1); // Ajuste conforme necessário
+    texturaPortao.colorSpace = THREE.SRGBColorSpace;
+
+    
+
+    // MATERIAL PARA A PLATAFORMA DA ÁREA 2
+    let texturaPlataforma = textureLoader.load('assets/images/area2plat.png'); // Ou area1clara.jpg
+    texturaPlataforma.wrapS = THREE.RepeatWrapping;
+    texturaPlataforma.wrapT = THREE.RepeatWrapping;
+    texturaPlataforma.repeat.set(4, 2); // Repetição para a plataforma
+    texturaPlataforma.colorSpace = THREE.SRGBColorSpace;
+
+    
+
+    // MATERIAL PARA OS BLOCOS DA ÁREA 2
+    let texturaBlocos = textureLoader.load('assets/images/area2blocos.png');
+    texturaBlocos.wrapS = THREE.RepeatWrapping;
+    texturaBlocos.wrapT = THREE.RepeatWrapping;
+    texturaBlocos.repeat.set(0.75, 2);
+    texturaBlocos.colorSpace = THREE.SRGBColorSpace;
+
+    let materialBlocosArea2 = new THREE.MeshLambertMaterial({ 
+      map: texturaBlocos,
+      color: new THREE.Color(0.8, 0.6, 0.4) // Tinge de marrom claro
+    });
 
     //Create bb
     const wallBox2 = new THREE.Box3().setFromObject(area2);
@@ -209,9 +279,12 @@ class Map{
   
     // Create door
     const doorGeometry = new THREE.BoxGeometry(16, 8, 0.1);
-    const doorMaterial = new THREE.MeshLambertMaterial({ color: "rgb(186, 184, 184)" });
+    let doorMaterial = new THREE.MeshLambertMaterial({ 
+      map: texturaPortao,
+      color: new THREE.Color(3.5, 3.5, 3.5) // Tinge de cinza azulado
+    });
     this.door = new THREE.Mesh(doorGeometry, doorMaterial);
-    this.door.castShadow = true; 
+    this.door.castShadow = true;
     this.door.receiveShadow = true; 
     this.door.position.set(0, 0, 62);
     area2.add(this.door);
@@ -228,7 +301,10 @@ class Map{
     
     //Create plataform
     const plataformGeometry = new THREE.BoxGeometry(16,0.1,6);
-    const plataformMaterial = new THREE.MeshLambertMaterial({ color: "rgb(14, 21, 55)" });
+    let plataformMaterial = new THREE.MeshLambertMaterial({ 
+      map: texturaPlataforma,
+      color: new THREE.Color(0.8, 0.8, 0.9) // Tinge clara
+    });
     this.plataform = new THREE.Mesh(plataformGeometry, plataformMaterial);
     this.plataform.castShadow = true; 
     this.plataform.receiveShadow = true; 
@@ -245,16 +321,16 @@ class Map{
     this.suport2Box = new THREE.Box3().setFromObject(this.suport2);
 
     //Create blocks
-    this.createBlocks(area2,20,20,10);
-    this.createBlocks(area2,-50,50,20);
-    this.createBlocks(area2,30,10,15);
-    this.createBlocks(area2,0,0,12);
-    this.createBlocks(area2,-20,10,9);
-    this.createBlocks(area2,-40,30,8);
-    this.createBlocks(area2,40,50,8);
-    this.createBlocks(area2,50,-20,20);
-    this.createBlocks(area2,-40,-40,20);
-    this.createBlocks(area2,-1,-40,10);
+    this.createBlocks(area2, 20, 20, 10, materialBlocosArea2);
+    this.createBlocks(area2, -50, 50, 20, materialBlocosArea2);
+    this.createBlocks(area2, 30, 10, 15, materialBlocosArea2);
+    this.createBlocks(area2, 0, 0, 12, materialBlocosArea2);
+    this.createBlocks(area2, -20, 10, 9, materialBlocosArea2);
+    this.createBlocks(area2, -40, 30, 8, materialBlocosArea2);
+    this.createBlocks(area2, 40, 50, 8, materialBlocosArea2);
+    this.createBlocks(area2, 50, -20, 20, materialBlocosArea2);
+    this.createBlocks(area2, -40, -40, 20, materialBlocosArea2);
+    this.createBlocks(area2, -1, -40, 10, materialBlocosArea2);
     
     //Add plataform on the middle
     this.suportTop2 = new THREE.Mesh(suportGeometry, new THREE.MeshLambertMaterial({ color: "rgb(143, 72, 38)" }));
@@ -272,13 +348,81 @@ class Map{
 
 
     // ÁREA 3
-    let material3 = new THREE.MeshLambertMaterial({ color: "rgb(139,90,43)" });
+    // Carregar texturas para o hangar
+    let texturaFrenteHangar = textureLoader.load('assets/images/hangarExt.png'); // Paredes externas
+    let texturaLateralHangar = textureLoader.load('assets/images/hangarExt.png'); // Paredes internas
+    let texturaChaoHangar = textureLoader.load('assets/images/hangarChao.png'); // Chão do hangar
+    let texturaPortasHangar = textureLoader.load('assets/images/hangarPorta.png'); // Portas do hangar
+    let texturaTopoHangar = textureLoader.load('assets/images/hangarExt.png'); // Teto do hangar
+    let texturaFundoHangar = textureLoader.load('assets/images/hangarExt.png'); // Portão do hangar
+    // Configurar repetições
+    texturaFrenteHangar.wrapS = THREE.RepeatWrapping;
+    texturaFrenteHangar.wrapT = THREE.RepeatWrapping;
+    texturaFrenteHangar.repeat.set(2, 3);
+    texturaFrenteHangar.colorSpace = THREE.SRGBColorSpace;
+
+    texturaLateralHangar.wrapS = THREE.RepeatWrapping;
+    texturaLateralHangar.wrapT = THREE.RepeatWrapping;
+    texturaLateralHangar.repeat.set(7, 3);
+    texturaLateralHangar.colorSpace = THREE.SRGBColorSpace;
+
+    texturaChaoHangar.wrapS = THREE.RepeatWrapping;
+    texturaChaoHangar.wrapT = THREE.RepeatWrapping;
+    texturaChaoHangar.repeat.set(1, 1);
+    texturaChaoHangar.colorSpace = THREE.SRGBColorSpace;
+
+    texturaPortasHangar.wrapS = THREE.RepeatWrapping;
+    texturaPortasHangar.wrapT = THREE.RepeatWrapping;
+    texturaPortasHangar.repeat.set(1, 3);
+    texturaPortasHangar.colorSpace = THREE.SRGBColorSpace;
+
+    texturaTopoHangar.wrapS = THREE.RepeatWrapping;
+    texturaTopoHangar.wrapT = THREE.RepeatWrapping;
+    texturaTopoHangar.repeat.set(18,10);
+    texturaTopoHangar.colorSpace = THREE.SRGBColorSpace;
+
+    texturaFundoHangar.wrapS = THREE.RepeatWrapping;
+    texturaFundoHangar.wrapT = THREE.RepeatWrapping;
+    texturaFundoHangar.repeat.set(10,3);
+    texturaFundoHangar.colorSpace = THREE.SRGBColorSpace;
+
+    // Criar materiais para o hangar
+    let materialChaoHangar = new THREE.MeshLambertMaterial({ 
+      map: texturaChaoHangar,
+      color: new THREE.Color(1.2, 1.2, 1.2) 
+    });
+
+    let materialFrenteHangar = new THREE.MeshLambertMaterial({ 
+      map: texturaFrenteHangar,
+      color: new THREE.Color(0.8, 0.8, 0.9) 
+    });
+
+    let materialLateralHangar = new THREE.MeshLambertMaterial({ 
+      map: texturaLateralHangar,
+      color: new THREE.Color(0.8, 0.8, 0.9) 
+    });
+
+    let materialPortasHangar = new THREE.MeshLambertMaterial({ 
+      map: texturaPortasHangar,
+      color: new THREE.Color(0.7, 0.6, 0.5) 
+    });
+
+    let materialTopoHangar = new THREE.MeshLambertMaterial({ 
+      map: texturaTopoHangar,
+      color: new THREE.Color(0.8, 0.8, 0.9) 
+    });
+
+    let materialFundoHangar = new THREE.MeshLambertMaterial({ 
+      map: texturaFundoHangar,
+      color: new THREE.Color(0.6, 0.6, 0.7) 
+    });
+
+    let material3 = materialChaoHangar;
     let area3 = this.createDefaultArea(material3,172,0,-125,0.1);
     area3.position.set(156.0, 0.0, -118.0);
     scene.add(area3);
 
-    let materialGray = new THREE.MeshLambertMaterial({ color: "rgb(59,59,59)" });
-    let lateraisHangar = new THREE.Mesh(new THREE.BoxGeometry(2, 30, 106), materialGray);
+    let lateraisHangar = new THREE.Mesh(new THREE.BoxGeometry(2, 30, 106), materialLateralHangar);
     lateraisHangar.castShadow = true; // A área também deve projetar sombras
     lateraisHangar.receiveShadow = true; // A área também deve receber sombras
     lateraisHangar.position.set(95, 5, -118);
@@ -286,31 +430,31 @@ class Map{
 
     scene.add(lateraisHangar);
 
-    let laterais2Hangar = new THREE.Mesh(new THREE.BoxGeometry(2, 30, 106), materialGray);
+    let laterais2Hangar = new THREE.Mesh(new THREE.BoxGeometry(2, 30, 106), materialLateralHangar);
     laterais2Hangar.castShadow = true; // A área também deve projetar sombras
     laterais2Hangar.receiveShadow = true; // A área também deve receber sombras
     laterais2Hangar.position.set(217, 5, -118);
     scene.add(laterais2Hangar);
     this.blocksArea3.push(new THREE.Box3().setFromObject(laterais2Hangar));
 
-    let fundoHangar = new THREE.Mesh(new THREE.BoxGeometry(124, 30, 2), materialGray);
+    let fundoHangar = new THREE.Mesh(new THREE.BoxGeometry(124, 30, 2), materialFundoHangar);
     fundoHangar.castShadow = true; // A área também deve projetar sombras
     fundoHangar.receiveShadow = true; // A área também deve receber sombras
     fundoHangar.position.set(156, 5, -171);
     scene.add(fundoHangar);
     this.blocksArea3.push(new THREE.Box3().setFromObject(fundoHangar));
 
-    scene.add(this.createTopHangar());
+    scene.add(this.createTopHangar(materialTopoHangar));
 
     //Cria frente hangar
-    let frenteHangar1 = new THREE.Mesh(new THREE.BoxGeometry(33, 30, 2), materialGray);
+    let frenteHangar1 = new THREE.Mesh(new THREE.BoxGeometry(33, 30, 2), materialFrenteHangar);
     frenteHangar1.castShadow = true; // A área também deve projetar sombras
     frenteHangar1.receiveShadow = true; // A área também deve receber sombras
     frenteHangar1.position.set(110.5, 5, -65);
     scene.add(frenteHangar1);
     this.blocksArea3.push(new THREE.Box3().setFromObject(frenteHangar1));
 
-    let frenteHangar2 = new THREE.Mesh(new THREE.BoxGeometry(32, 30, 2), materialGray);
+    let frenteHangar2 = new THREE.Mesh(new THREE.BoxGeometry(32, 30, 2), materialFrenteHangar);
     frenteHangar2.castShadow = true; // A área também deve projetar sombras
     frenteHangar2.receiveShadow = true; // A área também deve receber sombras
     frenteHangar2.position.set(202, 5, -65);
@@ -318,7 +462,7 @@ class Map{
     this.blocksArea3.push(new THREE.Box3().setFromObject(frenteHangar2));
 
     //Cria porta lateral
-     this.portaHangar1 = new THREE.Mesh(new THREE.BoxGeometry(31, 30, 1), material3);
+     this.portaHangar1 = new THREE.Mesh(new THREE.BoxGeometry(31, 30, 1), materialPortasHangar);
     this.portaHangar1.castShadow = true; // A área também deve projetar sombras
     this.portaHangar1.receiveShadow = true; // A área também deve receber sombras
     this.portaHangar1.position.set(141.8, 5, -66);
@@ -327,7 +471,7 @@ class Map{
     this.blocksArea3.push(this.door1Area3Box);
 
   
-    this.portaHangar2 = new THREE.Mesh(new THREE.BoxGeometry(30, 30, 1), material3);
+    this.portaHangar2 = new THREE.Mesh(new THREE.BoxGeometry(30, 30, 1), materialPortasHangar);
     this.portaHangar2.castShadow = true; // A área também deve projetar sombras
     this.portaHangar2.receiveShadow = true; // A área também deve receber sombras
     this.portaHangar2.position.set(172, 5, -66);
@@ -439,9 +583,10 @@ class Map{
     // this.scene.add(helper); // helper deve estar na scene
   }
 
-  createBlocks(area,x,z,height){
+  createBlocks(area,x,z,height, material){
     let blockGeometry = new THREE.BoxGeometry(4, height, 4);
-    let blockMaterial = new THREE.MeshLambertMaterial({ color: "rgb(171, 98, 21)" });
+      // Se não foi passado material, usa o padrão
+    let blockMaterial = material || new THREE.MeshLambertMaterial({ color: "rgb(171, 98, 21)" });
     let block = new THREE.Mesh(blockGeometry, blockMaterial);
     block.castShadow = true; 
     block.receiveShadow = true; 
@@ -495,7 +640,7 @@ class Map{
     return keyMesh;
   }
 
- createTopHangar(){
+ createTopHangar(material){
     let auxMat = new THREE.Matrix4();
 
     let profundidadeTopo = 108; 
@@ -519,7 +664,7 @@ class Map{
     let csgObject = csgObjectPre.subtract(quadradoCSG);
 
     let topoHangarMesh = CSG.toMesh(csgObject, auxMat);
-    topoHangarMesh.material = new THREE.MeshLambertMaterial({ color: "rgba(52, 68, 67, 1)" });
+    topoHangarMesh.material = material;
     topoHangarMesh.castShadow = true;
     topoHangarMesh.receiveShadow = true;
 

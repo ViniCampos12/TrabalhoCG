@@ -173,7 +173,7 @@ directionalLightBack.castShadow = false; // não projeta sombras
 scene.add(directionalLightBack);
 
 // LUZ DO HANGAR (interna) - posicionada na entrada virada para o fundo
-const hangarLight = new THREE.DirectionalLight("rgb(200, 180, 120)", 0); 
+const hangarLight = new THREE.DirectionalLight("rgb(200, 180, 120)", 0.5); 
 hangarLight.position.set(156, 30, -65); // Posição na entrada (z = -65)
 hangarLight.target.position.set(110, 100, -171); // Target para iluminar melhor a area
 scene.add(hangarLight.target); 
@@ -225,7 +225,7 @@ function smoothToggleHangarLighting(inHangar) {
   // AJUSTE AS INTENSIDADES AQUI:
   const targetMainIntensity = inHangar ? 0 : 6.0; // Reduz para 50% em vez de 0
   const targetBackIntensity = inHangar ? 4 : 1.0; // Mantém um pouco da luz traseira
-  const targetHangarIntensity = inHangar ? 4 : 0; // Aumenta a luz do hangar
+  const targetHangarIntensity = inHangar ? 4 : 0.5; // Aumenta a luz do hangar
   
   // Garante que todas as luzes estejam visíveis durante a transição
   directionalLight.visible = true;
@@ -240,7 +240,7 @@ function smoothToggleHangarLighting(inHangar) {
       isTransitioning = false;
       
       // NÃO DESLIGA MAIS AS LUZES - apenas reduz intensidade
-      console.log(inHangar ? '🏢 Iluminação do hangar ativa' : '🌞 Iluminação externa restaurada');
+      console.log(inHangar ? 'Iluminação do hangar ativa' : 'Iluminação externa restaurada');
     }
     
     // Interpola a intensidade das luzes
