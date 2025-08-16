@@ -2,12 +2,14 @@ import * as THREE from 'three';
 import { scene } from './game.js'; // assegure que main.js exporte scene
 import { OBJLoader } from '../build/jsm/loaders/OBJLoader.js';
 import { MTLLoader } from '../build/jsm/loaders/MTLLoader.js';
+import {soundManager} from './game.js';
 
 const lostSouls = [];
 const numSouls = 5;
 const safeDist = 50;
 const chargeDur = 1000;
 const cooldownDur = 5000;
+
 
 let scrullPrefab = null;
 
@@ -97,12 +99,13 @@ export function spawnLostSouls()
       state: 'patrol', //Começa no estado de patrulha
       chargeDir: new THREE.Vector3(),
         timers: {
-    chargeStart: 0, //Indica começo do "charge"
-    lastCharge: 0, //Indica quando foi o último "charge"
-    patrolDelay: 0 //Delay da patrulha
-    },
-    patrolTarget: null, //Alvo da patrulha começa apontando para null
-    idleUntil: 0, //Tempo de espera
+      chargeStart: 0, //Indica começo do "charge"
+      lastCharge: 0, //Indica quando foi o último "charge"
+      patrolDelay: 0 //Delay da patrulha
+      },
+      patrolTarget: null, //Alvo da patrulha começa apontando para null
+      idleUntil: 0, //Tempo de espera
+      soundPlayed: false
     };
 
     const healthBar = createHealthBar(); //Cria barra de vida
@@ -121,39 +124,6 @@ export function spawnLostSouls()
     lostSouls.push(soul);
   }
 }
-
-export function spawnLostSoulsFromPainElemental(origin, dir) {
-  if (!scrullPrefab) return;
-
-  const mesh = createMesh();
-  if (!mesh) return;
-
-  const soul = {
-    mesh,
-    hp: 20,
-    state: 'charge',
-    chargeDir: dir.clone(),
-    timers: {
-      chargeStart: Date.now(),
-      lastCharge: 0,
-      patrolDelay: 0
-    },
-    patrolTarget: null,
-    idleUntil: 0,
-  };
-
-  const healthBar = createHealthBar();
-  soul.mesh.add(healthBar);
-  soul.healthBar = healthBar;
-  soul.maxHp = soul.hp;
-
-  // nasce um pouco à frente do Pain Elemental
-  mesh.position.copy(origin).add(dir.clone().multiplyScalar(15));
-
-  scene.add(mesh);
-  lostSouls.push(soul);
-}
-
 
 
 //Checa a colisão dos Lost Souls
@@ -326,6 +296,10 @@ if (soul.state === 'dying') {
     //Estado "charge" (carga/dash)
     else if (soul.state === 'charge') {
       //Avança em alta velocidade em direção ao jogador
+      if(soundManager && !soul.soundPlayed){
+        soundManager.playLostSoulAttack();
+        soul.soundPlayed = true;
+      }
       moveVec.copy(soul.chargeDir).multiplyScalar(1.2);
       newPos.copy(soul.mesh.position).add(moveVec);
 
@@ -339,6 +313,7 @@ if (soul.state === 'dying') {
       } else {
         soul.state = 'cooldown';
         soul.timers.lastCharge = now;
+        soul.soundPlayed = false;
       }
     }
 

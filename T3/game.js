@@ -10,7 +10,7 @@ import {
 import Map from './map.js';
 import Ramp from './ramp.js';
 import { spawnLostSouls, updateLostSouls, checkCollisionForSouls, lostSouls } from './lostSoul.js';
-import { spawnCacodemons, updateCacodemons, cacodemons, projectiles, spawnCacodemonsArea4 } from './cacoDemons.js';
+import { spawnCacodemons, updateCacodemons, cacodemons, projectiles } from './cacoDemons.js';
 import { 
   initPlayerHP, 
   takeDamage, 
@@ -20,9 +20,7 @@ import {
   toggleGodMode
 } from './player.js';
 import SoundManager from './sounds.js';
-import { soldiers, spawnSoldiers, updateSoldiers } from './soldier.js';
-import { spawnPainElemental, updatePainElementals, painElementals } from './painElemental.js';
-
+import Airplane from "./airplane.js";
 
 let scene = new THREE.Scene();
 // Cria um SkyDome com textura de céu
@@ -87,6 +85,12 @@ const lerpConfigDoor1Area3 = {
 
 const lerpConfigDoor2Area3 = {
   destination: new THREE.Vector3(203, 5, -66),
+  alpha: 0.01,
+  move: false
+}
+
+const lerpConfigWall = {
+  destinationY: -25,
   alpha: 0.01,
   move: false
 }
@@ -174,20 +178,108 @@ directionalLightBack.castShadow = false; // não projeta sombras
 
 scene.add(directionalLightBack);
 
+// LUZ DO HANGAR (interna) - posicionada na entrada virada para o fundo
+const hangarLight = new THREE.DirectionalLight("rgb(200, 180, 120)", 0.5); 
+hangarLight.position.set(156, 30, -65); // Posição na entrada (z = -65)
+hangarLight.target.position.set(110, 100, -171); // Target para iluminar melhor a area
+scene.add(hangarLight.target); 
+hangarLight.castShadow = false; 
+hangarLight.visible = true; 
+scene.add(hangarLight);
+
+// VARIÁVEIS DE CONTROLE DA ILUMINAÇÃO DO HANGAR
+let isPlayerInHangar = false;
+let lastHangarCheck = 0;
+const HANGAR_CHECK_INTERVAL = 100; // Verifica a cada 100ms
+
+function checkPlayerInHangar(playerPosition) {
+  // Coordenadas da Área 3 (hangar) baseadas no map.js
+  const hangarBounds = {
+    minX: 94,   // Limite esquerdo
+    maxX: 218,  // Limite direito
+    minZ: -171, // Limite do fundo
+    maxZ: -65,  // Limite da frente
+    minY: 0,    // Chão
+    maxY: 30    // Teto
+  };
+
+  const x = playerPosition.x;
+  const y = playerPosition.y;
+  const z = playerPosition.z;
+
+  return (x >= hangarBounds.minX && x <= hangarBounds.maxX &&
+          z >= hangarBounds.minZ && z <= hangarBounds.maxZ &&
+          y >= hangarBounds.minY && y <= hangarBounds.maxY);
+}
+
+// Função para alternar a iluminação com transição suave
+let lightTransitionProgress = 0;
+let isTransitioning = false;
+const TRANSITION_SPEED = 3.0; // Velocidade da transição
+
+function smoothToggleHangarLighting(inHangar) {
+  if (isTransitioning) return; // Evita múltiplas transições
+  
+  isTransitioning = true;
+  lightTransitionProgress = 0;
+  
+  // Intensidades iniciais e finais
+  const startMainIntensity = directionalLight.intensity;
+  const startBackIntensity = directionalLightBack.intensity;
+  const startHangarIntensity = hangarLight.intensity;
+  
+  // AJUSTE AS INTENSIDADES AQUI:
+  const targetMainIntensity = inHangar ? 0 : 6.0; // Reduz para 50% em vez de 0
+  const targetBackIntensity = inHangar ? 4 : 1.0; // Mantém um pouco da luz traseira
+  const targetHangarIntensity = inHangar ? 4 : 0.5; // Aumenta a luz do hangar
+  
+  // Garante que todas as luzes estejam visíveis durante a transição
+  directionalLight.visible = true;
+  directionalLightBack.visible = true;
+  hangarLight.visible = true;
+  
+  const transition = () => {
+    lightTransitionProgress += TRANSITION_SPEED * 0.016; // ~16ms por frame
+    
+    if (lightTransitionProgress >= 1) {
+      lightTransitionProgress = 1;
+      isTransitioning = false;
+      
+      // NÃO DESLIGA MAIS AS LUZES - apenas reduz intensidade
+      console.log(inHangar ? 'Iluminação do hangar ativa' : 'Iluminação externa restaurada');
+    }
+    
+    // Interpola a intensidade das luzes
+    const t = lightTransitionProgress;
+    directionalLight.intensity = startMainIntensity + (targetMainIntensity - startMainIntensity) * t;
+    directionalLightBack.intensity = startBackIntensity + (targetBackIntensity - startBackIntensity) * t;
+    hangarLight.intensity = startHangarIntensity + (targetHangarIntensity - startHangarIntensity) * t;
+    
+    if (isTransitioning) {
+      requestAnimationFrame(transition);
+    }
+  };
+  
+  transition();
+}
 
 var blocked = false;
 var blocked2 = false;
-var blocked3 = false;
-var blocked4 = false;
 
 //MAPA
 let map = new Map(scene);
+
+// CRIA O AVIÃO:
+let airplane = new Airplane(scene);
+
+ 
 
 //Variáveis importante advindas do map
 const wallBoxes = map.getWallBoxes();
 const areaBoxes = map.getAreaBoxes(); 
 const collumnsBoxes = map.getCollumnsBoxes();
 const area3Boxes = map.getBBBlocksArea3();
+const area4Boxes = map.getBBBlocksArea4();
 const blockBoxes = map.getBlocksBoxes();
 const rampMesh = map.getRamps();
 const suport1 = map.suport1;
@@ -206,6 +298,9 @@ const door1Area3 = map.portaHangar1;
 const door2Area3 = map.portaHangar2;
 const door1Area3Box = map.door1Area3Box;
 const door2Area3Box = map.door2Area3Box;
+const doorPivot = map.doorPivot;
+const door4Box = map.door4Box;
+let movedoor4Pivot = false;
 let hasKey1 = false;
 let hasKey2 = true;
 let contaLostSouls = 0;
@@ -364,6 +459,8 @@ document.addEventListener('keydown', (event) => {
         break;
     case 'KeyO':
         openArea3Door();
+    case 'KeyL':
+        toggleDoor();
     case 'ShiftLeft':
     case 'ShiftRight':
       shiftPress = true;
@@ -659,48 +756,11 @@ function render() {
           }
 
           if (cacodemon.hp <= 0) {
+            if(soundManager){
+              soundManager.playCacodemonDeath();
+            }
             scene.remove(cacodemon.mesh);
             contaCacoDemons++;
-          }
-
-          atingiuAlgo = true;
-          break;
-        }
-      }
-
-      for (const soldier of soldiers) {
-  if (soldier.hp <= 0) continue;
-  const soldierBB = new THREE.Box3().setFromObject(soldier.mesh);
-  if (shot.userData.box.intersectsBox(soldierBB)) {
-    soldier.hp -= 10;
-    if (soundManager) soundManager.playEnemyHit();
-
-    if (soldier.hp <= 0) {
-      scene.remove(soldier.mesh);
-      // Remova a barra de vida também, se necessário:
-      if (soldier.healthBar) soldier.mesh.remove(soldier.healthBar);
-
-      // Remover da lista
-      const idx = soldiers.indexOf(soldier);
-      if (idx !== -1) soldiers.splice(idx, 1);
-    }
-    atingiuAlgo = true;
-    break;
-  }
-}
-
-        for (const pain of painElementals) {
-        if (pain.hp <= 0) continue;
-
-        const painElementalBB = new THREE.Box3().setFromObject(pain.mesh);
-        if (shot.userData.box.intersectsBox(painElementalBB)) {
-          pain.hp -= 10;
-          if(soundManager) {
-            soundManager.playEnemyHit();
-          }
-
-          if (pain.hp <= 0) {
-            scene.remove(pain.mesh);
           }
 
           atingiuAlgo = true;
@@ -771,42 +831,6 @@ function render() {
             break;
           }
         }
-
-        for (const soldier of soldiers) {
-  if (soldier.hp <= 0) continue;
-
-  const intersects = raycasterShoot.intersectObject(soldier.mesh, true);
-
-  if (intersects.length > 0) {
-    soldier.hp -= 1;
-    if (soundManager) soundManager.playEnemyHit();
-
-    if (soldier.hp <= 0) {
-      scene.remove(soldier.mesh);
-      if (soldier.healthBar) soldier.mesh.remove(soldier.healthBar);
-      const idx = soldiers.indexOf(soldier);
-      if (idx !== -1) soldiers.splice(idx, 1);
-    }
-    break;
-  }
-}
-
-  for (const pain of painElementals) {
-  if (pain.hp <= 0) continue;
-
-  const intersects = raycasterShoot.intersectObject(pain.mesh, true);
-
-  if (intersects.length > 0) {
-    pain.hp -= 1;
-    if (soundManager) soundManager.playEnemyHit();
-
-    if (pain.hp <= 0) {
-      scene.remove(pain.mesh);
-    }
-    break;
-  }
-}
-
       }
     } 
     else {
@@ -874,6 +898,43 @@ function render() {
       door1Area3Box.setFromObject(door1Area3); // Atualiza a bounding box da porta
       door2Area3Box.setFromObject(door2Area3); // Atualiza a bounding box da porta
     }
+
+    if(lerpConfigWall.move){
+      map.wallFront.position.y = THREE.MathUtils.lerp(
+      map.wallFront.position.y, 
+      lerpConfigWall.destinationY, 
+      lerpConfigWall.alpha
+    );
+    
+    map.wallBack.position.y = THREE.MathUtils.lerp(
+      map.wallBack.position.y, 
+      lerpConfigWall.destinationY, 
+      lerpConfigWall.alpha
+    );
+    
+    map.wallLeft.position.y = THREE.MathUtils.lerp(
+      map.wallLeft.position.y, 
+      lerpConfigWall.destinationY, 
+      lerpConfigWall.alpha
+    );
+    
+    map.wallRight.position.y = THREE.MathUtils.lerp(
+      map.wallRight.position.y, 
+      lerpConfigWall.destinationY, 
+      lerpConfigWall.alpha
+    );
+
+    map.wallFrontBox.setFromObject(map.wallFront);
+    map.wallBackBox.setFromObject(map.wallBack);
+    map.wallLeftBox.setFromObject(map.wallLeft);
+    map.wallRightBox.setFromObject(map.wallRight);
+
+    }
+
+    if (movedoor4Pivot) {
+      updateDoor();
+      door4Box.setFromObject(map.doorPivot);
+    }
     
     //Subida da plataforma da area 2
     let isIntersectPlataform = false;
@@ -938,20 +999,6 @@ function render() {
       blocked2 = true;
     }
 
-    if(cube.position.x < 218 && cube.position.x > 94 && cube.position.z > -179 && cube.position.z < -79 && blocked3==false)
-    {
-      spawnSoldiers();
-      blocked3 = true;
-    }
-
-    if(cube.position.y== 8 && cube.position.x < 62 && cube.position.x > -62 && cube.position.z > 79 && cube.position.z < 179 && blocked4==false)
-    {
-      spawnPainElemental();
-      spawnCacodemonsArea4();
-      blocked4 = true;
-    }
-
-
     if (moveDir.lengthSq() > 0) {
 
       moveDir.normalize();
@@ -992,15 +1039,25 @@ function render() {
       atualizaGravidade(cube);
         
     updateLostSouls(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
-    updateCacodemons(cube, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes);
-    updateSoldiers(cube, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes);
-    updatePainElementals(cube, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes);
+    updateCacodemons(cube, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
 
+      // VERIFICAÇÃO DE ILUMINAÇÃO DO HANGAR (com throttling)
+    lastHangarCheck += delta * 1000; // Converte para ms
+    if (lastHangarCheck >= HANGAR_CHECK_INTERVAL) {
+      lastHangarCheck = 0;
+      
+      const playerInHangar = checkPlayerInHangar(cube.position);
+      
+      // Só alterna se o estado mudou
+      if (playerInHangar !== isPlayerInHangar) {
+        isPlayerInHangar = playerInHangar;
+        smoothToggleHangarLighting(isPlayerInHangar);
+      }
+    }
+    
      const damageReceived = checkPlayerDamage(cube.position, {
       lostSouls: lostSouls,
       cacodemons: cacodemons,
-      soldiers: soldiers,
-      painElementals: painElementals,
       projectiles: projectiles
     });
 
@@ -1108,8 +1165,34 @@ function checkCollisions(walls, areas, newCubePos) {
     }
   } 
 
+  //Testa blocos da área 3
   if(newCubePos.z < -53 && newCubePos.z > -182 && newCubePos.x > 90 && newCubePos.x < 230){
     for(const block of area3Boxes){
+      if(futureBB.intersectsBox(block)){
+        return true;
+      }
+    }
+  }
+
+
+  //Testa blocos da área 4
+  if(newCubePos.z >30 && newCubePos.z < 199 && newCubePos.x > -170 && newCubePos.x < 170){
+    if(futureBB.intersectsBox(map.suport4Box)){
+      downWall();
+    }
+
+    if(newCubePos.z > 55 && newCubePos.x > -20 && newCubePos.x < 20){
+      toggleDoor();
+    }
+
+    if(newCubePos.z > 55 && newCubePos.z < 79 && newCubePos.x < 6 && newCubePos.x > -6){
+      if(futureBB.intersectsBox(map.door4Box)){
+        return true;
+      }
+      return false;
+    }
+
+    for(const block of area4Boxes){
       if(futureBB.intersectsBox(block)){
         return true;
       }
@@ -1195,11 +1278,35 @@ function downPlataform(){
 }
 
 function openArea3Door(){
+  if(soundManager) {
+    soundManager.playDoorOpen();
+  }
   lerpConfigDoor1Area3.move = true;
   lerpConfigDoor2Area3.move = true;
   doorArea3Open = true;
 }
 
+function downWall(){
+  lerpConfigWall.move = true;
+}
+
+
+let door4Open = true;
+
+function toggleDoor() {
+  movedoor4Pivot = true;
+  // door4Open = !door4Open;
+}
+
+function updateDoor() {
+  const alvo = door4Open ? THREE.MathUtils.degToRad(-90) : 0;
+  const atual = doorPivot.rotation.y;
+
+  doorPivot.rotation.y += (alvo - atual) * 0.01;
+}
 render();
 
-export {scene};
+export {
+  scene,
+  soundManager
+};

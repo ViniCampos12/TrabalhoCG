@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { scene } from './game.js';
 import { GLTFLoader } from '../build/jsm/loaders/GLTFLoader.js';
-
+import { soundManager } from './game.js';
 
 const cacodemons = [];
 const projectiles = [];
@@ -138,7 +138,7 @@ function getRandomOffsetTarget(position, radius = 10) //Randomiza patrulha do ca
   return new THREE.Vector3(position.x + dx, position.y, position.z + dz);
 }
 
-export function checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes) //Checa a colisão dos cacodemons
+export function checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes) //Checa a colisão dos cacodemons
 {
   const futureBB = new THREE.Box3().setFromCenterAndSize(newPos, new THREE.Vector3(8, 8, 8)); //Tamanho diferente do lostsoul, pois o cacodemon é maior
 
@@ -167,12 +167,6 @@ export function checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, area3B
     }
   }
 
-  for (const area of area3Boxes) {
-    if (futureBB.intersectsBox(area)) {
-      return true;
-    }
-  }
-
   //Evita colisão com o chão
   if (newPos.y < 8)
     {
@@ -183,6 +177,9 @@ export function checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, area3B
 }
 
 export function spawnCacodemons(blockBoxes) {
+  if(soundManager){
+    soundManager.playCacodemonSpawn();
+  }
   const numToSpawn = 3;
   if (blockBoxes.length < numToSpawn) {
     return;
@@ -222,51 +219,14 @@ export function spawnCacodemons(blockBoxes) {
     cacodemon.mesh.add(healthBar);
     cacodemon.healthBar = healthBar;
     cacodemon.maxHp = cacodemon.hp;
-    cacodemon.mesh.position.set(center.x, center.y + 20, center.z);
+    cacodemon.mesh.position.set(center.x, center.y + 20, center.z); //Posiciona a barra de vida acima do cacodemon
     
     scene.add(cacodemon.mesh);
     cacodemons.push(cacodemon);
   }
 }
 
-export function spawnCacodemonsArea4() {
-  const numToSpawn = 4;
-
-  for (let i = 0; i < numToSpawn; i++) {
-    
-    const mesh = createCacodemonMesh();
-    if (!mesh) {
-      continue;
-    }
-    
-    //Objeto cacodemon
-    const cacodemon = {
-      mesh,
-      hp: 50, //Vida do cacodemon
-      timers: {
-        lastFire: 0, //Último tiro
-        idleUntil: 0 //Tempo de espera
-      },
-      patrolTarget: null, //Alvo da patrulha começa apontando para null
-      state: 'passive' //Status começa passivo, até ser ativado pelo jogador
-    };
-    
-    const healthBar = createHealthBar(); //Cria barra de vida
-    cacodemon.mesh.add(healthBar);
-    cacodemon.healthBar = healthBar;
-    cacodemon.maxHp = cacodemon.hp;
-
-    const x = -100 + Math.random() * (100 - -100);
-    const z = 80 + Math.random() * (160 - 80);
-
-    cacodemon.mesh.position.set(x, 25, z);
-    
-    scene.add(cacodemon.mesh);
-    cacodemons.push(cacodemon);
-  }
-}
-
-function checkProjectileCollision(projectile, player, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes) //Checa as colisões dos projéteis
+function checkProjectileCollision(projectile, player, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes) //Checa as colisões dos projéteis
 {
   const projectileBB = new THREE.Box3().setFromCenterAndSize(
     projectile.mesh.position,
@@ -280,7 +240,7 @@ function checkProjectileCollision(projectile, player, wallBoxes, areaBoxes, area
   }
 
   //Colisão com o mundo
-  for (const boxList of [wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes]) {
+  for (const boxList of [wallBoxes, areaBoxes, collumnsBoxes, blockBoxes]) {
     for (const box of boxList) {
       if (projectileBB.intersectsBox(box)) {
         return 'world';
@@ -296,7 +256,7 @@ function checkProjectileCollision(projectile, player, wallBoxes, areaBoxes, area
   return null;
 }
 
-export function updateCacodemons(player, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes)
+export function updateCacodemons(player, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)
 {
   const now = Date.now();
   const tmpVec = new THREE.Vector3();
@@ -322,6 +282,9 @@ export function updateCacodemons(player, wallBoxes, areaBoxes, area3Boxes, collu
     //Transições de estado (passivo e ativo)
     if (cacodemon.state === 'passive' && distToPlayer < 80) {
       cacodemon.state = 'active';
+      if(soundManager){
+        soundManager.playCacodemonNearby();
+      }
     } else if (cacodemon.state === 'active' && distToPlayer > 100) {
       cacodemon.state = 'passive';
     }
@@ -339,7 +302,7 @@ export function updateCacodemons(player, wallBoxes, areaBoxes, area3Boxes, collu
   moveVec.subVectors(cacodemon.patrolTarget, cacodemon.mesh.position).setY(0).normalize().multiplyScalar(0.02);
   newPos.copy(cacodemon.mesh.position).add(moveVec);
 
-  if (!checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes))
+  if (!checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes))
     {
     cacodemon.mesh.position.copy(newPos);
     cacodemon.mesh.lookAt(cacodemon.patrolTarget);
@@ -369,7 +332,7 @@ export function updateCacodemons(player, wallBoxes, areaBoxes, area3Boxes, collu
   moveVec.add(sideVec);
   newPos.copy(cacodemon.mesh.position).add(moveVec);
 
-  if (!checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes)) {
+  if (!checkCollisionForCacodemons(newPos, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes)) {
     cacodemon.mesh.position.copy(newPos);
 
     //Olha na direção do movimento, não para o jogador
@@ -379,6 +342,9 @@ export function updateCacodemons(player, wallBoxes, areaBoxes, area3Boxes, collu
 
   //Ataca se estiver no intervalo de tiro
   if (distToPlayer < 80 && now - cacodemon.timers.lastFire > fireInterval) {
+    if(soundManager){
+      soundManager.playCacodemonAttack();
+    }
     const projectile = createProjectile(cacodemon.mesh.position, forwardDir);
     projectiles.push(projectile);
     cacodemon.timers.lastFire = now;
@@ -397,13 +363,13 @@ export function updateCacodemons(player, wallBoxes, areaBoxes, area3Boxes, collu
     tmpVec.copy(p.dir).multiplyScalar(projectileSpeed);
     p.mesh.position.add(tmpVec);
 
-    const collision = checkProjectileCollision(p, player, wallBoxes, areaBoxes, area3Boxes, collumnsBoxes, blockBoxes);
+    const collision = checkProjectileCollision(p, player, wallBoxes, areaBoxes, collumnsBoxes, blockBoxes);
 
     if (collision === 'player') {
   console.log('Jogador atingido por projétil do Cacodemon!');
   
 
-    if (window.takeDamage && !godModeEnabled) {
+    if (window.takeDamage && !window.godModeEnabled) {
       window.takeDamage(15); // Projétil causa 15 de dano
       console.log('Dano aplicado ao player!');
       if (window.soundManager) {
