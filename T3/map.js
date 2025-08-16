@@ -63,7 +63,7 @@ class Map{
     this.suport4 = new THREE.Mesh(suportArea4Geometry, new THREE.MeshLambertMaterial({ color: "rgb(143, 72, 38)" }));
     this.suport4.castShadow = true;
     this.suport4.receiveShadow = true;
-    this.suport4.position.set(-20, 2,40);
+    this.suport4.position.set(-20, 1,40);
     this.suport4Box = new THREE.Box3().setFromObject(this.suport4);
     this.blocksArea4.push(this.suport4Box);
     this.scene.add(this.suport4);
@@ -363,16 +363,16 @@ class Map{
     this.suport2Box = new THREE.Box3().setFromObject(this.suport2);
 
     //Create blocks
-    this.createBlocks(area2, 20, 20, 10, materialBlocosArea2);
-    this.createBlocks(area2, -50, 50, 20, materialBlocosArea2);
-    this.createBlocks(area2, 30, 10, 15, materialBlocosArea2);
-    this.createBlocks(area2, 0, 0, 12, materialBlocosArea2);
-    this.createBlocks(area2, -20, 10, 9, materialBlocosArea2);
-    this.createBlocks(area2, -40, 30, 8, materialBlocosArea2);
-    this.createBlocks(area2, 40, 50, 8, materialBlocosArea2);
-    this.createBlocks(area2, 50, -20, 20, materialBlocosArea2);
-    this.createBlocks(area2, -40, -40, 20, materialBlocosArea2);
-    this.createBlocks(area2, -1, -40, 10, materialBlocosArea2);
+    this.createBlocks(area2, 20, 20, 10, materialBlocosArea2,true);
+    this.createBlocks(area2, -50, 50, 20, materialBlocosArea2,false);
+    this.createBlocks(area2, 30, 10, 15, materialBlocosArea2, true);
+    this.createBlocks(area2, 0, 0, 12, materialBlocosArea2,false);
+    this.createBlocks(area2, -20, 10, 9, materialBlocosArea2,false);
+    this.createBlocks(area2, -40, 30, 8, materialBlocosArea2,false);
+    this.createBlocks(area2, 40, 50, 8, materialBlocosArea2,true);
+    this.createBlocks(area2, 50, -20, 20, materialBlocosArea2,false);
+    this.createBlocks(area2, -40, -40, 20, materialBlocosArea2,false);
+    this.createBlocks(area2, -1, -40, 10, materialBlocosArea2,true);
     
     //Add plataform on the middle
     this.suportTop2 = new THREE.Mesh(suportGeometry, new THREE.MeshLambertMaterial({ color: "rgb(143, 72, 38)" }));
@@ -521,8 +521,18 @@ class Map{
     this.door2Area3Box = new THREE.Box3().setFromObject(this.portaHangar2);
     this.blocksArea3.push(this.door2Area3Box);
 
+    this.suport3 = new THREE.Mesh(suportGeometry, new THREE.MeshLambertMaterial({color: "rgb(143, 72, 38)"}));
+    this.suport3.receiveShadow = true;
+    this.suport3.castShadow = true;
+    this.suport3.position.set(160, -5, -75);
+    scene.add(this.suport3);
+    this.suport3Box = new THREE.Box3().setFromObject(this.suport3);
+    this.blocksArea3.push(this.suport3Box);
 
-
+    this.keyMesh3 = this.createKey("blue");
+    let keyBox3 = new THREE.Box3().setFromObject(this.keyMesh3);
+    
+    this.suport3.add(this.keyMesh3);    
 
     //Create side walls
     this.createBorder(scene);
@@ -608,7 +618,6 @@ class Map{
     // Rotacionar para deixar na vertical
     doorArea4Mesh.rotation.x = THREE.MathUtils.degToRad(90);
 
-    // ⚠️ O truque: deslocar a porta dentro do pivot, para que o eixo do grupo fique na lateral
     doorArea4Mesh.position.x = 9.9; // metade do diâmetro
 
     // Adicionar a porta no pivot
@@ -808,15 +817,19 @@ class Map{
 
   }
 
-  createBlocks(area,x,z,height, material){
+  createBlocks(area,x,z,height, material,flutua){
     let blockGeometry = new THREE.BoxGeometry(4, height, 4);
       // Se não foi passado material, usa o padrão
     let blockMaterial = material || new THREE.MeshLambertMaterial({ color: "rgb(171, 98, 21)" });
     let block = new THREE.Mesh(blockGeometry, blockMaterial);
     block.castShadow = true; 
     block.receiveShadow = true; 
-    block.position.set(x, 3+height/2, z);
+    if(flutua)
+      block.position.set(x,3+height/2+3,z);
+    else
+      block.position.set(x, 3+height/2, z);
 
+    
     area.add(block); 
 
     block.updateMatrixWorld(true); 
