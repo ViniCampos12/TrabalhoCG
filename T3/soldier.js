@@ -3,7 +3,6 @@ import { scene } from './game.js';
 
 const soldiers = [];
 
-const projectileSpeed = 0.6; // Velocidade do disparo
 const fireInterval = 5000; // Intervalo entre tiros (ms)
 
 function createSoldierMesh() {
@@ -108,6 +107,11 @@ export function checkCollisionForSoldiers(newPos, wallBoxes, areaBoxes, area3Box
     if (futureBB.intersectsBox(area)) {
       return true;
     }
+  }
+
+  if(newPos.x > 218 || newPos.x < 94 || newPos.z < -179 || newPos.z > -79)
+  {
+    return true;
   }
 
   //Evita colisão com o chão
