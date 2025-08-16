@@ -23,7 +23,6 @@ function createSoldierMesh() {
       // Configura o espaço de cor
       texture.colorSpace = THREE.SRGBColorSpace;
 
-      // 🔴 Impede interpolação que causa "corte"
       texture.magFilter = THREE.NearestFilter;
       texture.minFilter = THREE.NearestFilter;
       texture.generateMipmaps = false;

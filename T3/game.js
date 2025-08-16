@@ -10,7 +10,7 @@ import {
 import Map from './map.js';
 import Ramp from './ramp.js';
 import { spawnLostSouls, updateLostSouls, checkCollisionForSouls, lostSouls } from './lostSoul.js';
-import { spawnCacodemons, updateCacodemons, cacodemons, projectiles } from './cacoDemons.js';
+import { spawnCacodemons, updateCacodemons, cacodemons, projectiles, spawnCacodemonsArea4 } from './cacoDemons.js';
 import { 
   initPlayerHP, 
   takeDamage, 
@@ -21,7 +21,8 @@ import {
 } from './player.js';
 import SoundManager from './sounds.js';
 import Airplane from "./airplane.js";
-import { soldiers, spawnSoldiers } from './soldier.js';
+import { soldiers, spawnSoldiers, updateSoldiers } from './soldier.js';
+import { spawnPainElemental, updatePainElementals, painElementals } from './painElemental.js';
 
 let scene = new THREE.Scene();
 // Cria um SkyDome com textura de céu
@@ -266,6 +267,8 @@ function smoothToggleHangarLighting(inHangar) {
 
 var blocked = false;
 var blocked2 = false;
+var blocked3 = false;
+var blocked4 = false;
 
 //MAPA
 let map = new Map(scene);
@@ -1079,7 +1082,7 @@ function render() {
       blocked3 = true;
     }
 
-    if(cube.position.y== 8 && cube.position.x < 62 && cube.position.x > -62 && cube.position.z > 79 && cube.position.z < 179 && blocked4==false)
+    if(cube.position.x < 62 && cube.position.x > -62 && cube.position.z > 79 && cube.position.z < 179 && blocked4==false)
     {
       spawnPainElemental();
       spawnCacodemonsArea4();
