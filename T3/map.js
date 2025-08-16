@@ -2,7 +2,7 @@ import * as THREE from  'three';
 import { createGroundPlaneXZ, degreesToRadians, InfoBox, setDefaultMaterial } from '../libs/util/util.js';
 import Ladder from './ladder.js';
 import { CSG } from '../libs/other/CSGMesh.js';
-import { MeshLambertMaterial } from '../build/three.module.js';
+import { Color, MeshLambertMaterial } from '../build/three.module.js';
 
 export let wallBox;
  export   let wall; 
@@ -17,6 +17,7 @@ class Map{
     this.collumnsBox = []; //Vetor with all bb´s of collumns
     this.blocksBox = []; //Vetor with all bb´s of blocks
     this.blocksArea3 = []; //Vetor with all bb´s of blocks from area 3
+    this.blocksArea4 = [];
     this.ladderBig = new Ladder();
     this.ramps = [];
     this.suport1 = null;
@@ -378,50 +379,180 @@ class Map{
 
   createBiggerArea(material, x, y, z){
 
-    let floorArea4 = new THREE.Mesh(new THREE.BoxGeometry(287,0.2,102),new THREE.MeshLambertMaterial({color: "rgba(103, 105, 107, 1)"}));
+    let floorArea4 = new THREE.Mesh(new THREE.BoxGeometry(287,0.2,102),new THREE.MeshStandardMaterial({roughness: 1, metalness: 0, color:  0xaaaaaa  }));
+    const floorTexture = this.textureLoader.load("assets/images/Pebbles_002_COLOR.jpg");
+    floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping;
+    floorTexture.repeat.set(100, 40);
+    
+    floorArea4.material.map = floorTexture;
     floorArea4.receiveShadow = true;
     floorArea4.position.set(0,0.1,121);
     this.scene.add(floorArea4);
+
+    let verticalPath = new THREE.Mesh(new THREE.BoxGeometry(40,0.1,40.8), new THREE.MeshLambertMaterial({color: "rgba(122, 67, 67, 1)"}));
+    const verticalTexture = this.textureLoader.load("assets/images/floorWood.jpg");
+    verticalTexture.wrapS = verticalTexture.wrapT = THREE.RepeatWrapping;
+    verticalTexture.repeat.set(2, 20);
+    
+    verticalPath.material.map = verticalTexture;
+    verticalPath.receiveShadow = true;
+    verticalPath.position.set(0,0.25,90.4);
+    this.scene.add(verticalPath);
+
+    let verticalPath2 = new THREE.Mesh(new THREE.BoxGeometry(40,0.1,40.8), new THREE.MeshLambertMaterial({color: "rgba(122, 67, 67, 1)"}));
+    const verticalTexture2 = this.textureLoader.load("assets/images/floorWood.jpg");
+    verticalTexture2.wrapS = verticalTexture2.wrapT = THREE.RepeatWrapping;
+    verticalTexture2.repeat.set(2, 20);
+    
+    verticalPath2.material.map = verticalTexture2;
+    verticalPath2.receiveShadow = true;
+    verticalPath2.position.set(0,0.25,151.2);
+    this.scene.add(verticalPath2);
+
+    let horizontalPath = new THREE.Mesh(new THREE.BoxGeometry(287,0.1,20.4), new THREE.MeshLambertMaterial({color: "rgba(122, 67, 67, 1)"}));
+    const horizontalTexture = this.textureLoader.load("assets/images/floorWood.jpg");
+    horizontalTexture.wrapS = horizontalTexture.wrapT = THREE.RepeatWrapping;
+    horizontalTexture.repeat.set(20, 2);
+    
+    horizontalPath.material.map = horizontalTexture;
+    horizontalPath.receiveShadow = true;
+    horizontalPath.position.set(0,0.25,121);
+    this.scene.add(horizontalPath);
+
 
     this.createTowers(-146,20,70);
     this.createTowers(-146,20,177);
     this.createTowers(146,20,70);
     this.createTowers(146,20,177);
 
-    let fortressWallCSGFront = this.createCSGFortressWall(282,5);
-    let fortressWallFront = CSG.toMesh(fortressWallCSGFront,this.auxMat,new THREE.MeshLambertMaterial({ color: "rgba(52, 68, 67, 1)" }));
+    let fortressWallCSGFront = this.createCSGFortressWall(282, 5);
+
+    // Porta (cilindro)
+    let cylinderMesh = new THREE.Mesh(new THREE.CylinderGeometry(10, 10, 10, 32, 1));
+    cylinderMesh.position.set(0, -10, 0);
+    cylinderMesh.rotation.x = THREE.MathUtils.degToRad(90);
+    cylinderMesh.updateMatrix();
+    let cylinderCSG = CSG.fromMesh(cylinderMesh);
+    fortressWallCSGFront = fortressWallCSGFront.subtract(cylinderCSG);
+
+
+
+   // Criar um grupo que será o pivot (eixo da porta)
+    this.doorPivot = new THREE.Group();
+    this.scene.add(this.doorPivot);
+
+    let doorArea4Mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(9.9, 9.9, 1, 32, 1),
+        new THREE.MeshLambertMaterial()
+    );
+
+    const door4Texture = this.textureLoader.load("assets/images/wood.png");
+    door4Texture.wrapS = door4Texture.wrapT = THREE.RepeatWrapping;
+    door4Texture.repeat.set(1, 2);
+    
+    doorArea4Mesh.material.map = door4Texture;
+    
+
+    // Rotacionar para deixar na vertical
+    doorArea4Mesh.rotation.x = THREE.MathUtils.degToRad(90);
+
+    // ⚠️ O truque: deslocar a porta dentro do pivot, para que o eixo do grupo fique na lateral
+    doorArea4Mesh.position.x = 9.9; // metade do diâmetro
+
+    // Adicionar a porta no pivot
+    this.doorPivot.add(doorArea4Mesh);
+
+    // Colocar o pivot no lugar correto
+    this.doorPivot.position.set(-9.9, 0, 72);
+
+    // Agora sim: calcular bounding box a partir do pivot
+    this.door4Box = new THREE.Box3().setFromObject(this.doorPivot);
+    this.blocksArea4.push(this.door4Box);
+
+
+    // Janelas (caixas finas atravessando a parede)
+    for (let i = -4; i <= 8; i=i+2) {   // 3 janelas em linha horizontal
+        let windowMesh = new THREE.Mesh(new THREE.BoxGeometry(10, 3, 10)); 
+        windowMesh.position.set(i * 20, 5, 0); // espaça as janelas
+        // cylinderMesh.rotation.x = THREE.MathUtils.degToRad(90);
+        windowMesh.updateMatrix();
+
+        let windowCSG = CSG.fromMesh(windowMesh);
+        fortressWallCSGFront = fortressWallCSGFront.subtract(windowCSG);
+    }
+
+    // Converter de volta para mesh
+    let fortressWallFront = CSG.toMesh(
+        fortressWallCSGFront,
+        this.auxMat,
+        new THREE.MeshLambertMaterial()
+    );
+
+    const wallTextureFront = this.textureLoader.load("assets/images/stone.jpg");
+    wallTextureFront.wrapS = wallTextureFront.wrapT = THREE.RepeatWrapping;
+    wallTextureFront.repeat.set(20, 4);
+    fortressWallFront.material.map = wallTextureFront;
     fortressWallFront.castShadow = true;
     fortressWallFront.receiveShadow = true;
-
     fortressWallFront.position.set(0, 10, 70);
+    this.blocksArea4.push(new THREE.Box3().setFromObject(fortressWallFront));
 
     this.scene.add(fortressWallFront);
 
-     let fortressWallCSGBack = this.createCSGFortressWall(282,5);
-    let fortressWallBack = CSG.toMesh(fortressWallCSGBack,this.auxMat,new THREE.MeshLambertMaterial({ color: "rgba(52, 68, 67, 1)" }));
+
+    let fortressWallCSGBack = this.createCSGFortressWall(282,5);
+
+    // Janelas (caixas finas atravessando a parede)
+    for (let i = -4; i <= 8; i=i+2) {   // 3 janelas em linha horizontal
+        let windowMesh = new THREE.Mesh(new THREE.BoxGeometry(10, 3, 10)); 
+        windowMesh.position.set(i * 20, 5, 0); // espaça as janelas
+        // cylinderMesh.rotation.x = THREE.MathUtils.degToRad(90);
+        windowMesh.updateMatrix();
+
+        let windowCSG = CSG.fromMesh(windowMesh);
+        fortressWallCSGBack = fortressWallCSGBack.subtract(windowCSG);
+    }
+    let fortressWallBack = CSG.toMesh(fortressWallCSGBack,this.auxMat,new THREE.MeshLambertMaterial());
+    const wallTextureBack = this.textureLoader.load("assets/images/stone.jpg");
+    wallTextureBack.wrapS = wallTextureBack.wrapT = THREE.RepeatWrapping;
+    wallTextureBack.repeat.set(20, 4);
+    fortressWallBack.material.map = wallTextureBack;
     fortressWallBack.castShadow = true;
     fortressWallBack.receiveShadow = true;
 
     fortressWallBack.position.set(0, 10, 177);
+    this.blocksArea4.push(new THREE.Box3().setFromObject(fortressWallBack));
 
     this.scene.add(fortressWallBack);
 
-     let fortressWallCSGLeft = this.createCSGFortressWall(5,97);
-    let fortressWallLeft = CSG.toMesh(fortressWallCSGLeft,this.auxMat,new THREE.MeshLambertMaterial({ color: "rgba(52, 68, 67, 1)" }));
+
+    let fortressWallCSGLeft = this.createCSGFortressWall(5,97);
+
+    let fortressWallLeft = CSG.toMesh(fortressWallCSGLeft,this.auxMat,new THREE.MeshLambertMaterial());
+    const wallTextureLeft = this.textureLoader.load("assets/images/stone.jpg");
+    wallTextureLeft.wrapS = wallTextureLeft.wrapT = THREE.RepeatWrapping;
+    wallTextureLeft.repeat.set(10, 4);
+    fortressWallLeft.material.map = wallTextureLeft;
     fortressWallLeft.castShadow = true;
     fortressWallLeft.receiveShadow = true;
 
     fortressWallLeft.position.set(-146, 10, 118.5);
-
+    this.blocksArea4.push(new THREE.Box3().setFromObject(fortressWallLeft));
     this.scene.add(fortressWallLeft);
 
 
-     let fortressWallCSGRight = this.createCSGFortressWall(5,97);
-    let fortressWallRight = CSG.toMesh(fortressWallCSGRight,this.auxMat,new THREE.MeshLambertMaterial({ color: "rgba(52, 68, 67, 1)" }));
+    let fortressWallCSGRight = this.createCSGFortressWall(5,97);
+
+    let fortressWallRight = CSG.toMesh(fortressWallCSGRight,this.auxMat,new THREE.MeshLambertMaterial());
+    const wallTextureRight = this.textureLoader.load("assets/images/stone.jpg");
+    wallTextureRight.wrapS = wallTextureRight.wrapT = THREE.RepeatWrapping;
+    wallTextureRight.repeat.set(10, 4);
+    fortressWallRight.material.map = wallTextureLeft;
     fortressWallRight.castShadow = true;
     fortressWallRight.receiveShadow = true;
 
     fortressWallRight.position.set(146, 10, 118.5);
+    this.blocksArea4.push(new THREE.Box3().setFromObject(fortressWallRight));
 
     this.scene.add(fortressWallRight);
 
@@ -436,42 +567,17 @@ class Map{
     }
 
 
+    this.createHomeBiggerArea(50,90);
+    this.createHomeBiggerArea(90,90);
+    this.createHomeBiggerArea(-50,90);
+    this.createHomeBiggerArea(-90,90);
+    this.createHomeBiggerArea(50,150);
+    this.createHomeBiggerArea(90,150);
+    this.createHomeBiggerArea(-50,150);
+    this.createHomeBiggerArea(-90,150);
 
 
-
-
-    //  let profundidadeTopo = 108; 
-    // let bigCylinderMesh = new THREE.Mesh(new THREE.CylinderGeometry(80, 80, profundidadeTopo, 32));
-    // let smallCylinderMesh = new THREE.Mesh(new THREE.CylinderGeometry(78, 78, profundidadeTopo-2, 32));
-    // let quadradoMesh = new THREE.Mesh(new THREE.BoxGeometry(800, 800, 100 ));
-
-    // bigCylinderMesh.matrixAutoUpdate = false;
-    // bigCylinderMesh.updateMatrix();
-    // smallCylinderMesh.matrixAutoUpdate = false;
-    // smallCylinderMesh.updateMatrix();
-    // quadradoMesh.matrixAutoUpdate = false;
-    // quadradoMesh.updateMatrix();
-    // quadradoMesh.position.set(0, 0, 0);
-    // quadradoMesh.rotateX(THREE.MathUtils.degToRad(90));
-
-    // let bigCylinderCSG = CSG.fromMesh(bigCylinderMesh);
-    // let quadradoCSG = CSG.fromMesh(quadradoMesh);
-    // let smallCylinderCSG = CSG.fromMesh(smallCylinderMesh);
-    // let csgObjectPre = bigCylinderCSG.subtract(smallCylinderCSG); // Subtrai o cilindro menor do maior
-    // let csgObject = csgObjectPre.subtract(quadradoCSG);
-
-    // let topoHangarMesh = CSG.toMesh(csgObject, this.auxMat);
-    // topoHangarMesh.material = new THREE.MeshLambertMaterial({ color: "rgba(52, 68, 67, 1)" });
-    // topoHangarMesh.castShadow = true;
-    // topoHangarMesh.receiveShadow = true;
-
-    // // Rotaciona para a posição horizontal
-    // topoHangarMesh.rotateX(Math.PI / 2);
-
-    // // Ajusta posição para compensar altura menor
-    // topoHangarMesh.position.set(156, -30, -118);
-
-    // return topoHangarMesh;
+    this.createAltar(0,151);
 
    }
 
@@ -538,8 +644,6 @@ class Map{
     let collumnBox = new THREE.Box3().setFromObject(collumn);
     this.collumnsBox.push(collumnBox);
 
-    // let helper = new THREE.Box3Helper(collumnBox, 'white');
-    // this.scene.add(helper); // helper deve estar na scene
   }
 
   createBlocks(area,x,z,height){
@@ -633,20 +737,38 @@ class Map{
 }
 
   createTowers(x,y,z){
-    let cylinderMesh = new THREE.Mesh(new THREE.CylinderGeometry(10,10,40));
-    cylinderMesh.matrixAutoUpdate = false;
+    let cylinderMesh = new THREE.Mesh(new THREE.CylinderGeometry(10, 10, 40, 32));
     cylinderMesh.updateMatrix();
+    let towerCSG = CSG.fromMesh(cylinderMesh);
 
-    let cylinderCSG = CSG.fromMesh(cylinderMesh);
+    // Criar 4 cortes de janela
+    for (let i = 0; i < 4; i++) {
+        let windowMesh = new THREE.Mesh(new THREE.BoxGeometry(6, 2, 4)); // largura, altura, profundidade
+        windowMesh.position.set(8 * Math.cos(i * Math.PI / 2), 8, 8 * Math.sin(i * Math.PI / 2)); // posiciona ao redor da torre
+        windowMesh.updateMatrix();
 
-    let tower = CSG.toMesh(cylinderCSG, this.auxMat);
-    tower.material = new THREE.MeshLambertMaterial({color: "rgba(103, 105, 107, 1)"});
-    tower.receiveShadow = true;
+        let windowCSG = CSG.fromMesh(windowMesh);
+        towerCSG = towerCSG.subtract(windowCSG);
+    }
+
+    // Converter de volta para Mesh
+    let tower = CSG.toMesh(towerCSG, this.auxMat, new THREE.MeshLambertMaterial());
+    const towerTexture = this.textureLoader.load("assets/images/darkcement.jpg");
+    towerTexture.wrapS = towerTexture.wrapT = THREE.RepeatWrapping;
+    towerTexture.repeat.set(2, 0.5);
+    tower.material.map = towerTexture;
     tower.castShadow = true;
+    tower.receiveShadow = true;
+    tower.position.set(x, y, z);
 
-    tower.position.set(x,y,z);
+    let towerBox = new THREE.Box3().setFromObject(tower);
+    this.blocksArea4.push(towerBox);
+
+    // let towerHelper = new THREE.Box3Helper(towerBox, 0xff0000); // vermelho
+    // this.scene.add(towerHelper);
 
     this.scene.add(tower);
+
   }
 
   createCSGFortressWall(largura, profundidade){
@@ -662,15 +784,78 @@ class Map{
   createTopFortressBlock(posx,posz,isTurned){
     let topFortressBlockMesh;
     if(isTurned){
-      topFortressBlockMesh = new THREE.Mesh(new THREE.BoxGeometry(5,3,13.5),new THREE.MeshLambertMaterial({color: "rgba(103, 105, 107, 1)"}));
+      topFortressBlockMesh = new THREE.Mesh(new THREE.BoxGeometry(5,3,13.5),new THREE.MeshLambertMaterial());
     }
     else{
-      topFortressBlockMesh = new THREE.Mesh(new THREE.BoxGeometry(13.5,3,5),new THREE.MeshLambertMaterial({color: "rgba(103, 105, 107, 1)"}));
+      topFortressBlockMesh = new THREE.Mesh(new THREE.BoxGeometry(13.5,3,5),new THREE.MeshLambertMaterial());
     }
+    const topTextureFortress = this.textureLoader.load("assets/images/stone.jpg");
+    topTextureFortress.wrapS = topTextureFortress.wrapT = THREE.RepeatWrapping;
+    topTextureFortress.repeat.set(2, 0.5);
+    topFortressBlockMesh.material.map = topTextureFortress;
     topFortressBlockMesh.castShadow = true;
     topFortressBlockMesh.receiveShadow = true;
     topFortressBlockMesh.position.set(posx,21.5,posz);
+    this.blocksArea4.push(new THREE.Box3().setFromObject(topFortressBlockMesh));
     this.scene.add(topFortressBlockMesh);
+  }
+
+  createHomeBiggerArea(posx,posz){
+
+    // const wallTexture = this.textureLoader.load('assets/images/floorWood.jpg');
+    const wallTexture = this.textureLoader.load("assets/images/darkcement.jpg");
+    wallTexture.wrapS = wallTexture.wrapT = THREE.RepeatWrapping;
+    wallTexture.repeat.set(1, 1);
+
+    let home = new THREE.Mesh(new THREE.BoxGeometry(15,10,15), new THREE.MeshLambertMaterial())
+    home.material.map = wallTexture;
+    home.castShadow = true;
+    home.receiveShadow = true;
+    home.position.set(posx,5,posz);
+
+    const topTexture = this.textureLoader.load('assets/images/floorWood.jpg');
+    topTexture.wrapS = topTexture.wrapT = THREE.RepeatWrapping;
+    topTexture.repeat.set(1, 1);
+
+    let topHome = new THREE.Mesh(new THREE.ConeGeometry(12,6,4,64), new THREE.MeshLambertMaterial());
+    topHome.material.map = topTexture;
+    topHome.castShadow = true;
+    topHome.receiveShadow = true;
+    topHome.position.set(0,8,0);
+    topHome.rotation.y = Math.PI / 4; 
+    home.add(topHome);
+
+    let baseBox = new THREE.Box3(
+    new THREE.Vector3(posx - 7.5, 0, posz - 7.5),  // mínimo
+    new THREE.Vector3(posx + 7.5, 10, posz + 7.5) // máximo
+    );
+    this.blocksArea4.push(baseBox);
+
+    this.scene.add(home);
+  }
+
+  createAltar(posx,posz){
+    let altarBase = new THREE.Mesh(new THREE.BoxGeometry(30,4,20), new THREE.MeshLambertMaterial());
+    const altarTexture = this.textureLoader.load("assets/images/cement.jpg");
+    altarTexture.wrapS = altarTexture.wrapT = THREE.RepeatWrapping;
+    altarTexture.repeat.set(2, 0.5);
+    altarBase.material.map = altarTexture;
+    altarBase.castShadow = true;
+    altarBase.receiveShadow = true;
+
+    let altarTop = new THREE.Mesh(new THREE.BoxGeometry(20,3,7), new THREE.MeshLambertMaterial());
+    const altarTopTexture = this.textureLoader.load("assets/images/cement.jpg");
+    altarTopTexture.wrapS = altarTopTexture.wrapT = THREE.RepeatWrapping;
+    altarTopTexture.repeat.set(2, 0.5);
+    altarTop.material.map = altarTopTexture;
+    altarTop.castShadow = true;
+    altarTop.receiveShadow = true;
+    altarTop.position.set(0,3.5,0);
+    altarBase.add(altarTop);
+
+    altarBase.position.set(posx,2,posz);
+    this.blocksArea4.push(new THREE.Box3().setFromObject(altarBase));
+    this.scene.add(altarBase);
   }
 
 
@@ -692,6 +877,10 @@ class Map{
 
   getBBBlocksArea3(){
     return this.blocksArea3;
+  }
+
+   getBBBlocksArea4(){
+    return this.blocksArea4;
   }
 
   getSuport2Box(){

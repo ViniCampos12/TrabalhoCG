@@ -188,6 +188,7 @@ const wallBoxes = map.getWallBoxes();
 const areaBoxes = map.getAreaBoxes(); 
 const collumnsBoxes = map.getCollumnsBoxes();
 const area3Boxes = map.getBBBlocksArea3();
+const area4Boxes = map.getBBBlocksArea4();
 const blockBoxes = map.getBlocksBoxes();
 const rampMesh = map.getRamps();
 const suport1 = map.suport1;
@@ -206,6 +207,9 @@ const door1Area3 = map.portaHangar1;
 const door2Area3 = map.portaHangar2;
 const door1Area3Box = map.door1Area3Box;
 const door2Area3Box = map.door2Area3Box;
+const doorPivot = map.doorPivot;
+const door4Box = map.door4Box;
+let movedoor4Pivot = false;
 let hasKey1 = false;
 let hasKey2 = true;
 let contaLostSouls = 0;
@@ -364,6 +368,8 @@ document.addEventListener('keydown', (event) => {
         break;
     case 'KeyO':
         openArea3Door();
+    case 'KeyL':
+        toggleDoor();
     case 'ShiftLeft':
     case 'ShiftRight':
       shiftPress = true;
@@ -874,6 +880,11 @@ function render() {
       door1Area3Box.setFromObject(door1Area3); // Atualiza a bounding box da porta
       door2Area3Box.setFromObject(door2Area3); // Atualiza a bounding box da porta
     }
+
+    if (movedoor4Pivot) {
+      updateDoor();
+      door4Box.setFromObject(map.doorPivot);
+    }
     
     //Subida da plataforma da area 2
     let isIntersectPlataform = false;
@@ -1108,8 +1119,26 @@ function checkCollisions(walls, areas, newCubePos) {
     }
   } 
 
+  //Testa blocos da área 3
   if(newCubePos.z < -53 && newCubePos.z > -182 && newCubePos.x > 90 && newCubePos.x < 230){
     for(const block of area3Boxes){
+      if(futureBB.intersectsBox(block)){
+        return true;
+      }
+    }
+  }
+
+
+  //Testa blocos da área 4
+  if(newCubePos.z >50 && newCubePos.z < 190 && newCubePos.x > -160 && newCubePos.x < 160){
+    if(newCubePos.z > 55 && newCubePos.z < 79 && newCubePos.x < 6 && newCubePos.x > -6){
+      if(futureBB.intersectsBox(map.door4Box)){
+        return true;
+      }
+      return false;
+    }
+
+    for(const block of area4Boxes){
       if(futureBB.intersectsBox(block)){
         return true;
       }
@@ -1200,6 +1229,20 @@ function openArea3Door(){
   doorArea3Open = true;
 }
 
+
+let door4Open = false;
+
+function toggleDoor() {
+  movedoor4Pivot = true;
+  door4Open = !door4Open;
+}
+
+function updateDoor() {
+  const alvo = door4Open ? THREE.MathUtils.degToRad(-90) : 0;
+  const atual = doorPivot.rotation.y;
+
+  doorPivot.rotation.y += (alvo - atual) * 0.01;
+}
 render();
 
 export {scene};
