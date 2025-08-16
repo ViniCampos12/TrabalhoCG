@@ -641,6 +641,12 @@ let velocidadeVertical = 0;
 let amortecimento = 0.5;
 let gravidade = -0.003;
 
+// Mesh invisível para representar o player
+const playerGeometry = new THREE.BoxGeometry(2, 5, 2); // largura, altura, profundidade
+const playerMaterial = new THREE.MeshBasicMaterial({ visible: false });
+export const playerMesh = new THREE.Mesh(playerGeometry, playerMaterial);
+
+scene.add(playerMesh);
 
 
 function render() {
@@ -653,6 +659,12 @@ function render() {
     initPlayerHP();
     window.playerHPInitialized = true;
   }
+
+  // Sempre manter o playerMesh na posição da câmera
+camera.getWorldPosition(playerMesh.position);
+
+// (Opcional) se quiser centralizar a caixa na altura do player
+playerMesh.position.y -= 2.5; // metade da altura da Box (5)
 
 
   const velocidade = () => 
@@ -876,19 +888,20 @@ function render() {
         for (const soldier of soldiers) {
   if (soldier.hp <= 0) continue;
 
-  const intersects = raycasterShoot.intersectObject(soldier.mesh, true);
+  // Cria a caixa de colisão em volta do sprite
+  const soldierBB = new THREE.Box3().setFromObject(soldier.mesh);
 
-  if (intersects.length > 0) {
+  // Verifica se o raio atinge a hitbox
+  const intersects = raycasterShoot.ray.intersectsBox(soldierBB);
+
+  if (intersects) {
     soldier.hp -= 1;
     if (soundManager) soundManager.playEnemyHit();
 
     if (soldier.hp <= 0) {
       scene.remove(soldier.mesh);
-      if (soldier.healthBar) soldier.mesh.remove(soldier.healthBar);
-      const idx = soldiers.indexOf(soldier);
-      if (idx !== -1) soldiers.splice(idx, 1);
     }
-    break;
+    break; // só um inimigo atingido por vez
   }
 }
 
@@ -1154,7 +1167,7 @@ function render() {
       soldiers: soldiers,
       painElementals: painElementals,
       projectiles: projectiles
-    });
+    }, playerMesh, area3Boxes);
 
     if(damageReceived){
       // Se o jogador recebeu dano, tocar som

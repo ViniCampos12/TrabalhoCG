@@ -53,8 +53,8 @@ function createSoldierMesh() {
 
 
 function createHealthBar() {
-  const maxWidth = 4;
-  const height = 0.3;
+  const maxWidth = 1.5;
+  const height = 0.1;
 
   const backgroundGeo = new THREE.PlaneGeometry(maxWidth, height);
   const backgroundMat = new THREE.MeshBasicMaterial({ color: 0x000000, depthTest: false });
@@ -68,7 +68,7 @@ function createHealthBar() {
   const barGroup = new THREE.Group();
   barGroup.add(background);
   barGroup.add(foreground);
-  barGroup.position.set(0, 3.5, 0); //posição acima da cabeça
+  barGroup.position.set(0, 0.8, 0); //posição acima da cabeça
 
   barGroup.userData = {
     foreground,
@@ -94,7 +94,7 @@ export async function spawnSoldiers() {
       const x = 100 + Math.random() * (210 - 100);
       const z = -150 + Math.random() * (-80 + 150);
 
-      sprite.position.set(x, 1, z);
+      sprite.position.set(x, 2, z);
 
       const healthBar = createHealthBar();
       sprite.add(healthBar);
@@ -263,7 +263,7 @@ export function checkCollisionForSoldiers(newPos, wallBoxes, areaBoxes, area3Box
   }
 
   //Evita colisão com o chão
-  if (newPos.y < 0)
+  if (newPos.y < 0.2)
     {
     return true;
     }
