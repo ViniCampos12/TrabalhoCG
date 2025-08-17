@@ -829,7 +829,7 @@ class Map{
     else
       block.position.set(x, 3+height/2, z);
 
-    
+      
     area.add(block); 
 
     block.updateMatrixWorld(true); 

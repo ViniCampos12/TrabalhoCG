@@ -65,6 +65,12 @@ const lerpConfigSuportTop2 = {
   move: false
 }
 
+const lerpConfigSuport3 = {
+  destination: new THREE.Vector3(160, 1.5, -75),
+  alpha: 0.01,
+  move: false
+}
+
 let doorOpen = false;
 const lerpConfigDoor = {
   destination: new THREE.Vector3(0, -8, 62),
@@ -78,7 +84,7 @@ const lerpConfigPlataform = {
   move: false
 }
 
-const doorArea3Open = false;
+let doorArea3Open = false;
 const lerpConfigDoor1Area3 = {
   destination: new THREE.Vector3(111.8, 5, -66),
   alpha: 0.015,
@@ -298,6 +304,7 @@ const suportTop2 = map.suportTop2;
 const suportTop2Box = map.suportTop2Box;
 const key = map.keyMesh;
 const key2 = map.keyMesh2;
+const key3 = map.keyMesh3;
 const door1Area3 = map.portaHangar1;
 const door2Area3 = map.portaHangar2;
 const door1Area3Box = map.door1Area3Box;
@@ -306,10 +313,11 @@ const doorPivot = map.doorPivot;
 const door4Box = map.door4Box;
 let movedoor4Pivot = false;
 let hasKey1 = false;
-let hasKey2 = true;
+let hasKey2 = false;
+let hasKey3 = false;
 let contaLostSouls = 0;
 let contaCacoDemons = 0;
-
+let contaSoldiers = 0;
 
 //CUBO
 //Cria pessoa como um cubo
@@ -461,8 +469,8 @@ document.addEventListener('keydown', (event) => {
     case 'Digit2':
         alternarParaLançador();
         break;
-    case 'KeyO':
-        openArea3Door();
+    // case 'KeyO':
+    //     openArea3Door();
     case 'KeyL':
         toggleDoor();
     case 'ShiftLeft':
@@ -472,7 +480,8 @@ document.addEventListener('keydown', (event) => {
     case 'KeyC':
       console.log('tecla C');
       hasKey1 = true;
-      hasKey2 = false;
+      hasKey2 = true;
+      hasKey3 = true;
       exibirMensagem();
       break;
     case 'KeyG':
@@ -682,6 +691,10 @@ playerMesh.position.y -= 2.5; // metade da altura da Box (5)
 
   if(contaCacoDemons == 3){
     lerpConfigSuportTop2.move = true;
+  }
+
+  if(contaSoldiers == 8){
+    lerpConfigSuport3.move = true;
   }
 
 
@@ -978,6 +991,10 @@ playerMesh.position.y -= 2.5; // metade da altura da Box (5)
       map.suportTop2.position.lerp(lerpConfigSuportTop2.destination, lerpConfigSuportTop2.alpha);
       map.suportTop2Box.setFromObject(map.suportTop2);
     }
+    if(lerpConfigSuport3.move){
+      map.suport3.position.lerp(lerpConfigSuport3.destination, lerpConfigSuport3.alpha);
+      map.suport3Box.setFromObject(map.suport3);
+    }
     if(lerpConfigDoor.move) {
       doorArea2.position.lerp(lerpConfigDoor.destination, lerpConfigDoor.alpha);
       doorBox.setFromObject(doorArea2); // Atualiza a bounding box da porta
@@ -1273,8 +1290,22 @@ function checkCollisions(walls, areas, newCubePos) {
     }
   } 
 
+   if(newCubePos.z < - 40 && newCubePos.x > 94 && hasKey2 && !doorArea3Open){
+      openArea3Door();
+    }
+
   //Testa blocos da área 3
   if(newCubePos.z < -53 && newCubePos.z > -182 && newCubePos.x > 90 && newCubePos.x < 230){
+
+     if(futureBB.intersectsBox(map.suport3Box)){
+      if (soundManager && !hasKey3) {
+        soundManager.playKeyPickup();
+      }
+      map.suport3.remove(key3);
+      key3.visible = false;
+      hasKey3 = true;
+    }
+
     for(const block of area3Boxes){
       if(futureBB.intersectsBox(block)){
         return true;
@@ -1285,8 +1316,11 @@ function checkCollisions(walls, areas, newCubePos) {
 
   //Testa blocos da área 4
   if(newCubePos.z >30 && newCubePos.z < 199 && newCubePos.x > -170 && newCubePos.x < 170){
-    if(futureBB.intersectsBox(map.suport4Box)){
+    if(futureBB.intersectsBox(map.suport4Box) && hasKey3){
+      map.suport4.add(key3);
+      key.visible = true;
       downWall();
+      return true;
     }
 
     if(newCubePos.z > 55 && newCubePos.x > -20 && newCubePos.x < 20){
@@ -1386,12 +1420,14 @@ function downPlataform(){
 }
 
 function openArea3Door(){
-  if(soundManager) {
-    soundManager.playDoorOpen();
+   if (!doorArea3Open) {  // Só abre se ainda não estiver aberta
+    doorArea3Open = true;
+    if(soundManager) {
+      soundManager.playDoorOpen();
+    }
+    lerpConfigDoor1Area3.move = true;
+    lerpConfigDoor2Area3.move = true;
   }
-  lerpConfigDoor1Area3.move = true;
-  lerpConfigDoor2Area3.move = true;
-  doorArea3Open = true;
 }
 
 function downWall(){
