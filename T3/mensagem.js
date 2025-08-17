@@ -35,6 +35,7 @@ function exibirMensagem() {
     <div style="font-size: 28px; color: #00ff00; margin-bottom: 10px;">FORAM OBTIDAS!</div>
     <div style="color: #00ff00; margin: 5px 0;">✅ Chave da Área 1 - OBTIDA</div>
     <div style="color: #00ff00; margin: 5px 0;">✅ Chave da Área 2 - OBTIDA</div>
+    <div style="color: #00ff00; margin: 5px 0;">✅ Chave da Área 3 - OBTIDA</div>
     <div style="font-size: 20px; color: #ffffff; margin-top: 15px;">🗝️ CHEAT ATIVADO 🗝️</div>
   `;
 
