@@ -77,7 +77,8 @@ function exibirMensagemFinal() {
   };
   
   restartButton.onclick = () => {
-    location.reload(); // Recarrega a página para reiniciar
+    window.location.href = window.location.href;
+    
   };
   
   // Adiciona elementos à tela

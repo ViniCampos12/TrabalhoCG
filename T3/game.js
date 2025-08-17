@@ -318,6 +318,8 @@ let hasKey3 = false;
 let contaLostSouls = 0;
 let contaCacoDemons = 0;
 let contaSoldiers = 0;
+let contaFinal = 0;
+let inFinalLevel = false;
 
 //CUBO
 //Cria pessoa como um cubo
@@ -663,6 +665,10 @@ function render() {
   const delta = clock.getDelta();
   animarSprite();
 
+  console.log(inFinalLevel);
+  console.log("Conta");
+  console.log(contaFinal);
+
   // Inicializa o HP apenas uma vez quando os controles estão ativos
   if (controls.isLocked && !window.playerHPInitialized) {
     initPlayerHP();
@@ -695,6 +701,11 @@ playerMesh.position.y -= 2.5; // metade da altura da Box (5)
 
   if(contaSoldiers == 8){
     lerpConfigSuport3.move = true;
+  }
+
+  if(contaFinal == 10){
+    contaFinal = 0;
+    exibirMensagemFinal();
   }
 
 
@@ -766,7 +777,7 @@ playerMesh.position.y -= 2.5; // metade da altura da Box (5)
           // caso a alma morra
           if (soul.hp <= 0) {
             scene.remove(soul.mesh);
-            contaLostSouls++;
+            {inFinalLevel ? contaFinal++ : contaLostSouls++}
           }
 
           atingiuAlgo = true;
@@ -786,7 +797,7 @@ playerMesh.position.y -= 2.5; // metade da altura da Box (5)
 
           if (cacodemon.hp <= 0) {
             scene.remove(cacodemon.mesh);
-            contaCacoDemons++;
+            {inFinalLevel ? contaFinal++ : contaCacoDemons++}
           }
 
           atingiuAlgo = true;
@@ -803,7 +814,7 @@ playerMesh.position.y -= 2.5; // metade da altura da Box (5)
 
     if (soldier.hp <= 0) {
       scene.remove(soldier.mesh);
-      contaSoldiers++;
+      {inFinalLevel ? contaFinal++ : contaSoldiers++}
       // Remova a barra de vida também, se necessário:
       if (soldier.healthBar) soldier.mesh.remove(soldier.healthBar);
 
@@ -828,6 +839,7 @@ playerMesh.position.y -= 2.5; // metade da altura da Box (5)
 
           if (pain.hp <= 0) {
             scene.remove(pain.mesh);
+            contaFinal++;
           }
 
           atingiuAlgo = true;
@@ -874,7 +886,7 @@ playerMesh.position.y -= 2.5; // metade da altura da Box (5)
 
             if (soul.hp <= 0) {
               scene.remove(soul.mesh);
-              contaLostSouls++;
+              {inFinalLevel ? contaFinal++ : contaLostSouls++}
             }
             break;
           }
@@ -893,7 +905,7 @@ playerMesh.position.y -= 2.5; // metade da altura da Box (5)
 
             if (cacodemon.hp <= 0) {
               scene.remove(cacodemon.mesh);
-              contaCacoDemons++;
+              {inFinalLevel ? contaFinal++ : contaCacoDemons++}
             }
             break;
           }
@@ -914,7 +926,7 @@ playerMesh.position.y -= 2.5; // metade da altura da Box (5)
 
     if (soldier.hp <= 0) {
       scene.remove(soldier.mesh);
-      contaSoldiers++;
+      {inFinalLevel ? contaFinal++ : contaSoldiers++}
     }
     break; // só um inimigo atingido por vez
   }
@@ -930,6 +942,7 @@ playerMesh.position.y -= 2.5; // metade da altura da Box (5)
     if (soundManager) soundManager.playEnemyHit();
 
     if (pain.hp <= 0) {
+      contaFinal++;
       scene.remove(pain.mesh);
     }
     break;
@@ -1043,6 +1056,7 @@ playerMesh.position.y -= 2.5; // metade da altura da Box (5)
     if (movedoor4Pivot) {
       updateDoor();
       door4Box.setFromObject(map.doorPivot);
+      inFinalLevel = true;
     }
     
     //Subida da plataforma da area 2

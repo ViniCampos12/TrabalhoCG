@@ -61,6 +61,10 @@ class Map{
 
     let suportArea4Geometry = new THREE.BoxGeometry(2,4,2);
     this.suport4 = new THREE.Mesh(suportArea4Geometry, new THREE.MeshLambertMaterial({ color: "rgb(143, 72, 38)" }));
+    this.suportTexture = this.textureLoader.load("assets/images/darkcement.jpg");
+    this.suportTexture.wrapS = this.suportTexture.wrapT = THREE.RepeatWrapping;
+    this.suportTexture.repeat.set(1, 1);
+    this.suport4.material.map = this.suportTexture;
     this.suport4.castShadow = true;
     this.suport4.receiveShadow = true;
     this.suport4.position.set(-20, 1,40);
@@ -209,7 +213,11 @@ class Map{
     
     //Add suport on the middle
     let suportGeometry = new THREE.BoxGeometry(2,4,2);
-    this.suport1 = new THREE.Mesh(suportGeometry, new THREE.MeshLambertMaterial({ color: "rgb(143, 72, 38)" }));
+    this.suport1 = new THREE.Mesh(suportGeometry, new THREE.MeshLambertMaterial());
+    this.suportTexture = this.textureLoader.load("assets/images/darkcement.jpg");
+    this.suportTexture.wrapS = this.suportTexture.wrapT = THREE.RepeatWrapping;
+    this.suportTexture.repeat.set(1, 1);
+    this.suport1.material.map = this.suportTexture;
     this.suport1.castShadow = true;
     this.suport1.receiveShadow = true;
     this.suport1.position.set(0, -10, 0);
@@ -355,7 +363,11 @@ class Map{
     this.plataformBox = new THREE.Box3().setFromObject(this.plataform);
 
     //Create out suport
-    this.suport2 = new THREE.Mesh(suportGeometry, new THREE.MeshLambertMaterial({color: "rgb(143, 72, 38)"}));
+    this.suport2 = new THREE.Mesh(suportGeometry, new THREE.MeshLambertMaterial());
+    this.suportTexture = this.textureLoader.load("assets/images/darkcement.jpg");
+    this.suportTexture.wrapS = this.suportTexture.wrapT = THREE.RepeatWrapping;
+    this.suportTexture.repeat.set(1, 1);
+    this.suport2.material.map = this.suportTexture;
     this.suport2.receiveShadow = true;
     this.suport2.castShadow = true;
     this.suport2.position.set(10, 1, -55);
@@ -375,7 +387,11 @@ class Map{
     this.createBlocks(area2, -1, -40, 10, materialBlocosArea2,true);
     
     //Add plataform on the middle
-    this.suportTop2 = new THREE.Mesh(suportGeometry, new THREE.MeshLambertMaterial({ color: "rgb(143, 72, 38)" }));
+    this.suportTop2 = new THREE.Mesh(suportGeometry, new THREE.MeshLambertMaterial());
+    this.suportTexture = this.textureLoader.load("assets/images/darkcement.jpg");
+    this.suportTexture.wrapS = this.suportTexture.wrapT = THREE.RepeatWrapping;
+    this.suportTexture.repeat.set(1, 1);
+    this.suportTop2.material.map = this.suportTexture;
     this.suportTop2.receiveShadow = true;
     this.suportTop2.castShadow = true;
     this.suportTop2.position.set(0, -8, 30);
@@ -521,7 +537,11 @@ class Map{
     this.door2Area3Box = new THREE.Box3().setFromObject(this.portaHangar2);
     this.blocksArea3.push(this.door2Area3Box);
 
-    this.suport3 = new THREE.Mesh(suportGeometry, new THREE.MeshLambertMaterial({color: "rgb(143, 72, 38)"}));
+    this.suport3 = new THREE.Mesh(suportGeometry, new THREE.MeshLambertMaterial());
+    this.suportTexture = this.textureLoader.load("assets/images/darkcement.jpg");
+    this.suportTexture.wrapS = this.suportTexture.wrapT = THREE.RepeatWrapping;
+    this.suportTexture.repeat.set(1, 1);
+    this.suport3.material.map = this.suportTexture;
     this.suport3.receiveShadow = true;
     this.suport3.castShadow = true;
     this.suport3.position.set(160, -5, -75);
@@ -829,7 +849,7 @@ class Map{
     else
       block.position.set(x, 3+height/2, z);
 
-      
+
     area.add(block); 
 
     block.updateMatrixWorld(true); 
