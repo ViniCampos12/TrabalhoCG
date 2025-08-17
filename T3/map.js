@@ -60,7 +60,7 @@ class Map{
     this.createBlockWall();
 
     let suportArea4Geometry = new THREE.BoxGeometry(2,4,2);
-    this.suport4 = new THREE.Mesh(suportArea4Geometry, new THREE.MeshLambertMaterial({ color: "rgb(143, 72, 38)" }));
+    this.suport4 = new THREE.Mesh(suportArea4Geometry, new THREE.MeshLambertMaterial());
     this.suportTexture = this.textureLoader.load("assets/images/darkcement.jpg");
     this.suportTexture.wrapS = this.suportTexture.wrapT = THREE.RepeatWrapping;
     this.suportTexture.repeat.set(1, 1);
