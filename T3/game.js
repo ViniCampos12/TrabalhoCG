@@ -765,6 +765,15 @@ playerMesh.position.y -= 2.5; // metade da altura da Box (5)
         }
       }
 
+      if(!atingiuAlgo) {
+        for(const block of map.blocksArea4){
+          if (shot.userData.box.intersectsBox(block)) {
+            atingiuAlgo = true;
+            break;
+          }
+        }
+      }
+
       for (const soul of lostSouls) {
         if (soul.hp <= 0) continue; // já morto
 
