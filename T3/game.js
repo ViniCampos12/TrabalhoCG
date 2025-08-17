@@ -803,6 +803,7 @@ playerMesh.position.y -= 2.5; // metade da altura da Box (5)
 
     if (soldier.hp <= 0) {
       scene.remove(soldier.mesh);
+      contaSoldiers++;
       // Remova a barra de vida também, se necessário:
       if (soldier.healthBar) soldier.mesh.remove(soldier.healthBar);
 
@@ -913,6 +914,7 @@ playerMesh.position.y -= 2.5; // metade da altura da Box (5)
 
     if (soldier.hp <= 0) {
       scene.remove(soldier.mesh);
+      contaSoldiers++;
     }
     break; // só um inimigo atingido por vez
   }
